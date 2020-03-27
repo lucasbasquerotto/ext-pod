@@ -19,7 +19,6 @@ services:
         PERL_VERSION: $PERL_VERSION
         S3_ACCESS_KEY: $S3_UPLOADS_ACCESS_KEY
         S3_SECRET_KEY: $S3_UPLOADS_SECRET_KEY
-        S3_REGION: $S3_UPLOADS_REGION
     restart: "unless-stopped"
     volumes: 
     - "$DATA_DIR:/var/main/data"
@@ -40,7 +39,6 @@ services:
         PERL_VERSION: $PERL_VERSION
         S3_ACCESS_KEY: $S3_DB_ACCESS_KEY
         S3_SECRET_KEY: $S3_DB_SECRET_KEY
-        S3_REGION: $S3_DB_REGION
     restart: "unless-stopped"
     volumes: 
     - "$DATA_DIR:/var/main/data",
