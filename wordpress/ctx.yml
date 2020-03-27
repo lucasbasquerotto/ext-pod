@@ -8,30 +8,25 @@
 
 ## general vars - end ###
 
-{% set var_wp_pod_type = params.main.type %}
-
-# {% set var_wp_domain = params.main.custom.wordpress.domain %}
-# {% set var_wp_ssl = params.main.custom.wordpress.ssl | default(false) %}
-# {% set var_wp_port = params.main.custom.wordpress.port 
-#   | default(var_wp_ssl | bool | ternary('443', '80')) 
-# %}
-# {% set var_wp_external_ssl = params.main.custom.nginx.wordpress.ssl | default(var_wp_ssl) %}
-# {% set var_wp_external_port = params.main.custom.nginx.wordpress.external_port | default(var_wp_port) %}
-# {% set var_wp_external_host = (var_wp_external_ssl | bool | ternary('https', 'http')) 
-#   + '://' + var_wp_domain 
-#   + ((var_wp_external_port in ['80', '443']) | ternary('', ':' + var_wp_external_port)) 
-# %}
-
 ### others ###
+
+{% set var_wp_pod_type = params.main.type %}
 
 {% set var_main_dir = params.main.custom_dir + '/wordpress' %}
 {% set var_apps_dir_base = params.dirs.apps_dir_base %}
 {% set var_app_repo_dir = var_apps_dir_base + '/' + 
   (params.pod.app.wp_local.dir_rel | default('')) 
 %}
-{% set var_wp_app_name = params.main.custom.wordpress.app_name | default('') %}
+{% set var_wp_app_name = params.main.custom.main.wordpress.app_name | default('') %}
 {% set var_dev_repo_dir_wordpress = var_local 
   | ternary(params.pod.app[var_wp_app_name].dir_rel | default(''), '') 
+%}
+
+{% set var_wp_domain = params.main.custom.domain.main_domain %}
+{% set var_wp_external_port = params.main.custom.domain.main_port %}
+{% set var_wp_external_host = (params.main.custom.domain.main_ssl | bool | ternary('https', 'http')) 
+  + '://' + var_wp_domain
+  + ((var_wp_external_port in ['80', '443']) | ternary('', ':' + var_wp_external_port)) 
 %}
 
 ### main ###
@@ -45,26 +40,54 @@ templates:
     ctx_name: "{{ params.main.env_name }}-{{ params.main.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ params.pod.data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
-    db_host: "{{ params.main.custom.mysql.host }}"
-    db_port: "{{ params.main.custom.mysql.port }}"
+    nginx_image: "{{ params.main.custom.images.nginx_image }}"
+    nginx_version: "{{ params.main.custom.images.nginx_version }}"
+    wordpress_image: "{{ params.main.custom.images.wordpress_image }}"
+    wordpress_version: "{{ params.main.custom.images.wordpress_version }}"
+    pma_image: "{{ params.main.custom.images.pma_image }}"
+    pma_version: "{{ params.main.custom.images.pma_version }}"
+    mysql_image: "{{ params.main.custom.images.mysql_image }}"
+    mysql_version: "{{ params.main.custom.images.mysql_version }}"
+    toolbox_image: "{{ params.main.custom.images.toolbox_image }}"
+    toolbox_version: "{{ params.main.custom.images.toolbox_version }}"
+    composer_image: "{{ params.main.custom.images.composer_image }}"
+    composer_version: "{{ params.main.custom.images.composer_version }}"
+    awscli_image: "{{ params.main.custom.images.awscli_image }}"
+    awscli_version: "{{ params.main.custom.images.awscli_version }}"
+    main_domain: "{{ params.main.custom.domain.main_domain }}"
+    main_domain_port: "{{ params.main.custom.domain.main_port }}"
+    pma_domain_port: "{{ params.main.custom.domain.pma_domain }}"
+    pma_port: "{{ params.main.custom.domain.pma_port }}"
+    db_host: "{{ params.main.custom.main.mysql.host }}"
+    db_port: "{{ params.main.custom.main.mysql.port }}"
     db_name: "{{ params.credentials.wordpress.db.name }}"
     db_user: "{{ params.credentials.wordpress.db.user }}"
     db_password: "{{ params.credentials.wordpress.db.password }}"
     mysql_root_password: "{{ params.credentials.mysql.root_password }}"
+    wordpress_env: "{{ params.main.custom.main.wordpress.env }}"
+    pma_login_cookie_validity: >-
+      {{ params.main.custom.main.wordpress.pma.login_cookie_validity | default('36000') }}
     wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_app_repo_dir, '') }}"
+    container_mem_nginx: "{{ params.main.custom.memory.nginx }}"
+    container_mem_wordpress: "{{ params.main.custom.memory.wordpress }}"
+    container_mem_pma: "{{ params.main.custom.memory.pma }}"
+    container_mem_mysql: "{{ params.main.custom.memory.mysql }}"
+    container_mem_toolbox: "{{ params.main.custom.memory.toolbox }}"
+    container_mem_composer: "{{ params.main.custom.memory.composer }}"
+    container_mem_s3_uploads: "{{ params.main.custom.memory.s3_uploads }}"
+    container_mem_s3_db: "{{ params.main.custom.memory.s3_db }}"
 
 - src: "{{ var_main_dir }}/templates/wp.env"
   dest: "{{ var_main_dir }}/env/wordpress/.env"
   root: true
   params: 
-    env: "{{ item_params.env }}"
-    db_host: "{{ params.main.custom.mysql.host }}"
-    db_port: "{{ params.main.custom.mysql.port }}"
+    env: "{{ params.main.custom.main.wordpress.env }}"
+    db_host: "{{ params.main.custom.main.mysql.host }}"
+    db_port: "{{ params.main.custom.main.mysql.port }}"
     db_name: "{{ params.credentials.wordpress.db.name }}"
     db_user: "{{ params.credentials.wordpress.db.user }}"
     db_password: "{{ params.credentials.wordpress.db.password }}"
-    home: "{{ item_params.external_host }}"
-    siteurl: "{{ item_params.external_host }}"
+    home: "{{ var_wp_external_host }}"
     auth_key: "{{ params.credentials.wordpress.config.auth_key }}"
     secure_auth_key: "{{ params.credentials.wordpress.config.secure_auth_key }}"
     logged_in_key: "{{ params.credentials.wordpress.config.logged_in_key }}"
@@ -73,15 +96,16 @@ templates:
     secure_auth_salt: "{{ params.credentials.wordpress.config.secure_auth_salt }}"
     logged_in_salt: "{{ params.credentials.wordpress.config.logged_in_salt }}"
     nonce_salt: "{{ params.credentials.wordpress.config.nonce_salt }}"
-    table_prefix: "{{ params.main.custom.wordpress.table_prefix | default('wp_') }}"
-    wplang: "{{ params.main.custom.wordpress.lang }}"
-    wp_debug: "{{ params.main.custom.wordpress.debug | default(false) | lower }}"
+    table_prefix: "{{ params.main.custom.main.wordpress.table_prefix | default('wp_') }}"
+    wplang: "{{ params.main.custom.main.wordpress.lang }}"
+    wp_debug: "{{ params.main.custom.main.wordpress.debug | default(false) | lower }}"
 
 children:
 
 - name: "main/vars/vars.run.yml"
   params:
     env_params: {{ params | to_json }}
+    pod_custom_dir: "{{ var_main_dir }}"
     run: {{ var_run | to_json }}
     run_dict: {{ var_run_dict | to_json }}
     run_custom:

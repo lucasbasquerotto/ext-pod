@@ -1,0 +1,1 @@
+$cfg['LoginCookieValidity'] = {{ LOGIN_COOKIE_VALIDITY }};
