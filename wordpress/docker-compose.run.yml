@@ -1,0 +1,41 @@
+version: "2.4"
+
+x-logging:
+  mainlog: &mainlog
+    driver: "json-file"
+    options: 
+      max-size: "50m"
+
+services:
+  s3_uploads:
+    container_name: "${CTX_NAME}-run-s3_uploads"
+    hostname: "s3_uploads"
+    build: 
+      context: "s3_uploads/"
+      args:
+        IMAGE: lucasbasquerotto/wordpress
+        VERSION: toolbox-ubuntu-18.04-20190925
+    restart: "unless-stopped"
+    volumes: 
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: "512mb"
+    
+  s3_db:
+    container_name: "${CTX_NAME}-run-s3_db"
+    hostname: "s3_db"
+    build: 
+      context: "s3_db/"
+      args:
+        IMAGE: lucasbasquerotto/wordpress
+        VERSION: toolbox-ubuntu-18.04-20190925
+    restart: "unless-stopped"
+    volumes: 
+    - "$DATA_DIR:/var/main/data",
+    - "$DATA_DIR/tmp:/tmp/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: "512mb"
+    

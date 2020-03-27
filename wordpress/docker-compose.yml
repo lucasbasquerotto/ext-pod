@@ -1,0 +1,149 @@
+version: "2.4"
+
+x-logging:
+  mainlog: &mainlog
+    driver: "json-file"
+    options: 
+      max-size: "50m"
+
+volumes:
+  mysql: {}
+
+networks:
+  internet: 
+    driver: "bridge"
+  local: 
+    internal: true
+    driver: "bridge"
+
+services:
+  nginx:
+    container_name: "${CTX_NAME}-main-nginx"
+    hostname: "nginx"
+    build: 
+      context: "nginx/"
+      args:
+        IMAGE: nginx
+        VERSION: 1.14.2-alpine
+    restart: "unless-stopped"
+    depends_on:
+    - "wordpress"
+    - "phpmyadmin"
+    ports:
+    - "8080:80"
+    - "8443:443"
+    - "9080:9080"
+    - "9443:9443"
+    networks: 
+    - "internet"
+    - "local"
+    volumes: 
+    - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
+    logging: *mainlog
+    mem_limit: "512mb"
+    
+  wordpress:
+    container_name: "${CTX_NAME}-main-wordpress"
+    hostname: "wordpress"
+    build: 
+      context: "wordpress/"
+      args:
+        IMAGE: lucasbasquerotto/wordpress
+        VERSION: 0.0.2
+        WORDPRESS_INI_FILE_TYPE: development
+    restart: "unless-stopped"
+    environment:
+      DB_HOST: $DB_HOST:$DB_PORT
+      DB_NAME: $DB_NAME
+      DB_USER: $DB_USER
+    depends_on:
+    - "mysql"
+    networks: 
+    - "internet"
+    - "local"
+    volumes: 
+    - "$WP_APP_REPO_DIR:/var/www/html"
+    - "$DATA_DIR/wordpress/uploads:/var/www/html/web/app/uploads"
+    - "$DATA_DIR/tmp/wordpress:/tmp/main/wordpress"
+    logging: *mainlog
+    mem_limit: "512mb"
+    
+  phpmyadmin:
+    container_name: "${CTX_NAME}-main-phpmyadmin"
+    hostname: "phpmyadmin"
+    build: 
+      context: "phpmyadmin/"
+      args:
+        IMAGE: phpmyadmin/phpmyadmin
+        VERSION: 4.8.5
+    restart: "unless-stopped"
+    environment:
+      PMA_HOST: $DB_HOST
+      PMA_PORT: $DB_PORT
+    depends_on:
+    - "mysql"
+    networks: 
+    - "local"
+    volumes: 
+    - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
+    logging: *mainlog
+    mem_limit: "512mb"
+    
+  mysql:
+    container_name: "${CTX_NAME}-main-mysql"
+    hostname: "mysql"
+    build: 
+      context: "mysql/"
+      args:
+        IMAGE: lucasbasquerotto/wordpress
+        VERSION: mysql-8.0.16-02
+    restart: "unless-stopped"
+    environment:
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_PASSWORD: $DB_PASSWORD
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_USER: $DB_USER
+    networks: 
+    - "local"
+    volumes: 
+    - "mysql:/var/lib/mysql"
+    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    logging: *mainlog
+    mem_limit: "1gb"
+    
+  toolbox:
+    container_name: "${CTX_NAME}-main-toolbox"
+    hostname: "toolbox"
+    build: 
+      context: "toolbox/"
+      args:
+        IMAGE: lucasbasquerotto/wordpress
+        VERSION: toolbox-ubuntu-18.04-20190925
+    restart: "unless-stopped"
+    networks: 
+    - "internet"
+    - "local"
+    volumes: 
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: "512mb"
+    
+  composer:
+    container_name: "${CTX_NAME}-main-composer"
+    hostname: "composer"
+    build: 
+      context: "composer/"
+      args:
+        IMAGE: lucasbasquerotto/wordpress
+        VERSION: composer-1.8.6
+    restart: "unless-stopped"
+    volumes: 
+    - "$WP_APP_REPO_DIR:/var/www/html"
+    -  "$DATA_DIR/tmp/composer:/tmp/main/composer"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    working_dir: "/var/www/html"
+    mem_limit: "512mb"
+    
