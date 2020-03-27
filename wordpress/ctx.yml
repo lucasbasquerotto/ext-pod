@@ -26,7 +26,8 @@
 {% set var_wp_external_port = params.main.custom.domain.main_port %}
 {% set var_wp_external_host = (params.main.custom.domain.main_ssl | bool | ternary('https', 'http')) 
   + '://' + var_wp_domain
-  + ((var_wp_external_port in ['80', '443']) | ternary('', ':' + var_wp_external_port)) 
+  + (((var_wp_external_port | string) in ['80', '443']) 
+  | ternary('', ':' + (var_wp_external_port | string))) 
 %}
 
 ### main ###
@@ -37,7 +38,7 @@ templates:
   dest: "{{ var_main_dir }}/.env"
   root: true
   params: 
-    ctx_name: "{{ params.main.env_name }}-{{ params.main.ctx_name }}-{{ params.pod.name }}"
+    ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ params.pod.data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     nginx_image: "{{ params.main.custom.images.nginx_image }}"
@@ -56,7 +57,8 @@ templates:
     awscli_version: "{{ params.main.custom.images.awscli_version }}"
     main_domain: "{{ params.main.custom.domain.main_domain }}"
     main_domain_port: "{{ params.main.custom.domain.main_port }}"
-    pma_domain_port: "{{ params.main.custom.domain.pma_domain }}"
+    pma_domain: "{{ params.main.custom.domain.pma_domain }}"
+    pma_domain_port: "{{ params.main.custom.domain.pma_port }}"
     pma_port: "{{ params.main.custom.domain.pma_port }}"
     db_host: "{{ params.main.custom.main.mysql.host }}"
     db_port: "{{ params.main.custom.main.mysql.port }}"
