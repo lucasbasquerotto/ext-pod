@@ -7,7 +7,7 @@ x-logging:
       max-size: "50m"
 
 services:
-  s3_uploads:
+  wp_s3_uploads:
     container_name: "${CTX_NAME}-run-s3_uploads"
     hostname: "s3_uploads"
     build: 
@@ -27,7 +27,7 @@ services:
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_UPLOADS
     
-  s3_db:
+  wp_s3_db:
     container_name: "${CTX_NAME}-run-s3_db"
     hostname: "s3_db"
     build: 
