@@ -12,8 +12,7 @@ ARG MAIN_DOMAIN_PORT
 ARG PMA_DOMAIN
 ARG PMA_DOMAIN_PORT
 
-RUN mkdir /aws \
- && cat /tmp/tpl/config.user.inc | \
+RUN cat /tmp/tpl/nginx.conf | \
     MAIN_DOMAIN="${MAIN_DOMAIN}" \
     MAIN_DOMAIN_PORT="${MAIN_DOMAIN_PORT}" \
     PMA_DOMAIN="${PMA_DOMAIN}" \
@@ -23,7 +22,7 @@ RUN mkdir /aws \
     -e 's/\Q{{MAIN_DOMAIN_PORT}}\E/$ENV{MAIN_DOMAIN_PORT}/g;' \
     -e 's/\Q{{PMA_DOMAIN}}\E/$ENV{PMA_DOMAIN}/g;' \
     -e 's/\Q{{PMA_DOMAIN_PORT}}\E/$ENV{PMA_DOMAIN_PORT}/g;' \
-    > /config.user.inc
+    > /nginx.conf
 
 FROM $IMAGE:$VERSION
 

@@ -26,6 +26,7 @@ services:
       args:
         IMAGE: $NGINX_IMAGE
         VERSION: $NGINX_VERSION
+        PERL_VERSION: $PERL_VERSION
         MAIN_DOMAIN: $MAIN_DOMAIN
         MAIN_DOMAIN_PORT: $MAIN_DOMAIN_PORT
         PMA_DOMAIN: $PMA_DOMAIN
@@ -81,6 +82,7 @@ services:
       args:
         IMAGE: $PMA_IMAGE
         VERSION: $PMA_VERSION
+        PERL_VERSION: $PERL_VERSION
         LOGIN_COOKIE_VALIDITY: $PMA_LOGIN_COOKIE_VALIDITY
     restart: "unless-stopped"
     environment:

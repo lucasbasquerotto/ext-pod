@@ -13,8 +13,15 @@
 {% set var_wp_pod_type = params.main.type %}
 
 {% set var_main_dir = params.main.custom_dir + '/wordpress' %}
+
+{% set var_pod_dir_rel = '../..' %}
+{% set var_data_dir = var_local 
+  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
+{% set var_data_dir_task = params.pod.local_data_dir_inside 
+  | default(params.pod.data_dir, true) 
+%}
 {% set var_apps_dir_base = params.dirs.apps_dir_base %}
-{% set var_app_repo_dir = var_apps_dir_base + '/' + 
+{% set var_app_repo_dir = var_pod_dir_rel + '/' + var_apps_dir_base + '/' + 
   (params.pod.app.wp_local.dir_rel | default('')) 
 %}
 {% set var_wp_app_name = params.main.custom.main.wordpress.app_name | default('') %}
@@ -32,6 +39,14 @@
 
 ### main ###
 
+volumes:
+
+- path: "{{ var_data_dir_task + '/mysql' }}"
+  mode: "0755"
+
+- path: "{{ var_data_dir_task + '/wordpress/uploads' }}"
+  mode: "0777"
+
 templates:
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
@@ -39,7 +54,7 @@ templates:
   root: true
   params: 
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
-    data_dir: "{{ params.pod.data_dir }}"
+    data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     nginx_image: "{{ params.main.custom.images.nginx_image }}"
     nginx_version: "{{ params.main.custom.images.nginx_version }}"

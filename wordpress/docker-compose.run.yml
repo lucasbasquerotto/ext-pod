@@ -41,7 +41,7 @@ services:
         S3_SECRET_KEY: $S3_DB_SECRET_KEY
     restart: "unless-stopped"
     volumes: 
-    - "$DATA_DIR:/var/main/data",
+    - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     logging: *mainlog
     command: "tail -f /dev/null"
