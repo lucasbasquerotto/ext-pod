@@ -12,7 +12,7 @@
 
 {% set var_wp_pod_type = params.main.type | default('') %}
 
-{% if var_wp_pod_type in ['app', 'web', 'db'] %}
+{% if not (var_wp_pod_type in ['app', 'web', 'db']) %}
   {% set error = {} %}
   {{ error['error.pod_type.invalid.' + var_wp_pod_type] }}
 {% endif %}
@@ -25,22 +25,11 @@
 {% set var_data_dir_task = params.pod.local_data_dir_inside 
   | default(params.pod.data_dir, true) 
 %}
-{% set var_apps_dir_base = params.dirs.apps_dir_base %}
-{% set var_app_repo_dir = var_pod_dir_rel + '/' + var_apps_dir_base + '/' + 
-  (params.pod.app.wp_local.dir_rel | default('')) 
-%}
-{% set var_wp_app_name = params.main.custom_args.wordpress.app_name | default('') %}
-{% set var_dev_repo_dir_wordpress = var_local 
-  | ternary(params.pod.app[var_wp_app_name].dir_rel | default(''), '') 
-%}
 
-{% set var_wp_domain = params.main.custom_domain.main_domain %}
-{% set var_wp_external_port = params.main.custom_domain.main_port %}
-{% set var_wp_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http')) 
-  + '://' + var_wp_domain
-  + (((var_wp_external_port | string) in ['80', '443']) 
-  | ternary('', ':' + (var_wp_external_port | string))) 
+{% set var_orchestration_main_file = 'docker-compose.' + var_wp_pod_type +
+  (var_local | ternary('.dev.yml', '.yml')) 
 %}
+{% set var_orchestration_run_file = 'docker-compose.run.yml' %}
 
 ### main ###
 
@@ -85,6 +74,11 @@ templates:
 
     {% if var_wp_pod_type in ['app', 'web'] %}
 
+    {% set var_apps_dir_base = params.dirs.apps_dir_base %}
+    {% set var_app_repo_dir = var_pod_dir_rel + '/' + var_apps_dir_base + '/' + 
+      (params.pod.app.wp_local.dir_rel | default('')) 
+    %}
+    
     nginx_image: "{{ params.main.custom_images.nginx_image }}"
     nginx_version: "{{ params.main.custom_images.nginx_version }}"
     wordpress_image: "{{ params.main.custom_images.wordpress_image }}"
@@ -125,6 +119,14 @@ templates:
 
 {% if var_wp_pod_type in ['app', 'web'] %}
 
+{% set var_wp_domain = params.main.custom_domain.main_domain %}
+{% set var_wp_external_port = params.main.custom_domain.main_port %}
+{% set var_wp_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http')) 
+  + '://' + var_wp_domain
+  + (((var_wp_external_port | string) in ['80', '443']) 
+  | ternary('', ':' + (var_wp_external_port | string))) 
+%}
+
 - src: "{{ var_main_dir }}/templates/wp.env"
   dest: "{{ var_main_dir }}/env/wordpress/.env"
   root: true
@@ -160,5 +162,14 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_custom:
       var_wp_pod_type: "{{ var_wp_pod_type }}"
-      var_dev_repo_dir_wordpress: >-
-        {{ var_local | ternary(params.pod.app[var_wp_app_name].dir_rel | default(''), '') }}
+      var_orchestration_main_file: "{{ var_orchestration_main_file }}"
+      var_orchestration_run_file: "{{ var_orchestration_run_file }}"
+
+      {% if var_local and (var_wp_pod_type in ['app', 'web']) %}
+
+      {% set var_wp_app_name = params.main.custom_args.wordpress.app_name | default('') %}
+      {% set var_dev_repo_dir_wordpress = params.pod.app[var_wp_app_name].dir_rel | default('') %}
+
+      var_dev_repo_dir_wordpress: "{{ var_dev_repo_dir_wordpress }}"
+
+      {% endif %}
