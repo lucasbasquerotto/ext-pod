@@ -55,7 +55,7 @@ services:
       args:
         IMAGE: $WORDPRESS_IMAGE
         VERSION: $WORDPRESS_VERSION
-        WORDPRESS_ENV: $WORDPRESS_ENV
+        WORDPRESS_INI_FILE_TYPE: $WORDPRESS_INI_FILE_TYPE
     restart: "unless-stopped"
     environment:
       DB_HOST: $DB_HOST:$DB_PORT
