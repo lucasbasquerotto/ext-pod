@@ -7,8 +7,6 @@ pod_layer_dir="$POD_LAYER_DIR"
 
 . "${pod_vars_dir}/vars.sh"
 
-pod_env_shared_file="$pod_layer_dir/main/log/scripts/efk.sh"
-
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
@@ -25,6 +23,8 @@ if [ -z "$command" ]; then
 fi
 
 shift;
+
+pod_env_shared_file="$pod_layer_dir/main/log/scripts/efk.sh"
 
 case "$command" in
   *)
