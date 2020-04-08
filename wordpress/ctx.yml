@@ -4,8 +4,6 @@
 {% set var_run = params.main.run | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
 
-{% set var_containers_dict = params.main.containers_dict | default({}) %}
-
 ## general vars - end ###
 
 ### others ###

@@ -1,0 +1,74 @@
+## general vars - start ###
+
+{% set var_local = params.main.local | default(false) | bool %}
+{% set var_run = params.main.run | default({}) %}
+{% set var_run_dict = params.main.run_dict | default({}) %}
+
+## general vars - end ###
+
+### others ###
+
+{% set var_pod_type = params.main.type | default('') %}
+
+{% if not (var_pod_type in ['app']) %}
+  {% set error = {} %}
+  {{ error['error.pod_type.invalid.' + var_pod_type] }}
+{% endif %}
+
+{% set var_main_dir = params.main.custom_dir + '/efk' %}
+
+{% set var_pod_dir_rel = '../..' %}
+{% set var_data_dir = var_local 
+  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
+{% set var_data_dir_task = params.pod.local_data_dir_inside 
+  | default(params.pod.data_dir, true) 
+%}
+
+{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type +
+  (var_local | ternary('.dev.yml', '.yml')) 
+%}
+{% set var_orchestration_run_file = 'docker-compose.run.yml' %}
+
+### main ###
+
+volumes:
+
+- rel_path: "{{ var_data_dir_task }}/elasticsearch"
+  mode: "0777"
+
+templates:
+
+- src: "{{ var_main_dir }}/templates/docker-compose.env"
+  dest: "{{ var_main_dir }}/.env"
+  root: true
+  params: 
+    ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
+    data_dir: "{{ var_data_dir }}"
+    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    type: "{{ var_pod_type }}"
+    fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
+    fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
+    elasticsearch_image: "{{ params.main.custom_images.elasticsearch_image }}"
+    elasticsearch_version: "{{ params.main.custom_images.elasticsearch_version }}"
+    kibana_image: "{{ params.main.custom_images.kibana_image }}"
+    kibana_version: "{{ params.main.custom_images.kibana_version }}"   
+    elasticsearch_java_opts: "{{ params.main.custom_args.elasticsearch.java_opts }}" 
+    fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
+    elasticsearch_port: "{{ params.main.custom_args.elasticsearch.port }}"
+    kibana_port: "{{ params.main.custom_args.kibana.port }}"    
+    container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
+    container_mem_elasticsearch: "{{ params.main.custom_memory.elasticsearch }}"
+    container_mem_kibana: "{{ params.main.custom_memory.kibana }}"
+
+children:
+
+- name: "main/vars/vars.run.yml"
+  params:
+    env_params: {{ params | to_json }}
+    pod_custom_dir: "{{ var_main_dir }}"
+    run: {{ var_run | to_json }}
+    run_dict: {{ var_run_dict | to_json }}
+    run_custom:
+      var_pod_type: "{{ var_pod_type }}"
+      var_orchestration_main_file: "{{ var_orchestration_main_file }}"
+      var_orchestration_run_file: "{{ var_orchestration_run_file }}"
