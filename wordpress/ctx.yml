@@ -93,7 +93,11 @@ templates:
       {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
     s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
     s3_uploads_secret_key: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
-    wordpress_env: "{{ params.main.custom_args.wordpress.env }}"
+    wordpress_ini_file_type: >-
+      {{ 
+      (params.main.custom_args.wordpress.env == 'production') | 
+      ternary('production', 'development') 
+      }}
     wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_app_repo_dir, '') }}"
     container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
     container_mem_wordpress: "{{ params.main.custom_memory.wordpress }}"
