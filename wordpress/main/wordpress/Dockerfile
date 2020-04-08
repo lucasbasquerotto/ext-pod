@@ -3,8 +3,8 @@ ARG VERSION
 
 FROM $IMAGE:$VERSION
 
-ARG WORDPRESS_ENV
+ARG WORDPRESS_INI_FILE_TYPE
 
 COPY --chown=www-data:www-data /env/wordpress/.env /var/www/html/
 
-RUN mv "$PHP_INI_DIR/php.ini-$WORDPRESS_ENV" "$PHP_INI_DIR/php.ini" 
+RUN mv "$PHP_INI_DIR/php.ini-$WORDPRESS_INI_FILE_TYPE" "$PHP_INI_DIR/php.ini" 
