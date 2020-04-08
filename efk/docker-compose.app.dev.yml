@@ -16,7 +16,8 @@ services:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
     build: 
-      context: "main/fluentd/"
+      context: .
+      dockerfile: "main/fluentd/Dockerfile"
       args:
         IMAGE: "$FLUENTD_IMAGE"
         VERSION: "$FLUENTD_VERSION"
@@ -33,7 +34,8 @@ services:
     container_name: "${CTX_NAME}-main-elasticsearch"
     hostname: "elasticsearch"
     build: 
-      context: "main/elasticsearch/"
+      context: .
+      dockerfile: "main/elasticsearch/Dockerfile"
       args:
         IMAGE: "$ELASTICSEARCH_IMAGE"
         VERSION: "$ELASTICSEARCH_VERSION"
@@ -58,7 +60,8 @@ services:
     container_name: "${CTX_NAME}-main-kibana"
     hostname: "kibana"
     build: 
-      context: "main/kibana/"
+      context: .
+      dockerfile: "main/kibana/Dockerfile"
       args:
         IMAGE: "$KIBANA_IMAGE"
         VERSION: "$KIBANA_VERSION"

@@ -33,7 +33,7 @@
 
 volumes:
 
-- rel_path: "{{ var_data_dir_task }}/elasticsearch"
+- path: "{{ var_data_dir_task }}/elasticsearch"
   mode: "0777"
 
 templates:
@@ -51,7 +51,7 @@ templates:
     elasticsearch_image: "{{ params.main.custom_images.elasticsearch_image }}"
     elasticsearch_version: "{{ params.main.custom_images.elasticsearch_version }}"
     kibana_image: "{{ params.main.custom_images.kibana_image }}"
-    kibana_version: "{{ params.main.custom_images.kibana_version }}"   
+    kibana_version: "{{ params.main.custom_images.kibana_version }}"
     elasticsearch_java_opts: "{{ params.main.custom_args.elasticsearch.java_opts }}" 
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     elasticsearch_port: "{{ params.main.custom_args.elasticsearch.port }}"
