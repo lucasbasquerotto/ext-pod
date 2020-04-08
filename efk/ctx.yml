@@ -24,10 +24,7 @@
   | default(params.pod.data_dir, true) 
 %}
 
-{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type +
-  (var_local | ternary('.dev.yml', '.yml')) 
-%}
-{% set var_orchestration_run_file = 'docker-compose.run.yml' %}
+{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.yml' %}
 
 ### main ###
 
@@ -71,4 +68,3 @@ children:
     run_custom:
       var_pod_type: "{{ var_pod_type }}"
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"
-      var_orchestration_run_file: "{{ var_orchestration_run_file }}"
