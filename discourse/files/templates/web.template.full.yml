@@ -1,0 +1,287 @@
+env:
+  # You can have redis on a different box
+  RAILS_ENV: 'production'
+  UNICORN_WORKERS: 3
+  UNICORN_SIDEKIQS: 1
+  # this gives us very good cache coverage, 96 -> 99
+  # in practice it is 1-2% perf improvement
+  RUBY_GLOBAL_METHOD_CACHE_SIZE: 131072
+  # stop heap doubling in size so aggressively, this conserves memory
+  RUBY_GC_HEAP_GROWTH_MAX_SLOTS: 40000
+  RUBY_GC_HEAP_INIT_SLOTS: 400000
+  RUBY_GC_HEAP_OLDOBJECT_LIMIT_FACTOR: 1.5
+
+  DISCOURSE_DB_SOCKET: /var/run/postgresql
+  DISCOURSE_DB_HOST:
+  DISCOURSE_DB_PORT:
+
+
+params:
+  # SSH key is required for remote access into the container
+  version: tests-passed
+
+  home: /var/www/discourse
+  upload_size: 10m
+
+run:
+  - exec: thpoff echo "thpoff is installed!"
+  - exec: /usr/local/bin/ruby -e 'if ENV["DISCOURSE_SMTP_ADDRESS"] == "smtp.example.com"; puts "Aborting! Mail is not configured!"; exit 1; end'
+  - exec: /usr/local/bin/ruby -e 'if ENV["DISCOURSE_HOSTNAME"] == "discourse.example.com"; puts "Aborting! Domain is not configured!"; exit 1; end'
+  - exec: /usr/local/bin/ruby -e 'if (ENV["DISCOURSE_CDN_URL"] || "")[0..2] == "//"; puts "Aborting! CDN must have a protocol specified. Once fixed you should rebake your posts now to correct all posts."; exit 1; end'
+  - exec: chown -R discourse /home/discourse
+  # TODO: move to base image (anacron can not be fired up using rc.d)
+  - exec: rm -f /etc/cron.d/anacron
+  - file:
+     path: /etc/cron.d/anacron
+     contents: |
+        SHELL=/bin/sh
+        PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+        30 7    * * *   root	/usr/sbin/anacron -s >/dev/null
+  - file:
+     path: /etc/runit/1.d/copy-env
+     chmod: "+x"
+     contents: |
+        #!/bin/bash
+        env > ~/boot_env
+        conf=/var/www/discourse/config/discourse.conf
+
+        # find DISCOURSE_ env vars, strip the leader, lowercase the key
+        /usr/local/bin/ruby -e 'ENV.each{|k,v| puts "#{$1.downcase} = '\''#{v}'\''" if k =~ /^DISCOURSE_(.*)/}' > $conf
+
+  - file:
+     path: /etc/service/unicorn/run
+     chmod: "+x"
+     contents: |
+        #!/bin/bash
+        exec 2>&1
+        # redis
+        # postgres
+        cd $home
+        chown -R discourse:www-data /shared/log/rails
+        LD_PRELOAD=$RUBY_ALLOCATOR HOME=/home/discourse USER=discourse exec thpoff chpst -u discourse:www-data -U discourse:www-data bundle exec config/unicorn_launcher -E production -c config/unicorn.conf.rb
+
+  - file:
+     path: /etc/service/nginx/run
+     chmod: "+x"
+     contents: |
+        #!/bin/sh
+        exec 2>&1
+        exec /usr/sbin/nginx
+
+  - file:
+     path: /etc/runit/3.d/01-nginx
+     chmod: "+x"
+     contents: |
+       #!/bin/bash
+       sv stop nginx
+
+  - file:
+     path: /etc/runit/3.d/02-unicorn
+     chmod: "+x"
+     contents: |
+       #!/bin/bash
+       sv stop unicorn
+
+  - exec:
+      cd: $home
+      hook: code
+      cmd:
+        - git reset --hard
+        - git clean -f
+        - git remote set-branches --add origin master
+        - git pull
+        - git fetch origin $version
+        - git checkout $version
+        - mkdir -p tmp/pids
+        - mkdir -p tmp/sockets
+        - touch tmp/.gitkeep
+        - mkdir -p                    /shared/log/rails
+        - bash -c "touch -a           /shared/log/rails/{production,production_errors,unicorn.stdout,unicorn.stderr,sidekiq}.log"
+        - bash -c "ln    -s           /shared/log/rails/{production,production_errors,unicorn.stdout,unicorn.stderr,sidekiq}.log $home/log"
+        - bash -c "mkdir -p           /shared/{uploads,backups}"
+        - bash -c "ln    -s           /shared/{uploads,backups} $home/public"
+        - bash -c "mkdir -p           /shared/tmp/{backups,restores}"
+        - bash -c "ln    -s           /shared/tmp/{backups,restores} $home/tmp"
+        - chown -R discourse:www-data /shared/log/rails /shared/uploads /shared/backups /shared/tmp
+
+  - exec:
+      cmd:
+        - "cp $home/config/nginx.sample.conf /etc/nginx/conf.d/discourse.conf"
+        - "rm /etc/nginx/sites-enabled/default"
+        - "mkdir -p /var/nginx/cache"
+
+  - replace:
+      filename: /etc/nginx/nginx.conf
+      from: pid /run/nginx.pid;
+      to: daemon off;
+
+  - replace:
+      filename: "/etc/nginx/conf.d/discourse.conf"
+      from: /upstream[^\}]+\}/m
+      to: "upstream discourse {
+        server 127.0.0.1:3000;
+      }"
+
+  - replace:
+      filename: "/etc/nginx/conf.d/discourse.conf"
+      from: /server_name.+$/
+      to: server_name _ ;
+
+  - replace:
+      filename: "/etc/nginx/conf.d/discourse.conf"
+      from: /client_max_body_size.+$/
+      to: client_max_body_size $upload_size ;
+
+  - exec:
+      cmd: echo "done configuring web"
+      hook: web_config
+
+  - exec:
+      cd: $home
+      hook: web
+      cmd:
+        # ensure we are on latest bundler
+        - gem update bundler
+        - find $home ! -user discourse -exec chown discourse {} \+
+
+  - exec:
+      cd: $home
+      hook: bundle_exec
+      cmd:
+        - su discourse -c 'bundle install --deployment --retry 3 --jobs 4 --verbose --without test development'
+  - exec:
+      cd: $home
+      hook: db_migrate
+      cmd:
+        - su discourse -c 'bundle exec rake db:migrate'
+  - exec:
+      cd: $home
+      hook: assets_precompile
+      cmd:
+        - su discourse -c 'bundle exec rake assets:precompile'
+  - file:
+     path: /usr/local/bin/discourse
+     chmod: +x
+     contents: |
+       #!/bin/bash
+       (cd /var/www/discourse && RAILS_ENV=production sudo -H -E -u discourse bundle exec script/discourse "$@")
+
+  - file:
+     path: /usr/local/bin/rails
+     chmod: +x
+     contents: |
+       #!/bin/bash
+       # If they requested a console, load pry instead
+       if [ "$*" == "c" -o "$*" == "console" ]
+       then
+        (cd /var/www/discourse && RAILS_ENV=production sudo -H -E -u discourse bundle exec pry -r ./config/environment)
+       else
+        (cd /var/www/discourse && RAILS_ENV=production sudo -H -E -u discourse bundle exec script/rails "$@")
+       fi
+
+  - file:
+     path: /usr/local/bin/rake
+     chmod: +x
+     contents: |
+       #!/bin/bash
+       (cd /var/www/discourse && RAILS_ENV=production sudo -H -E -u discourse bundle exec bin/rake "$@")
+
+  - file:
+     path: /usr/local/bin/rbtrace
+     chmod: +x
+     contents: |
+       #!/bin/bash
+       (cd /var/www/discourse && RAILS_ENV=production sudo -H -E -u discourse bundle exec rbtrace "$@")
+
+  - file:
+     path: /usr/local/bin/stackprof
+     chmod: +x
+     contents: |
+       #!/bin/bash
+       (cd /var/www/discourse && RAILS_ENV=production sudo -H -E -u discourse bundle exec stackprof "$@")
+
+  - file:
+     path: /etc/update-motd.d/10-web
+     chmod: +x
+     contents: |
+       #!/bin/bash
+       echo
+       echo Use: rails, rake or discourse to execute commands in production
+       echo
+
+  - file:
+     path: /etc/logrotate.d/rails
+     contents: |
+        /shared/log/rails/*.log
+        {
+                rotate 7
+                dateext
+                daily
+                missingok
+                delaycompress
+                compress
+                postrotate
+                sv 1 unicorn
+                endscript
+        }
+
+  - file:
+     path: /etc/logrotate.d/nginx
+     contents: |
+        /var/log/nginx/*.log {
+          daily
+          missingok
+          rotate 7
+          compress
+          delaycompress
+          create 0644 www-data www-data
+          sharedscripts
+          postrotate
+            sv 1 nginx
+          endscript
+        }
+
+  # move state out of the container this fancy is done to support rapid rebuilds of containers,
+  # we store anacron and logrotate state outside the container to ensure its maintained across builds
+  # later move this snipped into an intialization script
+  # we also ensure all the symlinks we need to /shared are in place in the correct structure
+  # this allows us to bootstrap on one machine and then run on another
+  - file:
+      path: /etc/runit/1.d/00-ensure-links
+      chmod: +x
+      contents: |
+        #!/bin/bash
+        if [[ ! -L /var/lib/logrotate ]]; then
+          rm -fr /var/lib/logrotate
+          mkdir -p /shared/state/logrotate
+          ln -s /shared/state/logrotate /var/lib/logrotate
+        fi
+        if [[ ! -L /var/spool/anacron ]]; then
+          rm -fr /var/spool/anacron
+          mkdir -p /shared/state/anacron-spool
+          ln -s /shared/state/anacron-spool /var/spool/anacron
+        fi
+        if [[ ! -d /shared/log/rails ]]; then
+          mkdir -p /shared/log/rails
+          chown -R discourse:www-data /shared/log/rails
+        fi
+        if [[ ! -d /shared/uploads ]]; then
+          mkdir -p /shared/uploads
+          chown -R discourse:www-data /shared/uploads
+        fi
+        if [[ ! -d /shared/backups ]]; then
+          mkdir -p /shared/backups
+          chown -R discourse:www-data /shared/backups
+        fi
+
+        rm -rf /shared/tmp/{backups,restores}
+        mkdir -p /shared/tmp/{backups,restores}
+        chown -R discourse:www-data /shared/tmp/{backups,restores}
+
+  # change login directory to Discourse home
+  - file:
+     path: /root/.bash_profile
+     chmod: 644
+     contents: |
+        cd $home

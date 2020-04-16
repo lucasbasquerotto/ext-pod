@@ -10,7 +10,7 @@
 
 {% set var_pod_type = params.main.type | default('') %}
 
-{% if not (var_pod_type in ['app']) %}
+{% if not (var_pod_type in ['app', 'external']) %}
   {% set error = {} %}
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
