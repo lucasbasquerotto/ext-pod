@@ -119,6 +119,23 @@ templates:
 
     {% endif %}
 
+    {% if var_wp_pod_type in ['web', 'db'] %}
+
+    fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
+    fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
+    fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
+    container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
+
+    elasticsearch_host_ip: "{{ params.dependencies_node_ip_dict['elasticsearch'] }}"
+    
+    {% endif %}
+
+    {% if var_wp_pod_type in ['web'] %}
+
+    mysql_host_ip: "{{ params.dependencies_node_ip_dict['mysql'] }}"
+
+    {% endif %}
+
 {% if var_wp_pod_type in ['app', 'web'] %}
 
 {% set var_wp_domain = params.main.custom_domain.main_domain %}
