@@ -2,9 +2,10 @@ version: "2.4"
 
 x-logging:
   mainlog: &mainlog
-    driver: "json-file"
+    driver: "fluentd"
     options: 
-      max-size: "50m"
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"  
 
 services:
   wp_s3_uploads:
