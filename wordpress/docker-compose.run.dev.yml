@@ -27,9 +27,9 @@ services:
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_UPLOADS
     
-  wp_s3_db:
-    container_name: "${CTX_NAME}-run-s3_db"
-    hostname: "s3_db"
+  wp_s3_backup:
+    container_name: "${CTX_NAME}-run-s3_backup"
+    hostname: "s3_backup"
     build: 
       context: .
       dockerfile: "main/awscli/Dockerfile"
@@ -37,13 +37,13 @@ services:
         IMAGE: $AWSCLI_IMAGE
         VERSION: $AWSCLI_VERSION
         PERL_VERSION: $PERL_VERSION
-        S3_ACCESS_KEY: $S3_DB_ACCESS_KEY
-        S3_SECRET_KEY: $S3_DB_SECRET_KEY
+        S3_ACCESS_KEY: $S3_BACKUP_ACCESS_KEY
+        S3_SECRET_KEY: $S3_BACKUP_SECRET_KEY
     restart: "unless-stopped"
     volumes: 
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     logging: *mainlog
     command: "tail -f /dev/null"
-    mem_limit: $CONTAINER_MEM_S3_DB
+    mem_limit: $CONTAINER_MEM_S3_BACKUP
     
