@@ -1,2 +1,6 @@
 /wordpress/.env
 /wordpress/env/
+
+tmp*
+
+!tmp*.*
