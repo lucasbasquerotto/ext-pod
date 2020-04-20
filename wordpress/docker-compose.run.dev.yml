@@ -1,0 +1,49 @@
+version: "2.4"
+
+x-logging:
+  mainlog: &mainlog
+    driver: "json-file"
+    options: 
+      max-size: "50m"
+
+services:
+  wp_s3_uploads:
+    container_name: "${CTX_NAME}-run-s3_uploads"
+    hostname: "s3_uploads"
+    build: 
+      context: .
+      dockerfile: "main/awscli/Dockerfile"
+      args:
+        IMAGE: $AWSCLI_IMAGE
+        VERSION: $AWSCLI_VERSION
+        PERL_VERSION: $PERL_VERSION
+        S3_ACCESS_KEY: $S3_UPLOADS_ACCESS_KEY
+        S3_SECRET_KEY: $S3_UPLOADS_SECRET_KEY
+    restart: "unless-stopped"
+    volumes: 
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_S3_UPLOADS
+    
+  wp_s3_db:
+    container_name: "${CTX_NAME}-run-s3_db"
+    hostname: "s3_db"
+    build: 
+      context: .
+      dockerfile: "main/awscli/Dockerfile"
+      args:
+        IMAGE: $AWSCLI_IMAGE
+        VERSION: $AWSCLI_VERSION
+        PERL_VERSION: $PERL_VERSION
+        S3_ACCESS_KEY: $S3_DB_ACCESS_KEY
+        S3_SECRET_KEY: $S3_DB_SECRET_KEY
+    restart: "unless-stopped"
+    volumes: 
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_S3_DB
+    

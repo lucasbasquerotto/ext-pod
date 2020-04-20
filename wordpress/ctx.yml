@@ -27,7 +27,9 @@
 {% set var_orchestration_main_file = 'docker-compose.' + var_wp_pod_type +
   (var_local | ternary('.dev.yml', '.yml')) 
 %}
-{% set var_orchestration_run_file = 'docker-compose.run.yml' %}
+{% set var_orchestration_run_file = 'docker-compose.run.' +
+  (var_local | ternary('.dev.yml', '.yml')) 
+%}
 
 ### main ###
 
@@ -119,14 +121,25 @@ templates:
 
     {% endif %}
 
-    {% if var_wp_pod_type in ['web', 'db'] %}
+    {% if not var_local %}
 
     fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
     fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
 
+    {% if var_wp_pod_type in ['app'] %}
+
+    fluentd_output_plugin: "file"
+    
+    {% endif %}
+
+    {% if var_wp_pod_type in ['web', 'db'] %}
+
+    fluentd_output_plugin: "elasticsearch"
     elasticsearch_host_ip: "{{ params.dependencies_node_ip_dict['elasticsearch'] }}"
+    
+    {% endif %}
     
     {% endif %}
 

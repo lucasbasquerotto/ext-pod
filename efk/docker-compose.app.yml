@@ -21,12 +21,15 @@ services:
       args:
         IMAGE: "$FLUENTD_IMAGE"
         VERSION: "$FLUENTD_VERSION"
+        OUTPUT_PLUGIN: "elasticsearch"
     restart: "unless-stopped"
     ports:
     - "$FLUENTD_PORT:24224"
     - "$FLUENTD_PORT:24224/udp"
     networks:
     - "log"
+    volumes: 
+    - "$DATA_DIR/log/fluentd:/var/log/fluentd/"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_FLUENTD
     

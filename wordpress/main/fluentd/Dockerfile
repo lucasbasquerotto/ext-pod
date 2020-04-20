@@ -5,7 +5,9 @@ FROM $IMAGE:$VERSION
 
 USER root
 
-COPY /main/fluentd/elasticsearch.conf /fluentd/etc/fluent.conf
+ARG OUTPUT_PLUGIN
+
+COPY /main/fluentd/${OUTPUT_PLUGIN}.conf /fluentd/etc/fluent.conf
 
 RUN chmod +rx /fluentd/etc/fluent.conf
 

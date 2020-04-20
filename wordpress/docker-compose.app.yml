@@ -155,12 +155,15 @@ services:
       args:
         IMAGE: $FLUENTD_IMAGE
         VERSION: $FLUENTD_VERSION
+        OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
     restart: "unless-stopped"
     ports:
     - "$FLUENTD_PORT:24224"
     - "$FLUENTD_PORT:24224/udp"
     networks:
     - "log"
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/fluentd/"
     logging: *jsonlog
     mem_limit: $CONTAINER_MEM_FLUENTD
     
