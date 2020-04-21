@@ -24,11 +24,11 @@
   | default(params.pod.data_dir, true) 
 %}
 
-{% set var_orchestration_main_file = 'docker-compose.' + var_wp_pod_type +
-  (var_local | ternary('.dev.yml', '.yml')) 
+{% set var_orchestration_main_file = 'docker-compose.' + var_wp_pod_type + '.' +
+  (var_local | ternary('dev.yml', 'yml')) 
 %}
 {% set var_orchestration_run_file = 'docker-compose.run.' +
-  (var_local | ternary('.dev.yml', '.yml')) 
+  (var_local | ternary('dev.yml', 'yml')) 
 %}
 
 ### main ###
