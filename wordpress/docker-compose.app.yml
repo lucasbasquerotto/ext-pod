@@ -173,7 +173,7 @@ services:
     networks:
     - "log"
     volumes:
-    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd/"
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     logging: *jsonlog
     mem_limit: $CONTAINER_MEM_FLUENTD
     

@@ -51,6 +51,13 @@ volumes:
 
 {% endif %}
 
+{% if not var_local %}
+
+- path: "{{ var_data_dir_task + '/log/fluentd' }}"
+  mode: "0777"
+
+{% endif %}
+
 templates:
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"

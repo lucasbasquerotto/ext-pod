@@ -29,7 +29,7 @@ services:
     networks:
     - "log"
     volumes: 
-    - "$DATA_DIR/log/fluentd:/var/log/fluentd/"
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_FLUENTD
     
