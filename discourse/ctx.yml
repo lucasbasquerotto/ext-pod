@@ -1,13 +1,7 @@
 ## vars ###
 
 {% set var_main_dir = 'discourse' %}
-{% set var_containers = params.main.containers | default({}) %}
-{% set var_pod_type = params.main.type | default('') %}
-
-{% if not (var_pod_type in ['app', 'web', 'db']) %}
-  {% set error = {} %}
-  {{ error['error.pod_type.invalid.' + var_pod_type] }}
-{% endif %}
+{% set var_containers = params.main.containers | default([]) %}
 
 {% set var_templates_files = [
   'web.template.build.yml',
@@ -35,6 +29,6 @@ templates:
 - src: "{{ var_main_dir }}/templates/containers/{{ item.name_src }}"
   dest: "{{ var_main_dir }}/repo/containers/{{ item.name_dest }}"
   root: true
-  params: "{{ item.params }}"
+  params: {{ item.params | to_json }}
 
 {% endfor %}
