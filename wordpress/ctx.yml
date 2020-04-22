@@ -77,6 +77,9 @@ templates:
     db_name: "{{ params.credentials.wordpress.db.name }}"
     db_user: "{{ params.credentials.wordpress.db.user }}"
     db_password: "{{ params.credentials.wordpress.db.password }}"
+    s3_backup_access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
+    s3_backup_secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
+    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
 
     {% if var_wp_pod_type in ['app', 'web'] %}
@@ -121,10 +124,7 @@ templates:
     mysql_image: "{{ params.main.custom_images.mysql_image }}"
     mysql_version: "{{ params.main.custom_images.mysql_version }}"
     mysql_root_password: "{{ params.credentials.mysql.root_password }}"
-    s3_backup_access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
-    s3_backup_secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
     container_mem_mysql: "{{ params.main.custom_memory.mysql }}"
-    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
 
     {% endif %}
 
