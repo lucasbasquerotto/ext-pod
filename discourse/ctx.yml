@@ -26,9 +26,20 @@ templates:
 
 {% for item in var_containers %}
 
+{% set var_docker_args = item.params.docker_args | default([]) %}
+{% set ns_docker_args = namespace(list=var_docker_args) %}
+
+{% for subitem in params.dependencies | default([]) %}
+  {% set ns_docker_args.list = ns_docker_args.list + 
+    ['--add-host ' + subitem.host + ':' + subitem.ip]
+  %}
+{% endfor %}
+
+{% set var_params = item.params | combine({ 'docker_args': ns_docker_args.list }) %}
+
 - src: "{{ var_main_dir }}/templates/containers/{{ item.name_src }}"
   dest: "{{ var_main_dir }}/repo/containers/{{ item.name_dest }}"
   root: true
-  params: {{ item.params | to_json }}
+  params: {{ var_params | to_json }}
 
 {% endfor %}
