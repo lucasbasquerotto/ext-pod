@@ -6,8 +6,7 @@
 {% set var_templates_files = [
   'web.template.build.yml',
   'web.template.run.yml',
-  'web.template.validate.yml',
-  'web.template.yml'
+  'web.template.validate.yml'
 ] %}
 
 ### main ###
