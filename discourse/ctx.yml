@@ -1,15 +1,22 @@
 ## vars ###
 
-{% set var_main_dir = 'discourse' %}
+{% set var_main_dir = params.main.custom_dir + '/discourse' %}
 {% set var_containers = params.main.containers | default([]) %}
 
-{% set var_templates_files = [
-  'web.template.build.yml',
-  'web.template.run.yml',
-  'web.template.validate.yml'
-] %}
+{% set var_static = params.main.static | default('false') | bool %}
+{% set var_static = params.main.static | default('false') | bool %}
+
+{% if var_static %}
+  {% set var_templates_files = [
+    'web.template.build.yml',
+    'web.template.run.yml',
+    'web.template.validate.yml'
+  ] %}
+{% endif %}
 
 ### main ###
+
+{% if ((var_templates_files | default([]) | length) > 0) %}
 
 files:
 
@@ -20,6 +27,8 @@ files:
   root: true
 
 {% endfor %}
+
+{% endif %}
 
 templates:
 
