@@ -51,6 +51,23 @@ templates:
 {% endfor %}
 
 {% set var_params = item.params | combine({ 'docker_args': ns_docker_args.list }) %}
+{% set var_params_env = var_params.env | default({}) %}
+{% set var_db_host = params.dependencies_node_ip_dict['db'] | default('') %}
+{% set var_redis_host = params.dependencies_node_ip_dict['redis'] | default('') %}
+
+{% if var_db_host != '' %}
+  {% set var_params_env = var_params_env 
+    | combine({ 'DISCOURSE_DB_HOST': var_db_host }) 
+  %}
+{% endif %}
+
+{% if var_redis_host != '' %}
+  {% set var_params_env = var_params_env 
+    | combine({ 'DISCOURSE_REDIS_HOST': var_redis_host }) 
+  %}
+{% endif %}
+
+{% set var_params = var_params | combine({ 'env': var_params_env }) %}
 
 - src: "{{ var_main_dir }}/templates/{{ item.name_src }}"
   dest: "repo/containers/{{ item.name_dest }}"
