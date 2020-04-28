@@ -3,8 +3,13 @@
 {% set var_main_dir = params.main.custom_dir + '/discourse' %}
 {% set var_containers = params.main.containers | default([]) %}
 
+{% set var_local = params.main.local | default(false) | bool %}
 {% set var_run = params.main.run | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
+
+{% set var_pod_dir_rel = '../..' %}
+{% set var_data_dir = var_local 
+  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
 
 {% set var_static = params.main.static | default('false') | bool %}
 
@@ -47,12 +52,45 @@ templates:
 
 {% set var_params = item.params | combine({ 'docker_args': ns_docker_args.list }) %}
 
-- src: "{{ var_main_dir }}/templates/containers/{{ item.name_src }}"
+- src: "{{ var_main_dir }}/templates/{{ item.name_src }}"
   dest: "repo/containers/{{ item.name_dest }}"
   root: true
   params: {{ var_params | to_json }}
 
 {% endfor %}
+
+{% if var_run | default({}) | dict2items | list | length > 0 %}
+
+- src: "{{ var_main_dir }}/templates/docker-compose.env"
+  dest: "{{ var_main_dir }}/.env"
+  root: true
+  params: 
+    ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
+    data_dir: "{{ var_data_dir }}"
+    toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
+    toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
+    awscli_image: "{{ params.main.custom_images.awscli_image }}"
+    awscli_version: "{{ params.main.custom_images.awscli_version }}"
+    postgres_image: "{{ params.main.custom_images.postgres_image }}"
+    postgres_version: "{{ params.main.custom_images.postgres_version }}"
+    s3_backup_access_key: "{{ params.credentials.discourse_backup_bucket.access_key }}"
+    s3_backup_secret_key: "{{ params.credentials.discourse_backup_bucket.secret_key }}"
+    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
+    container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
+    container_mem_postgres: "{{ params.main.custom_memory.postgres }}"
+    postgres_host_ip: "{{ params.dependencies_node_ip_dict['db'] | default('') }}"
+
+    {% if not var_local %}
+
+    fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
+    fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
+    fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
+    container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
+    fluentd_output_plugin: "file"
+    
+    {% endif %}
+
+{% endif %}
 
 {% if var_run | default({}) | dict2items | list | length > 0 %}
 

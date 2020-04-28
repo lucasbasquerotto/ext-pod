@@ -1,4 +1,8 @@
+/discourse/.env
+/discourse/env/
 /discourse/repo
+/efk/.env
+/efk/env/
 /wordpress/.env
 /wordpress/env/
 
