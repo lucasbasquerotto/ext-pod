@@ -1,6 +1,7 @@
-FROM alpine:latest
+ARG IMAGE
+ARG VERSION
 
-RUN apk --update add bind
+FROM $IMAGE:$VERSION
 
 ARG BIND_TYPE
 

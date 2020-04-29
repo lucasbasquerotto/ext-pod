@@ -97,16 +97,11 @@ templates:
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
     container_mem_postgres: "{{ params.main.custom_memory.postgres }}"
     postgres_host_ip: "{{ params.dependencies_node_ip_dict['db'] | default('') }}"
-
-    {% if not var_local %}
-
     fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
     fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
     fluentd_output_plugin: "file"
-    
-    {% endif %}
 
 {% endif %}
 
