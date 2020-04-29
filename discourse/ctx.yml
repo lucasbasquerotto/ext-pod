@@ -84,6 +84,7 @@ templates:
   params: 
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
+    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
     toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
     awscli_image: "{{ params.main.custom_images.awscli_image }}"
