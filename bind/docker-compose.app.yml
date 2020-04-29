@@ -46,7 +46,6 @@ services:
     - "$DATA_DIR/tmp/bind:/tmp/main/bind"
     - "$DATA_DIR/log/bind:/var/log/main/bind"
     logging: *mainlog
-    command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
     
   toolbox:

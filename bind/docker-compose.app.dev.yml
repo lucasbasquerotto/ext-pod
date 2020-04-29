@@ -30,14 +30,13 @@ services:
     - "internet"
     - "local"
     ports:
-    - "53:53"
-    - "53:53/udp"
+    - "$BIND_PORT:53"
+    - "$BIND_PORT:53/udp"
     volumes:
     - "$DATA_DIR/bind:/var/main/data/bind"
     - "$DATA_DIR/tmp/bind:/tmp/main/bind"
     - "$DATA_DIR/log/bind:/var/log/main/bind"
     logging: *mainlog
-    command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
     
   toolbox:
