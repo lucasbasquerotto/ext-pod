@@ -1,0 +1,95 @@
+version: "2.4"
+
+networks:
+  internet: 
+    driver: "bridge"
+  log: 
+    driver: "bridge"
+  local: 
+    internal: true
+    driver: "bridge"
+
+x-logging:
+  mainlog: &mainlog
+    driver: "fluentd"
+    options: 
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"  
+  jsonlog: &jsonlog
+    driver: "json-file"
+    options: 
+      max-size: "50m"
+
+services:
+    
+  bind:
+    container_name: "${CTX_NAME}-main-bind"
+    hostname: "bind"
+    build: 
+      context: .
+      dockerfile: "main/bind/Dockerfile"
+      args:
+        IMAGE: $BIND_IMAGE
+        VERSION: $BIND_VERSION
+        BIND_TYPE: $BIND_TYPE
+    restart: "unless-stopped"
+    depends_on:
+    - "fluentd"
+    ports:
+    - "$BIND_PORT:53"
+    - "$BIND_PORT:53/udp"
+    networks:
+    - "internet"
+    - "local"
+    volumes:
+    - "$DATA_DIR/bind:/var/main/data/bind"
+    - "$DATA_DIR/tmp/bind:/tmp/main/bind"
+    - "$DATA_DIR/log/bind:/var/log/main/bind"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_TOOLBOX
+    
+  toolbox:
+    container_name: "${CTX_NAME}-main-toolbox"
+    hostname: "toolbox"
+    build: 
+      context: .
+      dockerfile: "main/toolbox/Dockerfile"
+      args:
+        IMAGE: $TOOLBOX_IMAGE
+        VERSION: $TOOLBOX_VERSION
+    restart: "unless-stopped"
+    depends_on:
+    - "fluentd"
+    networks:
+    - "internet"
+    - "local"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_TOOLBOX
+    
+  fluentd:
+    container_name: "${CTX_NAME}-main-fluentd"
+    hostname: "fluentd"
+    build: 
+      context: .
+      dockerfile: "main/fluentd/Dockerfile"
+      args:
+        IMAGE: $FLUENTD_IMAGE
+        VERSION: $FLUENTD_VERSION
+        OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
+    restart: "unless-stopped"
+    ports:
+    - "$FLUENTD_PORT:24224"
+    - "$FLUENTD_PORT:24224/udp"
+    networks:
+    - "log"
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd/"
+    logging: *jsonlog
+    mem_limit: $CONTAINER_MEM_FLUENTD
+    
