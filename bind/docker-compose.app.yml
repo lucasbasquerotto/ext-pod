@@ -32,6 +32,8 @@ services:
         IMAGE: $BIND_IMAGE
         VERSION: $BIND_VERSION
         BIND_TYPE: $BIND_TYPE
+        BIND_ZONE: $BIND_ZONE
+        BIND_SECRET: $BIND_SECRET
     restart: "unless-stopped"
     depends_on:
     - "fluentd"
