@@ -1,6 +1,7 @@
 ## vars ###
 
 {% set var_main_dir = params.main.custom_dir + '/discourse' %}
+{% set var_discourse_dir = params.main.discourse_dir %}
 {% set var_containers = params.main.containers | default([]) %}
 
 {% set var_local = params.main.local | default(false) | bool %}
@@ -30,7 +31,7 @@ files:
 {% for item in var_templates_files %}
 
 - src: "{{ var_main_dir }}/files/templates/{{ item }}"
-  dest: "repo/templates/{{ item }}"
+  dest: "{{ var_discourse_dir }}/templates/{{ item }}"
   root: true
 
 {% endfor %}
@@ -70,7 +71,7 @@ templates:
 {% set var_params = var_params | combine({ 'env': var_params_env }) %}
 
 - src: "{{ var_main_dir }}/templates/{{ item.name_src }}"
-  dest: "repo/containers/{{ item.name_dest }}"
+  dest: "{{ var_discourse_dir }}/containers/{{ item.name_dest }}"
   root: true
   params: {{ var_params | to_json }}
 
