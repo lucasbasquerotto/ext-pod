@@ -75,3 +75,4 @@ children:
     run_custom:
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"
       var_orchestration_run_file: "{{ var_orchestration_run_file }}"
+      var_bind_zone: "{{ params.main.custom_args.bind.zone }}"

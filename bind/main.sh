@@ -4,6 +4,7 @@ set -eou pipefail
 
 pod_vars_dir="$POD_VARS_DIR"
 pod_layer_dir="$POD_LAYER_DIR"
+pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 . "${pod_vars_dir}/vars.sh"
 
@@ -28,18 +29,23 @@ pod_env_shared_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
   "new-key")
-		ctx="${command#bind:}"
-		prefix="var_bind_${ctx}"
-		zone_name="${prefix}_zone_name"
-	  "$pod_script_env_file" run dnssec <<-SHELL
+		"$pod_script_env_file" run dnssec bash <<-SHELL
 			set -eou pipefail
-			rm -rf /tmp/main/bind/keys
-			mkdir /tmp/main/bind/keys
-		  cd /tmp/main/bind/keys
-			dnssec-keygen -C -a HMAC-MD5 -b 512 -n USER "$zone_name".
-			cat "\$(ls -rt | grep "$zone_name" | tail -n1)" | awk '{ print $7 }'
+
+			>&2 rm -rf /tmp/main/bind/keys
+			>&2 mkdir -p /tmp/main/bind/keys
+
+			cd /tmp/main/bind/keys
+			>&2 dnssec-keygen -C -a HMAC-MD5 -b 512 -n USER "$var_bind_zone".
+			>&2 file_name="\$(ls -rt | grep "$var_bind_zone" | tail -n1)"
+			>&2 new_key="\$(cat "\$file_name" | awk '{ print \$7 }')"
+			echo "\$new_key"
 		SHELL
-	  ;;
+		;;
+	"print-new-key")
+		new_key="$("$pod_script_env_file" "new-key")"
+		echo "new_key=$new_key"
+		;;
 	"bind:"*)
 		ctx="${command#bind:}"
 		prefix="var_bind_${ctx}"
