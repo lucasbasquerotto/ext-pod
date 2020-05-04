@@ -28,10 +28,10 @@ pod_env_shared_file="$pod_layer_dir/main/wordpress/scripts/shared.sh"
 
 case "$command" in
 	"setup")
-    "$pod_env_shared_file" up fluentd
+		"$pod_env_shared_file" up fluentd
 		"$pod_env_shared_file" "$command" "$@"
 		;;
-  *)
-    "$pod_env_shared_file" "$command" "$@"
-    ;;
+	*)
+		"$pod_env_shared_file" "$command" "$@"
+		;;
 esac

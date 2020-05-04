@@ -25,10 +25,10 @@ function error {
 }
 
 if [ -z "$base_dir" ] || [ "$base_dir" = "/" ]; then
-  msg="This project must be in a directory structure of type"
-  msg="$msg [base_dir]/[pod_layer_base_dir]/[this_repo] with"
-  msg="$msg base_dir different than '' or '/' instead of $pod_layer_dir"
-  error "$msg"
+	msg="This project must be in a directory structure of type"
+	msg="$msg [base_dir]/[pod_layer_base_dir]/[this_repo] with"
+	msg="$msg base_dir different than '' or '/' instead of $pod_layer_dir"
+	error "$msg"
 fi
 
 ctl_layer_dir="$base_dir/ctl"
@@ -45,62 +45,62 @@ shift;
 start="$(date '+%F %T')"
 
 case "$command" in
-  "prepare"|"setup"|"migrate"|"stop"|"rm"|"clear")
-    echo -e "${CYAN}$(date '+%F %T') - env (local) - $command - start${NC}"
-    ;;
+	"prepare"|"setup"|"migrate"|"stop"|"rm"|"clear")
+		echo -e "${CYAN}$(date '+%F %T') - env (local) - $command - start${NC}"
+		;;
 esac
 
 case "$command" in
-  "prepare")
-    "$pod_env_shared_file" "local:prepare" \
-      --env_local_repo="$var_env_local_repo" \
-      --ctl_layer_dir="$ctl_layer_dir" --opts "${@}"
+	"prepare")
+		"$pod_env_shared_file" "local:prepare" \
+			--env_local_repo="$var_env_local_repo" \
+			--ctl_layer_dir="$ctl_layer_dir" --opts "${@}"
 
-    sudo chmod +x "$app_layer_dir/"
-    cp "$pod_full_dir/env/wordpress/.env" "$app_layer_dir/.env"
-    chmod +r "$app_layer_dir/.env"
-    chmod 777 "$app_layer_dir/web/app/uploads/"
-    ;;
+		sudo chmod +x "$app_layer_dir/"
+		cp "$pod_full_dir/env/wordpress/.env" "$app_layer_dir/.env"
+		chmod +r "$app_layer_dir/.env"
+		chmod 777 "$app_layer_dir/web/app/uploads/"
+		;;
 	"setup")
-    "$pod_env_shared_file" stop wordpress composer 
-    "$pod_env_shared_file" rm wordpress composer 
-    "$pod_env_shared_file" stop mysql
-    "$pod_env_shared_file" up mysql composer
-    "$pod_env_shared_file" exec composer composer install --verbose
+		"$pod_env_shared_file" stop wordpress composer 
+		"$pod_env_shared_file" rm wordpress composer 
+		"$pod_env_shared_file" stop mysql
+		"$pod_env_shared_file" up mysql composer
+		"$pod_env_shared_file" exec composer composer install --verbose
 		"$pod_env_shared_file" "$command" "$@"
 		;;
-  "migrate")
-    "$pod_env_shared_file" rm wordpress composer 
-    "$pod_env_shared_file" stop mysql
-    "$pod_env_shared_file" up mysql composer
-    # "$pod_env_shared_file" exec composer composer clear-cache
-    # "$pod_env_shared_file" exec composer composer update --verbose
+	"migrate")
+		"$pod_env_shared_file" rm wordpress composer 
+		"$pod_env_shared_file" stop mysql
+		"$pod_env_shared_file" up mysql composer
+		# "$pod_env_shared_file" exec composer composer clear-cache
+		# "$pod_env_shared_file" exec composer composer update --verbose
 		"$pod_env_shared_file" "$command" "$@"
-    ;;
-  "stop"|"rm")
+		;;
+	"stop"|"rm")
 		"$pod_env_shared_file" "$command" "$@"
-    "$ctl_layer_dir/run" "$command"
-    ;;
-  "clear-all")
-    "$pod_script_env_file" "s3:task:wp_uploads" --s3_cmd=rb
-    "$pod_script_env_file" "s3:task:wp_db" --s3_cmd=rb
-    "$pod_script_env_file" clear
-    ;;
-  "clear")
-    "$pod_script_env_file" rm
-    sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mysql"
-    sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
-    ;;
+		"$ctl_layer_dir/run" "$command"
+		;;
+	"clear-all")
+		"$pod_script_env_file" "s3:task:wp_uploads" --s3_cmd=rb
+		"$pod_script_env_file" "s3:task:wp_db" --s3_cmd=rb
+		"$pod_script_env_file" clear
+		;;
+	"clear")
+		"$pod_script_env_file" rm
+		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mysql"
+		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"
-    ;;
+		;;
 esac
 
 end="$(date '+%F %T')"
 
 case "$command" in
-  "prepare"|"setup"|"migrate"|"stop"|"rm"|"clear")
-    echo -e "${CYAN}$(date '+%F %T') - env (local) - $command - end${NC}"
-    echo -e "${CYAN}env (local) - $command - $start - $end${NC}"
-    ;;
+	"prepare"|"setup"|"migrate"|"stop"|"rm"|"clear")
+		echo -e "${CYAN}$(date '+%F %T') - env (local) - $command - end${NC}"
+		echo -e "${CYAN}env (local) - $command - $start - $end${NC}"
+		;;
 esac

@@ -42,14 +42,17 @@ templates:
     toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
     awscli_image: "{{ params.main.custom_images.awscli_image }}"
     awscli_version: "{{ params.main.custom_images.awscli_version }}"
+    dnssec_image: "{{ params.main.custom_images.dnssec_image }}"
+    dnssec_version: "{{ params.main.custom_images.dnssec_version }}"
     bind_port: "{{ params.main.custom_args.bind.port }}"
     bind_type: "{{ params.main.custom_args.bind.type }}"
     bind_zone: "{{ params.main.custom_args.bind.zone }}"
     bind_secret: "{{ params.credentials.bind.secret }}"
     s3_backup_access_key: "{{ params.credentials.backup_bucket.access_key }}"
     s3_backup_secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
-    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
+    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
+    container_mem_dnssec: "{{ params.main.custom_memory.dnssec }}"
 
     {% if not var_local %}
 

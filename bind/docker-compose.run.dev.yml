@@ -28,4 +28,16 @@ services:
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_BACKUP
+  
+  dnssec:
+    container_name: "${CTX_NAME}-run-dnssec"
+    hostname: "dnssec"
+    image: "$DNSSEC_IMAGE:$DNSSEC_VERSION"
+    restart: "unless-stopped"
+    volumes: 
+    - "$DATA_DIR/dnssec:/var/main/data/dnssec"
+    - "$DATA_DIR/tmp/dnssec:/tmp/main/dnssec"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_DNSSEC
     
