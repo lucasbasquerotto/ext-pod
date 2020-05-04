@@ -27,8 +27,11 @@ shift;
 pod_env_shared_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
+  "bootstrap:remote:"*)
+    ;;
   "restore")
-		"$pod_env_shared_file" exec-nontty -w /var/www/discourse "$var_restore_container_name" sh -x <<-SHELL
+		"$pod_env_shared_file" exec-nontty "$var_restore_container_name" sh -x <<-SHELL
+		  cd /var/www/discourse
 			discourse enable_restore
 			discourse restore $var_restore_filename
 			discourse disable_restore
