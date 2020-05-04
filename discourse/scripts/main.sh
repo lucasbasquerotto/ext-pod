@@ -24,12 +24,18 @@ fi
 
 shift;
 
+args=("$@")
+
 pod_env_shared_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
-  "bootstrap:remote:"*)
-		ctx="${command#backup:local:db:}"
+  "discourse:launcher")
+		"$var_discourse_dir"/launcher ${args[@]+"${args[@]}"}
+		;;
+  "discourse:bootstrap:remote:"*)
+		ctx="${command#bootstrap:remote:}"
 		prefix="var_bootstrap_remote_${ctx}"
+		container_name="${prefix}_container_name"
 		remote_tag="${prefix}_remote_tag"
 		toolbox_service="${prefix}_toolbox_service"
 		container_type="${prefix}_container_type"
@@ -40,10 +46,11 @@ case "$command" in
 		version="${prefix}_version"
 		username="${prefix}_username"
 		pass="${prefix}_pass"
+
+		local_image="local/$container_name"
 		
 		opts=()
 
-		opts+=( "--remote_tag=${!remote_tag}" )
 		opts+=( "--toolbox_service=${!toolbox_service}" )
 		opts+=( "--container_type=${!container_type}" )
 		opts+=( "--registry_api_base_url=${!registry_api_base_url}" )
@@ -54,9 +61,13 @@ case "$command" in
 		opts+=( "--username=${!username}" )
 		opts+=( "--pass=${!pass}" )
 
+		opts+=( "--local_image=$local_image" )
+		opts+=( "--remote_tag=${!remote_tag}" )
+
 		exists="$("$pod_script_env_file" "image:verify" "${opts[@]}")"
 
 		if [ "$exists" != "true" ]; then
+		  "$pod_script_env_file" "discourse:launcher" bootstrap "$container_name"
 			"$pod_script_env_file" "image:push" "${opts[@]}"
 		fi
     ;;
