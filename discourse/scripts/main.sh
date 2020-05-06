@@ -35,8 +35,6 @@ case "$command" in
   "discourse:bootstrap:remote:"*)
 		ctx="${command#bootstrap:remote:}"
 		prefix="var_bootstrap_remote_${ctx}"
-		container_name="${prefix}_container_name"
-		remote_tag="${prefix}_remote_tag"
 		toolbox_service="${prefix}_toolbox_service"
 		container_type="${prefix}_container_type"
 		registry_api_base_url="${prefix}_registry_api_base_url"
@@ -46,6 +44,8 @@ case "$command" in
 		version="${prefix}_version"
 		username="${prefix}_username"
 		pass="${prefix}_pass"
+		container_name="${prefix}_container_name"
+		remote_tag="${prefix}_remote_tag"
 
 		local_image="local/$container_name"
 		
@@ -64,11 +64,11 @@ case "$command" in
 		opts+=( "--local_image=$local_image" )
 		opts+=( "--remote_tag=${!remote_tag}" )
 
-		exists="$("$pod_script_env_file" "image:verify" "${opts[@]}")"
+		exists="$("$pod_script_env_file" "container:image:verify" "${opts[@]}")"
 
 		if [ "$exists" != "true" ]; then
 		  "$pod_script_env_file" "discourse:launcher" bootstrap "$container_name"
-			"$pod_script_env_file" "image:push" "${opts[@]}"
+			"$pod_script_env_file" "container:image:push" "${opts[@]}"
 		fi
     ;;
   "restore")
