@@ -116,5 +116,7 @@ children:
     pod_custom_dir: "{{ var_main_dir }}"
     run: {{ var_run | to_json }}
     run_dict: {{ var_run_dict | to_json }}
+    run_custom:
+      var_discourse_dir: "{{ var_discourse_dir }}"
 
 {% endif %}
