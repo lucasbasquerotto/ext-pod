@@ -46,6 +46,15 @@ case "$command" in
 		new_key="$("$pod_script_env_file" "new-key")"
 		echo "new_key=$new_key"
 		;;
+	"up")
+		result="$(ps --no-headers -o comm 1)"
+
+		if [ "$result" = "systemd" ]; then
+			sudo systemctl stop systemd-resolved || :
+		fi
+		
+		"$pod_env_shared_file" "$command" "$@"
+	  ;;
 	"bind:"*)
 		ctx="${command#bind:}"
 		prefix="var_bind_${ctx}"
