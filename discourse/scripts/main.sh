@@ -63,7 +63,7 @@ case "$command" in
 
 		opts+=( "--local_image=$local_image" )
 
-		exists="$("$pod_script_env_file" "container:image:verify" "${opts[@]}")"
+		exists="$("$pod_script_env_file" "container:image:tag:exists" "${opts[@]}")"
 
 		if [ "$exists" != "true" ]; then
 		  "$pod_script_env_file" "discourse:launcher" bootstrap "$container_name"
