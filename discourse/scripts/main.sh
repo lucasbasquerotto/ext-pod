@@ -33,7 +33,7 @@ case "$command" in
 		"$var_discourse_dir"/launcher ${args[@]+"${args[@]}"}
 		;;
   "discourse:bootstrap:"*)
-		ctx="${command#bootstrap:remote:}"
+		ctx="${command#discourse:bootstrap:}"
 		prefix="var_discourse_bootstrap_${ctx}"
 		toolbox_service="${prefix}_toolbox_service"
 		container_type="${prefix}_container_type"
