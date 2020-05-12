@@ -57,6 +57,7 @@ templates:
     bind_serial: "{{ params.main.custom_args.bind.serial }}"
     s3_backup_access_key: "{{ params.credentials.backup_bucket.access_key }}"
     s3_backup_secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
+    container_mem_bind: "{{ params.main.custom_memory.bind }}"
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
     container_mem_dnssec: "{{ params.main.custom_memory.dnssec }}"

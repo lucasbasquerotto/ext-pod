@@ -51,7 +51,7 @@ services:
     - "$DATA_DIR/tmp/bind:/tmp/main/bind"
     - "$DATA_DIR/log/bind:/var/log/main/bind"
     logging: *mainlog
-    mem_limit: $CONTAINER_MEM_TOOLBOX
+    mem_limit: $CONTAINER_MEM_BIND
     
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
