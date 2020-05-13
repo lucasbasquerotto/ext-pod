@@ -47,7 +47,7 @@ case "$command" in
 		userpass="${prefix}_userpass"
 		container_name="${prefix}_container_name"
 
-		local_image="local_discourse/$container_name"
+		local_image="local_discourse/${!container_name}"
 		
 		opts=()
 
@@ -66,7 +66,7 @@ case "$command" in
 		exists="$("$pod_script_env_file" "container:image:tag:exists" "${opts[@]}")"
 
 		if [ "$exists" != "true" ]; then
-		  "$pod_script_env_file" "discourse:launcher" bootstrap "$container_name"
+			"$pod_script_env_file" "discourse:launcher" bootstrap "${!container_name}"
 			"$pod_script_env_file" "container:image:push" "${opts[@]}"
 		fi
     ;;
