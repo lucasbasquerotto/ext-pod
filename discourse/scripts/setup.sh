@@ -192,45 +192,6 @@ check_disk_and_memory() {
 }
 
 ##
-## standard http / https ports must not be occupied
-##
-check_ports() {
-  check_port "80"
-  check_port "443"
-  echo "Ports 80 and 443 are free for use"
-}
-
-##
-## check a port to see if it is already in use
-##
-check_port() {
-  echo "check_port started"
-
-  local valid=$(netstat -tln | awk '{print $4}' | grep ":${1}\$")
-
-  if [ -n "$valid" ]; then
-    echo "Port ${1} appears to already be in use."
-    echo
-    echo "This will show you what command is using port ${1}"
-    lsof -i tcp:${1} -s tcp:listen
-    echo
-    echo "If you are trying to run Discourse simultaneously with another web"
-    echo "server like Apache or nginx, you will need to bind to a different port"
-    echo
-    echo "See https://meta.discourse.org/t/17247"
-    echo
-    echo "If you are reconfiguring an already-configured Discourse, use "
-    echo
-    echo "./launcher stop app"
-    echo
-    echo "to stop Discourse before you reconfigure it and try again."
-    exit 1
-  fi
-  
-  echo "check_port finished"
-}
-
-##
 ## Check requirements before creating a copy of a config file we won't edit
 ##
 check_root
