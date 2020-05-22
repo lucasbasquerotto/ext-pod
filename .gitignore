@@ -5,8 +5,13 @@
 /discourse/repo
 /efk/.env
 /efk/env/
+/rocketchat/.env
+/rocketchat/env/
+/wikimedia/.env
+/wikimedia/env/
 /wordpress/.env
 /wordpress/env/
+
 
 tmp*
 

@@ -1,0 +1,81 @@
+## general vars - start ###
+
+{% set var_local = params.main.local | default(false) | bool %}
+{% set var_run = params.main.run | default({}) %}
+{% set var_run_dict = params.main.run_dict | default({}) %}
+
+## general vars - end ###
+
+### others ###
+
+{% set var_pod_type = params.main.type | default('') %}
+
+{% if not (var_pod_type in ['app']) %}
+  {% set error = {} %}
+  {{ error['error.pod_type.invalid.' + var_pod_type] }}
+{% endif %}
+
+{% set var_main_dir = params.main.custom_dir + '/rocketchat' %}
+
+{% set var_pod_dir_rel = '../..' %}
+{% set var_data_dir = var_local 
+  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
+{% set var_data_dir_task = params.pod.local_data_dir_inside 
+  | default(params.pod.data_dir, true) 
+%}
+
+{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.yml' %}
+
+### main ###
+
+volumes:
+
+- path: "{{ var_data_dir_task }}/elasticsearch"
+  mode: "0777"
+
+templates:
+
+- src: "{{ var_main_dir }}/templates/docker-compose.env"
+  dest: "{{ var_main_dir }}/.env"
+  root: true
+  params: 
+    ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
+    data_dir: "{{ var_data_dir }}"
+    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    type: "{{ var_pod_type }}"
+    nginx_image: "{{ params.main.custom_images.nginx_image }}"
+    nginx_version: "{{ params.main.custom_images.nginx_version }}"
+    rocketchat_image: "{{ params.main.custom_images.rocketchat_image }}"
+    rocketchat_version: "{{ params.main.custom_images.rocketchat_version }}"
+    mongo_image: "{{ params.main.custom_images.mongo_image }}"
+    mongo_version: "{{ params.main.custom_images.mongo_version }}"
+    toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
+    toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
+    hubot_image: "{{ params.main.custom_images.hubot_image }}"
+    hubot_version: "{{ params.main.custom_images.hubot_version }}"
+    awscli_image: "{{ params.main.custom_images.awscli_image }}"
+    awscli_version: "{{ params.main.custom_images.awscli_version }}"
+    main_domain: "{{ params.main.custom_domain.main_domain }}"
+    main_domain_port: "{{ params.main.custom_domain.main_port }}"
+    nginx_port: "{{ params.main.custom_args.nginx.port }}"
+    s3_backup_access_key: "{{ params.credentials.rocketchat_backup_bucket.access_key }}"
+    s3_backup_secret_key: "{{ params.credentials.rocketchat_backup_bucket.secret_key }}"
+    container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
+    container_mem_rocketchat: "{{ params.main.custom_memory.rocketchat }}"
+    container_mem_mongo: "{{ params.main.custom_memory.mongo }}"
+    container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
+    container_mem_hubot: "{{ params.main.custom_memory.hubot }}"
+    container_mem_mongo_init: "{{ params.main.custom_memory.mongo_init }}"
+    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
+
+children:
+
+- name: "main/scripts/vars.run.yml"
+  params:
+    env_params: {{ params | to_json }}
+    pod_custom_dir: "{{ var_main_dir }}"
+    run: {{ var_run | to_json }}
+    run_dict: {{ var_run_dict | to_json }}
+    run_custom:
+      var_pod_type: "{{ var_pod_type }}"
+      var_orchestration_main_file: "{{ var_orchestration_main_file }}"
