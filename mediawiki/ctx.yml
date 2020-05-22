@@ -35,7 +35,8 @@
 
 volumes:
 
-- when: false
+- path: "{{ var_data_dir_task + '/mediawiki/images' }}"
+  mode: "0777"
 
 {% if not var_local %}
 
@@ -102,6 +103,31 @@ templates:
     {% endif %}
     
     {% endif %}
+
+{% set var_server = (params.main.custom_domain.ssl | bool) | 
+  ternary('https', 'http') + '://' + 
+  params.main.custom_domain.main_domain 
+  + (not (params.main.custom_domain.main_port in ['80', '443'])) | 
+  ternary(':' + params.main.custom_domain.main_port, '') 
+%}
+
+- src: "{{ var_main_dir }}/templates/mediawiki/LocalSettings.php"
+  dest: "{{ var_main_dir }}/env/mediawiki/LocalSettings.php"
+  mode: "666"
+  root: true
+  params:  
+    sitename: "{{ params.main.mediawiki.sitename }}"
+    meta_namespace: "{{ params.main.mediawiki.meta_namespace }}"
+    server: "{{ var_server }}"
+    emergency_contact: "{{ params.main.mediawiki.emergency_contact }}"
+    password_sender: "{{ params.main.mediawiki.password_sender }}"
+    db_server: "mysql"
+    db_name: "{{ params.credentials.mediawiki.db.name }}"
+    db_user: "{{ params.credentials.mediawiki.db.user }}"
+    db_password: "{{ params.credentials.mediawiki.db.password }}"
+    lang: "{{ params.main.mediawiki.lang }}"
+    secret_key: "{{ params.credentials.mediawiki.secret_key }}"
+    authentication_token_version: "{{ params.main.mediawiki.authentication_token_version }}"
 
 children:
 

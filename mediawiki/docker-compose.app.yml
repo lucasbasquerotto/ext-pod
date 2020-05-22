@@ -63,11 +63,7 @@ services:
     networks:
     - "shared"
     volumes:
-      - "$DATA_DIR/mediawiki/images:/var/www/html/images"
-      # After initial setup, download LocalSettings.php to the same directory as
-      # this yaml and uncomment the following line and use compose to restart
-      # the mediawiki service
-      # - ./LocalSettings.php:/var/www/html/LocalSettings.php
+    - "$DATA_DIR/mediawiki/images:/var/www/html/images"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_MEDIAWIKI
 

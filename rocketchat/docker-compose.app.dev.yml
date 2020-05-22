@@ -62,17 +62,17 @@ services:
         done; (exit $$s)"
     restart: "unless-stopped"
     environment:
-      - PORT=3000
-      - ROOT_URL=http://localhost:3000
-      - MONGO_URL=mongodb://mongo:27017/rocketchat
-      - MONGO_OPLOG_URL=mongodb://mongo:27017/local
-      - MAIL_URL=smtp://smtp.email
+    - PORT=3000
+    - ROOT_URL=http://localhost:3000
+    - MONGO_URL=mongodb://mongo:27017/rocketchat
+    - MONGO_OPLOG_URL=mongodb://mongo:27017/local
+    - MAIL_URL=smtp://smtp.email
     depends_on:
-      - mongo
+    - mongo
     networks:
     - "shared"
     volumes:
-      - "$DATA_DIR/rocketchat/uploads:/app/uploads"
+    - "$DATA_DIR/rocketchat/uploads:/app/uploads"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_ROCKETCHAT
 
@@ -89,32 +89,34 @@ services:
     networks:
     - "shared"
     volumes:
-      - "mongo_db:/data/db"
-      - "mongo_dump:/dump"
+    - "mongo_db:/data/db"
+    - "mongo_dump:/dump"
     command: mongod --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
     mem_limit: $CONTAINER_MEM_MONGO
 
   # # hubot, the popular chatbot (add the bot user first and change the password before starting this image)
-  # hubot:
-  # image: "$hubot_IMAGE:$hubot_VERSION"
-  #   restart: unless-stopped
-  #   environment:
-  #     - ROCKETCHAT_URL=rocketchat:3000
-  #     - ROCKETCHAT_ROOM=GENERAL
-  #     - ROCKETCHAT_USER=bot
-  #     - ROCKETCHAT_PASSWORD=botpassword
-  #     - BOT_NAME=bot
-  # # you can add more scripts as you'd like here, they need to be installable by npm
-  #     - EXTERNAL_SCRIPTS=hubot-help,hubot-seen,hubot-links,hubot-diagnostics
-  #   depends_on:
-  #     - rocketchat
-  #   labels:
-  #     - "traefik.enable=false"
-  #   volumes:
-  #     - ./scripts:/home/hubot/scripts
-  # # this is used to expose the hubot port for notifications on the host on port 3001, e.g. for hubot-jenkins-notifier
-  #   ports:
-  #     - 3001:8080
+  hubot:
+    container_name: "${CTX_NAME}-main-hubot"
+    hostname: "hubot"
+    build: 
+      context: .
+      dockerfile: "main/hubot/Dockerfile"
+      args:
+        IMAGE: $HUBOT_IMAGE
+        VERSION: $HUBOT_VERSION
+    restart: unless-stopped
+    environment:
+    - ROCKETCHAT_URL=rocketchat:3000
+    - LISTEN_ON_ALL_PUBLIC=true
+    - ROCKETCHAT_ROOM=$HUBOT_ROOM
+    - ROCKETCHAT_USER=$HUBOT_USER
+    - ROCKETCHAT_PASSWORD=$HUBOT_PASSWORD
+    - BOT_NAME=$HUBOT_BOT_NAME
+    - EXTERNAL_SCRIPTS=hubot-help,hubot-seen,hubot-links,hubot-diagnostics
+    depends_on:
+    - rocketchat
+    volumes:
+    - ./scripts:/home/hubot/scripts
     
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"

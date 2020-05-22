@@ -43,21 +43,21 @@ case "$command" in
 		>&2 "$pod_env_run_file" exec-nontty "$var_general_toolbox_service" /bin/bash <<-SHELL
 			set -eou pipefail
 
-			curl -H "X-Auth-Token: $var_hubot_auth_token" \
-				-H "X-User-Id: $var_hubot_auth_token" \
-				-H "Content-type:application/json" \
-				$var_hubot_base_url/api/v1/users.create \
-				-d "{\
-					'email': '$var_hubot_email', \
-					'username': '$var_hubot_user',\
-					'password': '$var_hubot_password', \
-					'name': '$var_hubot_bot_name', \
-					'roles': ['bot'], \
-					'verified': true, \
-					'joinDefaultChannels': false, \
-					'requirePasswordChange': false, \
-					'sendWelcomeEmail': false \
-				}"
+			# curl -H "X-Auth-Token: $var_hubot_auth_token" \
+			# 	-H "X-User-Id: $var_hubot_auth_token" \
+			# 	-H "Content-type:application/json" \
+			# 	$var_hubot_base_url/api/v1/users.create \
+			# 	-d "{\
+			# 		'email': '$var_hubot_email', \
+			# 		'username': '$var_hubot_user',\
+			# 		'password': '$var_hubot_password', \
+			# 		'name': '$var_hubot_bot_name', \
+			# 		'roles': ['bot'], \
+			# 		'verified': true, \
+			# 		'joinDefaultChannels': false, \
+			# 		'requirePasswordChange': false, \
+			# 		'sendWelcomeEmail': false \
+			# 	}"
 		SHELL
 		;;
 	*)
