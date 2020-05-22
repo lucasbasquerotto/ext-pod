@@ -15,7 +15,7 @@
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
 
-{% set var_main_dir = params.main.custom_dir + '/rocketchat' %}
+{% set var_main_dir = params.main.custom_dir + '/mediawiki' %}
 
 {% set var_pod_dir_rel = '../..' %}
 {% set var_data_dir = var_local 
@@ -35,11 +35,7 @@
 
 volumes:
 
-- path: "{{ var_data_dir_task }}/mongo/db"
-  mode: "0777"
-
-- path: "{{ var_data_dir_task }}/mongo/dump"
-  mode: "0777"
+- when: false
 
 {% if not var_local %}
 
@@ -60,14 +56,12 @@ templates:
     type: "{{ var_pod_type }}"
     nginx_image: "{{ params.main.custom_images.nginx_image }}"
     nginx_version: "{{ params.main.custom_images.nginx_version }}"
-    rocketchat_image: "{{ params.main.custom_images.rocketchat_image }}"
-    rocketchat_version: "{{ params.main.custom_images.rocketchat_version }}"
-    mongo_image: "{{ params.main.custom_images.mongo_image }}"
-    mongo_version: "{{ params.main.custom_images.mongo_version }}"
+    mediawiki_image: "{{ params.main.custom_images.mediawiki_image }}"
+    mediawiki_version: "{{ params.main.custom_images.mediawiki_version }}"
+    mysql_image: "{{ params.main.custom_images.mysql_image }}"
+    mysql_version: "{{ params.main.custom_images.mysql_version }}"
     toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
     toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
-    hubot_image: "{{ params.main.custom_images.hubot_image }}"
-    hubot_version: "{{ params.main.custom_images.hubot_version }}"
     awscli_image: "{{ params.main.custom_images.awscli_image }}"
     awscli_version: "{{ params.main.custom_images.awscli_version }}"
     ssl: "{{ params.main.custom_domain.ssl }}"
@@ -75,18 +69,15 @@ templates:
     main_domain_port: "{{ params.main.custom_domain.main_port }}"
     nginx_http_port: "{{ params.main.custom_args.nginx.http_port }}"
     nginx_https_port: "{{ params.main.custom_args.nginx.https_port }}"
-    hubot_room: "{{ params.credentials.hubot.room }}"
-    hubot_user: "{{ params.credentials.hubot.user }}"
-    hubot_password: "{{ params.credentials.hubot.password }}"
-    hubot_bot_name: "{{ params.credentials.hubot.bot_name }}"
-    s3_backup_access_key: "{{ params.credentials.rocketchat_backup_bucket.access_key }}"
-    s3_backup_secret_key: "{{ params.credentials.rocketchat_backup_bucket.secret_key }}"
+    mysql_database: "{{ params.credentials.mediawiki.db.name }}"
+    mysql_user: "{{ params.credentials.mediawiki.db.user }}"
+    mysql_password: "{{ params.credentials.mediawiki.db.password }}"
+    s3_backup_access_key: "{{ params.credentials.mediawiki_backup_bucket.access_key }}"
+    s3_backup_secret_key: "{{ params.credentials.mediawiki_backup_bucket.secret_key }}"
     container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
-    container_mem_rocketchat: "{{ params.main.custom_memory.rocketchat }}"
-    container_mem_mongo: "{{ params.main.custom_memory.mongo }}"
+    container_mem_mediawiki: "{{ params.main.custom_memory.mediawiki }}"
+    container_mem_mysql: "{{ params.main.custom_memory.mysql }}"
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
-    container_mem_hubot: "{{ params.main.custom_memory.hubot }}"
-    container_mem_mongo_init: "{{ params.main.custom_memory.mongo_init }}"
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
 
     {% if not var_local %}
@@ -124,7 +115,3 @@ children:
       var_pod_type: "{{ var_pod_type }}"
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"
       var_orchestration_run_file: "{{ var_orchestration_run_file }}"
-      var_hubot_email: "{{ params.credentials.hubot.email }}"
-      var_hubot_user: "{{ params.credentials.hubot.user }}"
-      var_hubot_password: "{{ params.credentials.hubot.password }}"
-      var_hubot_bot_name: "{{ params.credentials.hubot.bot_name }}"

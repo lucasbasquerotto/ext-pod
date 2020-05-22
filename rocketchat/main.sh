@@ -33,13 +33,31 @@ shift;
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
-  "migrate")
-    "$pod_env_run_file" up rocketchat mongo
+	"migrate")
+		"$pod_env_run_file" up rocketchat mongo
 
-    info "init the mongo database"
-    "$pod_env_run_file" run mongo_init
-	  ;;
-  *)
-    "$pod_env_run_file" "$command" "$@"
-    ;;
+		info "$command - init the mongo database"
+		"$pod_env_run_file" run mongo_init
+
+		info "$command - create the hubot user"
+		>&2 "$pod_env_run_file" exec-nontty "$var_general_toolbox_service" /bin/bash <<-SHELL
+			set -eou pipefail
+
+			curl -H "X-Auth-Token: 9HqLlyZOugoStsXCUfD_0YdwnNnunAJF8V47U3QHXSq" \
+				-H "X-User-Id: aobEdbYhXfu5hkeqG" \
+				-H "Content-type:application/json" \
+				http://localhost:3000/api/v1/users.create \
+				-d "{\
+					'email': '$var_hubot_email', \
+					'username': '$var_hubot_user',\
+					'password': '$var_hubot_password', \
+					'name': '$var_hubot_bot_name', \
+					'roles': ['bot'], \
+					'verified': true \
+				}"
+		SHELL
+		;;
+	*)
+		"$pod_env_run_file" "$command" "$@"
+		;;
 esac

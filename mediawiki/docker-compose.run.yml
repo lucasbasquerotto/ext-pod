@@ -1,0 +1,38 @@
+version: "2.4"
+
+x-logging:
+  mainlog: &mainlog
+    driver: "fluentd"
+    options: 
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"  
+
+networks:
+  shared:
+    external: true
+    name: "${CTX_NAME}-network"
+
+services:
+  s3_backup:
+    container_name: "${CTX_NAME}-run-s3_backup"
+    hostname: "s3_backup"
+    build: 
+      context: .
+      dockerfile: "main/awscli/Dockerfile"
+      args:
+        IMAGE: $AWSCLI_IMAGE
+        VERSION: $AWSCLI_VERSION
+        PERL_VERSION: $PERL_VERSION
+        S3_ACCESS_KEY: $S3_BACKUP_ACCESS_KEY
+        S3_SECRET_KEY: $S3_BACKUP_SECRET_KEY
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes: 
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_S3_BACKUP
+    

@@ -7,8 +7,8 @@
 /efk/env/
 /rocketchat/.env
 /rocketchat/env/
-/wikimedia/.env
-/wikimedia/env/
+/mediawiki/.env
+/mediawiki/env/
 /wordpress/.env
 /wordpress/env/
 
