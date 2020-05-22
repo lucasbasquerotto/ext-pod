@@ -27,6 +27,9 @@
 {% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
   (var_local | ternary('dev.yml', 'yml')) 
 %}
+{% set var_orchestration_run_file = 'docker-compose.run.' +
+  (var_local | ternary('dev.yml', 'yml')) 
+%}
 
 ### main ###
 
@@ -70,7 +73,8 @@ templates:
     ssl: "{{ params.main.custom_domain.ssl }}"
     main_domain: "{{ params.main.custom_domain.main_domain }}"
     main_domain_port: "{{ params.main.custom_domain.main_port }}"
-    nginx_port: "{{ params.main.custom_args.nginx.port }}"
+    nginx_http_port: "{{ params.main.custom_args.nginx.http_port }}"
+    nginx_https_port: "{{ params.main.custom_args.nginx.https_port }}"
     s3_backup_access_key: "{{ params.credentials.rocketchat_backup_bucket.access_key }}"
     s3_backup_secret_key: "{{ params.credentials.rocketchat_backup_bucket.secret_key }}"
     container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
@@ -115,3 +119,4 @@ children:
     run_custom:
       var_pod_type: "{{ var_pod_type }}"
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"
+      var_orchestration_run_file: "{{ var_orchestration_run_file }}"
