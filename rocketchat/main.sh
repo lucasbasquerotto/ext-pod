@@ -7,8 +7,14 @@ pod_layer_dir="$POD_LAYER_DIR"
 
 . "${pod_vars_dir}/vars.sh"
 
+GRAY='\033[0;90m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+function info {
+	msg="$(date '+%F %T') - ${1:-}"
+	>&2 echo -e "${GRAY}${msg}${NC}"
+}
 
 function error {
 	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
@@ -28,8 +34,9 @@ pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
   "migrate")
-		sudo docker network create -d bridge "${var_env}-${var_ctx}-${var_pod_name}-network"
     "$pod_env_run_file" up rocketchat mongo
+
+    info "init the mongo database"
     "$pod_env_run_file" run mongo_init
 	  ;;
   *)

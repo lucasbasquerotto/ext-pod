@@ -11,9 +11,6 @@ x-logging:
     options: 
       max-size: "50m"
 
-volumes:
-  mysql: {}
-
 networks:
   internet: 
     driver: "bridge"
@@ -128,7 +125,7 @@ services:
     networks: 
     - "local"
     volumes: 
-    - "mysql:/var/lib/mysql"
+    - "$DATA_DIR/mysql:/var/lib/mysql"
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_MYSQL

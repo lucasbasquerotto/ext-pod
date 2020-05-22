@@ -24,14 +24,26 @@
   | default(params.pod.data_dir, true) 
 %}
 
-{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.yml' %}
+{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
+  (var_local | ternary('dev.yml', 'yml')) 
+%}
 
 ### main ###
 
 volumes:
 
-- path: "{{ var_data_dir_task }}/elasticsearch"
+- path: "{{ var_data_dir_task }}/mongo/db"
   mode: "0777"
+
+- path: "{{ var_data_dir_task }}/mongo/dump"
+  mode: "0777"
+
+{% if not var_local %}
+
+- path: "{{ var_data_dir_task + '/log/fluentd' }}"
+  mode: "0777"
+
+{% endif %}
 
 templates:
 
@@ -55,6 +67,7 @@ templates:
     hubot_version: "{{ params.main.custom_images.hubot_version }}"
     awscli_image: "{{ params.main.custom_images.awscli_image }}"
     awscli_version: "{{ params.main.custom_images.awscli_version }}"
+    ssl: "{{ params.main.custom_domain.ssl }}"
     main_domain: "{{ params.main.custom_domain.main_domain }}"
     main_domain_port: "{{ params.main.custom_domain.main_port }}"
     nginx_port: "{{ params.main.custom_args.nginx.port }}"
@@ -67,6 +80,29 @@ templates:
     container_mem_hubot: "{{ params.main.custom_memory.hubot }}"
     container_mem_mongo_init: "{{ params.main.custom_memory.mongo_init }}"
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
+
+    {% if not var_local %}
+
+    fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
+    fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
+    fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
+    container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
+
+    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin 
+      | default(
+        (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
+      ) 
+    %}
+    
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+
+    {% if var_fluentd_output_plugin == 'elasticsearch' %}
+
+    elasticsearch_host_ip: "{{ params.dependencies_node_ip_dict['elasticsearch'] }}"
+    
+    {% endif %}
+    
+    {% endif %}
 
 children:
 

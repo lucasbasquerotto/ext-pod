@@ -2,10 +2,9 @@ version: "2.4"
 
 x-logging:
   mainlog: &mainlog
-    driver: "fluentd"
+    driver: "json-file"
     options: 
-      tag: "docker.{{.Name}}.{{.ID}}"
-      fluentd-address: "localhost:$FLUENTD_PORT"  
+      max-size: "50m"
 
 networks:
   shared:

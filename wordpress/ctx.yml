@@ -8,11 +8,11 @@
 
 ### others ###
 
-{% set var_wp_pod_type = params.main.type | default('') %}
+{% set var_pod_type = params.main.type | default('') %}
 
-{% if not (var_wp_pod_type in ['app', 'web', 'db']) %}
+{% if not (var_pod_type in ['app', 'web', 'db']) %}
   {% set error = {} %}
-  {{ error['error.pod_type.invalid.' + var_wp_pod_type] }}
+  {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
 
 {% set var_main_dir = params.main.custom_dir + '/wordpress' %}
@@ -24,7 +24,7 @@
   | default(params.pod.data_dir, true) 
 %}
 
-{% set var_orchestration_main_file = 'docker-compose.' + var_wp_pod_type + '.' +
+{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
   (var_local | ternary('dev.yml', 'yml')) 
 %}
 {% set var_orchestration_run_file = 'docker-compose.run.' +
@@ -37,14 +37,14 @@ volumes:
 
 - when: false
 
-{% if var_wp_pod_type in ['app', 'db'] %}
+{% if var_pod_type in ['app', 'db'] %}
 
 - path: "{{ var_data_dir_task + '/mysql' }}"
   mode: "0755"
 
 {% endif %}
 
-{% if var_wp_pod_type in ['app', 'web'] %}
+{% if var_pod_type in ['app', 'web'] %}
 
 - path: "{{ var_data_dir_task + '/wordpress/uploads' }}"
   mode: "0777"
@@ -67,7 +67,7 @@ templates:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
-    type: "{{ var_wp_pod_type }}"
+    type: "{{ var_pod_type }}"
     toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
     toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
     awscli_image: "{{ params.main.custom_images.awscli_image }}"
@@ -82,7 +82,7 @@ templates:
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
 
-    {% if var_wp_pod_type in ['app', 'web'] %}
+    {% if var_pod_type in ['app', 'web'] %}
 
     {% set var_apps_dir_base = params.dirs.apps_dir_base %}
     {% set var_app_repo_dir = var_pod_dir_rel + '/' + var_apps_dir_base + '/' + 
@@ -119,7 +119,7 @@ templates:
 
     {% endif %}
 
-    {% if var_wp_pod_type in ['app', 'db'] %}
+    {% if var_pod_type in ['app', 'db'] %}
 
     mysql_image: "{{ params.main.custom_images.mysql_image }}"
     mysql_version: "{{ params.main.custom_images.mysql_version }}"
@@ -130,7 +130,7 @@ templates:
 
     {% if not var_local %}
 
-    {% if var_wp_pod_type in ['web'] %}
+    {% if var_pod_type in ['web'] %}
 
     mysql_host_ip: "{{ params.dependencies_node_ip_dict['mysql'] }}"
 
@@ -141,22 +141,23 @@ templates:
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
 
-    {% if var_wp_pod_type in ['app'] %}
-
-    fluentd_output_plugin: "file"
+    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin 
+      | default(
+        (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
+      ) 
+    %}
     
-    {% endif %}
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
 
-    {% if var_wp_pod_type in ['web', 'db'] %}
+    {% if var_fluentd_output_plugin == 'elasticsearch' %}
 
-    fluentd_output_plugin: "elasticsearch"
     elasticsearch_host_ip: "{{ params.dependencies_node_ip_dict['elasticsearch'] }}"
     
     {% endif %}
     
     {% endif %}
 
-{% if var_wp_pod_type in ['app', 'web'] %}
+{% if var_pod_type in ['app', 'web'] %}
 
 {% set var_wp_domain = params.main.custom_domain.main_domain %}
 {% set var_wp_external_port = params.main.custom_domain.main_port %}
@@ -200,11 +201,11 @@ children:
     run: {{ var_run | to_json }}
     run_dict: {{ var_run_dict | to_json }}
     run_custom:
-      var_wp_pod_type: "{{ var_wp_pod_type }}"
+      var_wp_pod_type: "{{ var_pod_type }}"
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"
       var_orchestration_run_file: "{{ var_orchestration_run_file }}"
 
-      {% if var_local and (var_wp_pod_type in ['app', 'web']) %}
+      {% if var_local and (var_pod_type in ['app', 'web']) %}
 
       {% set var_wp_app_name = params.main.custom_args.wordpress.app_name | default('') %}
       {% set var_dev_repo_dir_wordpress = params.pod.app[var_wp_app_name].dir_rel | default('') %}
