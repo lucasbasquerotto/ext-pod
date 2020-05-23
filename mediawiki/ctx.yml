@@ -119,6 +119,7 @@ templates:
     sitename: "{{ params.main.mediawiki.sitename }}"
     meta_namespace: "{{ params.main.mediawiki.meta_namespace }}"
     server: "{{ var_server }}"
+    logo: "{{ params.main.mediawiki.logo }}"
     emergency_contact: "{{ params.main.mediawiki.emergency_contact }}"
     password_sender: "{{ params.main.mediawiki.password_sender }}"
     db_server: "mysql"
