@@ -86,6 +86,9 @@ services:
     - "fluentd"
     networks:
     - "shared"
+    volumes: 
+    - "$DATA_DIR/mysql:/var/lib/mysql"
+    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     mem_limit: $CONTAINER_MEM_MYSQL
 
   toolbox:

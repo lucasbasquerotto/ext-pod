@@ -100,7 +100,7 @@ services:
     hostname: "hubot"
     build: 
       context: .
-      dockerfile: "main/hubot/Dockerfile"
+      dockerfile: "main/$HUBOT_DIR/Dockerfile"
       args:
         IMAGE: $HUBOT_IMAGE
         VERSION: $HUBOT_VERSION
@@ -116,7 +116,7 @@ services:
     depends_on:
     - rocketchat
     volumes:
-    - ./scripts:/home/hubot/scripts
+    - "$DATA_DIR/hubot/scripts:/home/hubot/scripts"
     
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"

@@ -6,6 +6,9 @@ x-logging:
     options: 
       max-size: "50m"
 
+volumes:
+  mysql: {}
+
 networks:
   shared:
     external: true
@@ -75,6 +78,9 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
     networks:
     - "shared"
+    volumes: 
+    - "mysql:/var/lib/mysql"
+    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     mem_limit: $CONTAINER_MEM_MYSQL
 
   toolbox:
