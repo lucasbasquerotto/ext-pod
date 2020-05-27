@@ -113,6 +113,8 @@ services:
     - ROCKETCHAT_PASSWORD=$HUBOT_PASSWORD
     - BOT_NAME=$HUBOT_BOT_NAME
     - EXTERNAL_SCRIPTS=hubot-help,hubot-seen,hubot-links,hubot-diagnostics
+    networks:
+    - "shared"
     depends_on:
     - rocketchat
     volumes:

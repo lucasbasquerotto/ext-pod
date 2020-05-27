@@ -63,7 +63,7 @@ templates:
 {% else %}
 
   {% set var_hubot_image = params.main.custom_images.hubot_fake_image | default('alpine') %}
-  {% set var_hubot_version = 'params.main.custom_images.hubot_fake_version' | default('3.11.6') %}
+  {% set var_hubot_version = params.main.custom_images.hubot_fake_version | default('3.11.6') %}
   {% set var_hubot_room = '' %}
   {% set var_hubot_user = '' %}
   {% set var_hubot_password = '' %}
