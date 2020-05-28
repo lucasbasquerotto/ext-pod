@@ -21,7 +21,11 @@
  * @ingroup Maintenance
  */
 
+$base_path = '/var/www/html';
+
 require_once __DIR__ . '/Maintenance.php';
+require_once $base_path . '/includes/AutoLoader.php';
+require_once $base_path . '/includes/installer/CustomCliInstaller.php';
 
 define( 'MW_CONFIG_CALLBACK', 'Installer::overrideConfig' );
 define( 'MEDIAWIKI_INSTALL', true );
@@ -45,9 +49,18 @@ class CommandLineUpgrader extends Maintenance {
 
 	public function execute() {
     	global $IP;
-    
+
+		$vars = Installer::getExistingLocalSettings();
+		if ( !$vars ) {
+			$status = Status::newFatal( "config-download-localsettings" );
+			$this->showStatusMessage( $status );
+			return $status;
+		}
+
+		$sitename = $vars['wgSitename'];
+
 		try {
-			$installer = InstallerOverrides::getCliInstaller( $siteName, $adminName, $this->mOptions );
+			$installer = new CustomCliInstaller( $siteName );
 		} catch ( \MediaWiki\Installer\InstallException $e ) {
 			$this->output( $e->getStatus()->getMessage( false, false, 'en' )->text() . "\n" );
 			return false;
@@ -68,7 +81,6 @@ class CommandLineUpgrader extends Maintenance {
 
 				return false;
 			}
-			$installer->writeConfigurationFile( $this->getOption( 'confpath', $IP ) );
 			$installer->showMessage(
 				'config-install-success',
 				$installer->getVar( 'wgServer' ),
@@ -76,48 +88,6 @@ class CommandLineUpgrader extends Maintenance {
 			);
 		}
 		return true;
-	}
-
-	private function setDbPassOption() {
-		$dbpassfile = $this->getOption( 'dbpassfile' );
-		if ( $dbpassfile !== null ) {
-			if ( $this->getOption( 'dbpass' ) !== null ) {
-				$this->error( 'WARNING: You have provided the options "dbpass" and "dbpassfile". '
-					. 'The content of "dbpassfile" overrides "dbpass".' );
-			}
-			Wikimedia\suppressWarnings();
-			$dbpass = file_get_contents( $dbpassfile ); // returns false on failure
-			Wikimedia\restoreWarnings();
-			if ( $dbpass === false ) {
-				$this->fatalError( "Couldn't open $dbpassfile" );
-			}
-			$this->mOptions['dbpass'] = trim( $dbpass, "\r\n" );
-		}
-	}
-
-	private function setPassOption() {
-		$passfile = $this->getOption( 'passfile' );
-		if ( $passfile !== null ) {
-			if ( $this->getOption( 'pass' ) !== null ) {
-				$this->error( 'WARNING: You have provided the options "pass" and "passfile". '
-					. 'The content of "passfile" overrides "pass".' );
-			}
-			Wikimedia\suppressWarnings();
-			$pass = file_get_contents( $passfile ); // returns false on failure
-			Wikimedia\restoreWarnings();
-			if ( $pass === false ) {
-				$this->fatalError( "Couldn't open $passfile" );
-			}
-			$this->mOptions['pass'] = trim( $pass, "\r\n" );
-		} elseif ( $this->getOption( 'pass' ) === null ) {
-			$this->fatalError( 'You need to provide the option "pass" or "passfile"' );
-		}
-	}
-
-	public function validateParamsAndArgs() {
-		if ( !$this->hasOption( 'env-checks' ) ) {
-			parent::validateParamsAndArgs();
-		}
 	}
 }
 

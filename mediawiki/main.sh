@@ -33,6 +33,12 @@ shift;
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
+  "migrate")
+	"$pod_env_run_file" up mediawiki mysql
+
+	info "$command - init the mediawiki database if needed"
+	"$pod_env_run_file" exec-nontty mediawiki php maintenance/upgrade.php
+    ;;
   *)
     "$pod_env_run_file" "$command" "$@"
     ;;

@@ -36,7 +36,7 @@ case "$command" in
 	"migrate")
 		"$pod_env_run_file" up rocketchat mongo
 
-		info "$command - init the mongo database"
+		info "$command - init the mongo database if needed"
 		"$pod_env_run_file" run mongo_init
 		;;
 	*)

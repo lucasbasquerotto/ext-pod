@@ -3,26 +3,26 @@ version: '2.4'
 x-logging:
   mainlog: &mainlog
     driver: "fluentd"
-    options: 
+    options:
       tag: "docker.{{.Name}}.{{.ID}}"
-      fluentd-address: "localhost:$FLUENTD_PORT"  
+      fluentd-address: "localhost:$FLUENTD_PORT"
   jsonlog: &jsonlog
     driver: "json-file"
-    options: 
+    options:
       max-size: "50m"
 
 networks:
   shared:
     external: true
     name: "${CTX_NAME}-network"
-  log: 
+  log:
     driver: "bridge"
 
 services:
   nginx:
     container_name: "${CTX_NAME}-main-nginx"
     hostname: "nginx"
-    build: 
+    build:
       context: .
       dockerfile: "main/nginx/Dockerfile"
       args:
@@ -41,16 +41,15 @@ services:
     - "$NGINX_HTTPS_PORT:443"
     networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_NGINX
 
   mediawiki:
-    image: mediawiki:1.34.1
     container_name: "${CTX_NAME}-main-mediawiki"
     hostname: "mediawiki"
-    build: 
+    build:
       context: .
       dockerfile: "main/mediawiki/Dockerfile"
       args:
@@ -70,7 +69,7 @@ services:
   mysql:
     container_name: "${CTX_NAME}-main-mysql"
     hostname: "mysql"
-    build: 
+    build:
       context: .
       dockerfile: "main/mysql/Dockerfile"
       args:
@@ -86,7 +85,7 @@ services:
     - "fluentd"
     networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR/mysql:/var/lib/mysql"
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     mem_limit: $CONTAINER_MEM_MYSQL
@@ -94,7 +93,7 @@ services:
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
-    build: 
+    build:
       context: .
       dockerfile: "main/toolbox/Dockerfile"
       args:
@@ -103,18 +102,18 @@ services:
     restart: "unless-stopped"
     networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
-    
+
   fluentd:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
-    build: 
+    build:
       context: .
       dockerfile: "main/fluentd/Dockerfile"
       args:
