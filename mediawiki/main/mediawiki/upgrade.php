@@ -58,9 +58,27 @@ class CommandLineUpgrader extends Maintenance {
 		}
 
 		$sitename = $vars['wgSitename'];
+		$admin = $vars['wgDBuser'];
+		$options = [
+			'dbtype' => $vars['wgDBtype'],
+			'dbserver' => $vars['wgDBserver'],
+			'dbname' => $vars['wgDBname'],
+			'dbuser' => $vars['wgDBuser'],
+			'dbpass' => $vars['wgDBpassword'],
+			'dbprefix' => $vars['wgDBprefix'],
+			'dbtableoptions' => $vars['wgDBTableOptions'],
+			'dbport' => $vars['wgDBport'],
+			'dbschema' => $vars['wgDBmwschema'],
+			'dbpath' => $vars['wgSQLiteDataDir'],
+			'server' => $vars['wgServer'],
+			'scriptpath' => $vars['wgScriptPath'],
+
+			'lang' => $vars['wgLanguageCode'],
+			'pass' => $vars['wgDBpassword'],
+		];
 
 		try {
-			$installer = new CustomCliInstaller( $siteName );
+			$installer = new CustomCliInstaller( $siteName, $admin, $options );
 		} catch ( \MediaWiki\Installer\InstallException $e ) {
 			$this->output( $e->getStatus()->getMessage( false, false, 'en' )->text() . "\n" );
 			return false;
