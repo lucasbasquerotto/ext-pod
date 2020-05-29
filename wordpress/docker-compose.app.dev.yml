@@ -110,9 +110,9 @@ services:
         VERSION: $MYSQL_VERSION
     restart: "unless-stopped"
     environment:
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
       MYSQL_DATABASE: $DB_NAME
       MYSQL_PASSWORD: $DB_PASSWORD
-      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
       MYSQL_USER: $DB_USER
     networks: 
     - "local"

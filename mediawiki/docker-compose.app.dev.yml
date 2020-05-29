@@ -28,12 +28,18 @@ services:
         MAIN_DOMAIN: $MAIN_DOMAIN
         MAIN_DOMAIN_PORT: $MAIN_DOMAIN_PORT
         MAIN_DOMAIN_PORT_SUFFIX: $MAIN_DOMAIN_PORT_SUFFIX
+        PMA_DOMAIN: $PMA_DOMAIN
+        PMA_DOMAIN_PORT: $PMA_DOMAIN_PORT
+        PMA_DOMAIN_PORT_SUFFIX: $PMA_DOMAIN_PORT_SUFFIX
     restart: "unless-stopped"
     depends_on:
     - "mediawiki"
+    - "phpmyadmin"
     ports:
     - "$NGINX_HTTP_PORT:80"
     - "$NGINX_HTTPS_PORT:443"
+    - "$NGINX_PRIVATE_HTTP_PORT:9080"
+    - "$NGINX_PRIVATE_HTTPS_PORT:9443"
     networks:
     - "shared"
     volumes:
@@ -59,6 +65,30 @@ services:
     - "$DATA_DIR/mediawiki/images:/var/www/html/images"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_MEDIAWIKI
+    
+  phpmyadmin:
+    container_name: "${CTX_NAME}-main-phpmyadmin"
+    hostname: "phpmyadmin"
+    build: 
+      context: .
+      dockerfile: "main/phpmyadmin/Dockerfile"
+      args:
+        IMAGE: $PMA_IMAGE
+        VERSION: $PMA_VERSION
+        PERL_VERSION: $PERL_VERSION
+        LOGIN_COOKIE_VALIDITY: $PMA_LOGIN_COOKIE_VALIDITY
+    restart: "unless-stopped"
+    environment:
+      PMA_HOST: $DB_HOST
+      PMA_PORT: $DB_PORT
+    depends_on:
+    - "mysql"
+    networks: 
+    - "shared"
+    volumes: 
+    - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_PMA
 
   mysql:
     container_name: "${CTX_NAME}-main-mysql"
@@ -71,10 +101,10 @@ services:
         VERSION: $MYSQL_VERSION
     restart: "unless-stopped"
     environment:
-      MYSQL_DATABASE: "$MYSQL_DATABASE"
-      MYSQL_USER: "$MYSQL_USER"
-      MYSQL_PASSWORD: "$MYSQL_PASSWORD"
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
+      MYSQL_DATABASE: "$DB_NAME"
+      MYSQL_USER: "$DB_USER"
+      MYSQL_PASSWORD: "$DB_PASSWORD"
     networks:
     - "shared"
     volumes:

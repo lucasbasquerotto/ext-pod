@@ -85,26 +85,27 @@ class CommandLineUpgrader extends Maintenance {
 		}
 
 		$status = $installer->doEnvironmentChecks();
+
 		if ( $status->isGood() ) {
 			$installer->showMessage( 'config-env-good' );
 		} else {
 			$installer->showStatusMessage( $status );
-
 			return false;
 		}
-		if ( !$envChecksOnly ) {
-			$status = $installer->execute();
-			if ( !$status->isGood() ) {
-				$installer->showStatusMessage( $status );
+		
+		$status = $installer->execute();
 
-				return false;
-			}
-			$installer->showMessage(
-				'config-install-success',
-				$installer->getVar( 'wgServer' ),
-				$installer->getVar( 'wgScriptPath' )
-			);
+		if ( !$status->isGood() ) {
+			$installer->showStatusMessage( $status );
+			return false;
 		}
+
+		$installer->showMessage(
+			'config-install-success',
+			$installer->getVar( 'wgServer' ),
+			$installer->getVar( 'wgScriptPath' )
+		);
+		
 		return true;
 	}
 }

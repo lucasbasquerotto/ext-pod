@@ -7,6 +7,9 @@ pod_layer_dir="$POD_LAYER_DIR"
 
 . "${pod_vars_dir}/vars.sh"
 
+pod_layer_base_dir="$(dirname "$pod_layer_dir")"
+base_dir="$(dirname "$pod_layer_base_dir")"
+
 GRAY='\033[0;90m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -33,13 +36,21 @@ shift;
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
-  "migrate")
-	"$pod_env_run_file" up mediawiki mysql
+	"clear-all")
+    mapfile -t list < <(sudo docker ps -aq)
+    [[ ${#list[@]} -gt 0 ]] && sudo docker container rm -f "${list[@]}"
+		sudo docker container prune -f
+		sudo docker network prune -f
+		sudo docker volume prune -f
+		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		;;
+	"migrate")
+		"$pod_env_run_file" up mediawiki mysql
 
-	info "$command - init the mediawiki database if needed"
-	"$pod_env_run_file" exec-nontty mediawiki php maintenance/upgrade.php
-    ;;
-  *)
-    "$pod_env_run_file" "$command" "$@"
-    ;;
+		info "$command - init the mediawiki database if needed"
+		"$pod_env_run_file" exec-nontty mediawiki php maintenance/upgrade.php
+		;;
+	*)
+		"$pod_env_run_file" "$command" "$@"
+		;;
 esac
