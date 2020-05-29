@@ -45,10 +45,25 @@ case "$command" in
 		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
 		;;
 	"migrate")
-		"$pod_env_run_file" up mediawiki mysql
+		if [ "$var_pod_type" = "app" ] || [ "$var_pod_type" = "db" ]; then
+			"$pod_env_run_file" up mysql
 
-		info "$command - init the mediawiki database if needed"
-		"$pod_env_run_file" exec-nontty mediawiki php maintenance/upgrade.php
+			info "$command - init the mediawiki database if needed"
+			"$pod_script_env_file" "db:connect:mysql"
+				--db_service="$var_migrate_db_service" \
+				--db_name="$var_migrate_db_name" \
+				--db_user="$var_migrate_db_user" \
+				--db_pass="$var_migrate_db_pass" \
+				--db_connect_wait_secs="$var_migrate_db_connect_wait_secs" \
+				--connection_sleep="${var_migrate_connection_sleep:-}"
+		fi
+
+		if [ "$var_pod_type" = "app" ] || [ "$var_pod_type" = "web" ]; then
+			"$pod_env_run_file" up mediawiki
+
+			info "$command - init the mediawiki database if needed"
+			"$pod_env_run_file" exec-nontty mediawiki php maintenance/upgrade.php
+		fi
 		;;
 	*)
 		"$pod_env_run_file" "$command" "$@"

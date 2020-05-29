@@ -3,7 +3,6 @@
 set -eou pipefail
 
 pod_vars_dir="$POD_VARS_DIR"
-pod_layer_dir="$POD_LAYER_DIR"
 
 . "${pod_vars_dir}/vars.sh"
 
@@ -24,7 +23,7 @@ fi
 
 shift;
 
-pod_env_shared_file="$pod_layer_dir/main/wordpress/scripts/shared.sh"
+pod_env_shared_file="$pod_layer_dir/$var_general_script_dir/shared.sh"
 
 case "$command" in
 	"setup")

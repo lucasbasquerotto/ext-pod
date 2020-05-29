@@ -21,9 +21,6 @@
  * @ingroup Installer
  */
 
-// define( 'MW_CONFIG_CALLBACK', 'Installer::overrideConfig' );
-// define( 'MEDIAWIKI_INSTALL', true );
-
 /**
  * Class for the custom installer command line interface.
  *
