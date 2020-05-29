@@ -21,11 +21,9 @@
  * @ingroup Maintenance
  */
 
-$base_path = '/var/www/html';
-
 require_once __DIR__ . '/Maintenance.php';
-require_once $base_path . '/includes/AutoLoader.php';
-require_once $base_path . '/includes/installer/CustomCliInstaller.php';
+require_once __DIR__ . '/../includes/AutoLoader.php';
+require_once __DIR__ . '/../includes/installer/CustomCliInstaller.php';
 
 define( 'MW_CONFIG_CALLBACK', 'Installer::overrideConfig' );
 define( 'MEDIAWIKI_INSTALL', true );
@@ -92,7 +90,7 @@ class CommandLineUpgrader extends Maintenance {
 			$installer->showStatusMessage( $status );
 			return false;
 		}
-		
+
 		$status = $installer->execute();
 
 		if ( !$status->isGood() ) {
@@ -105,7 +103,7 @@ class CommandLineUpgrader extends Maintenance {
 			$installer->getVar( 'wgServer' ),
 			$installer->getVar( 'wgScriptPath' )
 		);
-		
+
 		return true;
 	}
 }
