@@ -18,17 +18,17 @@
 {% set var_main_dir = params.main.custom_dir + '/mediawiki' %}
 
 {% set var_pod_dir_rel = '../..' %}
-{% set var_data_dir = var_local 
+{% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
-{% set var_data_dir_task = params.pod.local_data_dir_inside 
-  | default(params.pod.data_dir, true) 
+{% set var_data_dir_task = params.pod.local_data_dir_inside
+  | default(params.pod.data_dir, true)
 %}
 
 {% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 {% set var_orchestration_run_file = 'docker-compose.run.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 
 ### main ###
@@ -50,7 +50,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
-  params: 
+  params:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -93,41 +93,55 @@ templates:
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
 
-    {% if not var_local %}
+    {% if var_local %}
+
+    db_host_ip: ""
+
+    {% else %}
+
+    {% if var_pod_type in ['web'] %}
+
+    db_host_ip: "{{ params.dependencies_node_ip_dict['mysql'] }}"
+
+    {% else %}
+
+    db_host_ip: ""
+
+    {% endif %}
 
     fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
     fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
 
-    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin 
+    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin
       | default(
         (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
-      ) 
+      )
     %}
-    
+
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
 
     {% if var_fluentd_output_plugin == 'elasticsearch' %}
 
     elasticsearch_host_ip: "{{ params.dependencies_node_ip_dict['elasticsearch'] }}"
-    
-    {% endif %}
-    
+
     {% endif %}
 
-{% set var_server = (params.main.custom_domain.ssl | bool) | 
-  ternary('https', 'http') + '://' + 
-  params.main.custom_domain.main_domain 
-  + (not (params.main.custom_domain.main_port in ['80', '443'])) | 
-  ternary(':' + params.main.custom_domain.main_port, '') 
+    {% endif %}
+
+{% set var_server = (params.main.custom_domain.ssl | bool) |
+  ternary('https', 'http') + '://' +
+  params.main.custom_domain.main_domain
+  + (not (params.main.custom_domain.main_port in ['80', '443'])) |
+  ternary(':' + params.main.custom_domain.main_port, '')
 %}
 
 - src: "{{ var_main_dir }}/templates/mediawiki/LocalSettings.php"
   dest: "{{ var_main_dir }}/env/mediawiki/LocalSettings.php"
   mode: "666"
   root: true
-  params:  
+  params:
     sitename: "{{ params.main.mediawiki.sitename }}"
     meta_namespace: "{{ params.main.mediawiki.meta_namespace }}"
     server: "{{ var_server }}"

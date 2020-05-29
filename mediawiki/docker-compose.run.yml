@@ -3,9 +3,9 @@ version: "2.4"
 x-logging:
   mainlog: &mainlog
     driver: "fluentd"
-    options: 
+    options:
       tag: "docker.{{.Name}}.{{.ID}}"
-      fluentd-address: "localhost:$FLUENTD_PORT"  
+      fluentd-address: "localhost:$FLUENTD_PORT"
 
 networks:
   shared:
@@ -13,10 +13,27 @@ networks:
     name: "${CTX_NAME}-network"
 
 services:
+  mysql_cli:
+    container_name: "${CTX_NAME}-main-mysql_cli"
+    hostname: "mysql_cli"
+    build:
+      context: .
+      dockerfile: "main/mysql/Dockerfile"
+      args:
+        IMAGE: $MYSQL_IMAGE
+        VERSION: $MYSQL_VERSION
+    networks:
+    - "shared"
+    extra_hosts:
+    - "mysql:$DB_HOST_IP"
+    volumes:
+    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    mem_limit: $CONTAINER_MEM_MYSQL
+
   s3_backup:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
-    build: 
+    build:
       context: .
       dockerfile: "main/awscli/Dockerfile"
       args:
@@ -28,11 +45,10 @@ services:
     restart: "unless-stopped"
     networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_BACKUP
-    
