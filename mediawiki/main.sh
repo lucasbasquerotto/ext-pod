@@ -37,13 +37,17 @@ shift;
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
+	"clear")
+		"$pod_script_env_file" rm
+		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mysql"
+		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		;;
 	"clear-all")
-		mapfile -t list < <(sudo docker ps -aq)
-		[[ ${#list[@]} -gt 0 ]] && sudo docker container rm -f "${list[@]}"
+		"$pod_script_env_file" rm
 		sudo docker container prune -f
 		sudo docker network prune -f
 		sudo docker volume prune -f
-		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		sudo rm -rf "${base_dir}/data/"*
 		;;
 	"migrate")
 		if [ "$var_pod_type" = "app" ] || [ "$var_pod_type" = "db" ]; then

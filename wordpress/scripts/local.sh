@@ -83,7 +83,7 @@ case "$command" in
 		"$pod_env_shared_file" "$command" "$@"
 		"$ctl_layer_dir/run" "$command"
 		;;
-	"clear-all")
+	"clear-remote")
 		"$pod_script_env_file" "s3:task:wp_uploads" --s3_cmd=rb
 		"$pod_script_env_file" "s3:task:wp_db" --s3_cmd=rb
 		"$pod_script_env_file" clear
@@ -92,6 +92,13 @@ case "$command" in
 		"$pod_script_env_file" rm
 		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mysql"
 		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		;;
+	"clear-all")
+		"$pod_script_env_file" rm
+		sudo docker container prune -f
+		sudo docker network prune -f
+		sudo docker volume prune -f
+		sudo rm -rf "${base_dir}/data/"*
 		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"

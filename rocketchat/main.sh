@@ -33,6 +33,19 @@ shift;
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
+	"clear")
+		"$pod_script_env_file" rm
+		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_db"
+		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_dump"
+		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		;;
+	"clear-all")
+		"$pod_script_env_file" rm
+		sudo docker container prune -f
+		sudo docker network prune -f
+		sudo docker volume prune -f
+		sudo rm -rf "${base_dir}/data/"*
+		;;
 	"migrate")
 		"$pod_env_run_file" up rocketchat mongo
 

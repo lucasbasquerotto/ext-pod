@@ -4,7 +4,7 @@ version: '2.4'
 x-logging:
   mainlog: &mainlog
     driver: "json-file"
-    options: 
+    options:
       max-size: "50m"
 
 networks:
@@ -20,7 +20,7 @@ services:
   nginx:
     container_name: "${CTX_NAME}-main-nginx"
     hostname: "nginx"
-    build: 
+    build:
       context: .
       dockerfile: "main/nginx/Dockerfile"
       args:
@@ -38,7 +38,7 @@ services:
     - "$NGINX_HTTPS_PORT:443"
     networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_NGINX
@@ -46,7 +46,7 @@ services:
   rocketchat:
     container_name: "${CTX_NAME}-main-rocketchat"
     hostname: "rocketchat"
-    build: 
+    build:
       context: .
       dockerfile: "main/rocketchat/Dockerfile"
       args:
@@ -76,10 +76,28 @@ services:
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_ROCKETCHAT
 
+  mongo-express:
+    container_name: "${CTX_NAME}-main-mongo-express"
+    hostname: "mongo-express"
+    build:
+      context: .
+      dockerfile: "main/mongo-express/Dockerfile"
+      args:
+        IMAGE: $MONGO_IMAGE
+        VERSION: $MONGO_VERSION
+    restart: "unless-stopped"
+    environment:
+    - ME_CONFIG_OPTIONS_EDITORTHEME=ambiance
+    - ME_CONFIG_MONGODB_SERVER=$DB_HOST
+    - ME_CONFIG_MONGODB_PORT=$DB_PORT
+    networks:
+    - "shared"
+    mem_limit: $CONTAINER_MEM_MONGO_EXPRESS
+
   mongo:
     container_name: "${CTX_NAME}-main-mongo"
     hostname: "mongo"
-    build: 
+    build:
       context: .
       dockerfile: "main/mongo/Dockerfile"
       args:
@@ -98,7 +116,7 @@ services:
   hubot:
     container_name: "${CTX_NAME}-main-hubot"
     hostname: "hubot"
-    build: 
+    build:
       context: .
       dockerfile: "main/$HUBOT_DIR/Dockerfile"
       args:
@@ -119,11 +137,11 @@ services:
     - rocketchat
     volumes:
     - "$DATA_DIR/hubot/scripts:/home/hubot/scripts"
-    
+
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
-    build: 
+    build:
       context: .
       dockerfile: "main/toolbox/Dockerfile"
       args:
@@ -132,7 +150,7 @@ services:
     restart: "unless-stopped"
     networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"

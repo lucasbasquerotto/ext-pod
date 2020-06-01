@@ -63,7 +63,6 @@ services:
         VERSION: $MEDIAWIKI_VERSION
     restart: "unless-stopped"
     depends_on:
-    - "mysql"
     - "fluentd"
     networks:
     - "shared"
@@ -88,7 +87,6 @@ services:
       PMA_HOST: $DB_HOST
       PMA_PORT: $DB_PORT
     depends_on:
-    - "mysql"
     - "fluentd"
     networks:
     - "shared"
@@ -96,30 +94,6 @@ services:
     - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_PMA
-
-  mysql:
-    container_name: "${CTX_NAME}-main-mysql"
-    hostname: "mysql"
-    build:
-      context: .
-      dockerfile: "main/mysql/Dockerfile"
-      args:
-        IMAGE: $MYSQL_IMAGE
-        VERSION: $MYSQL_VERSION
-    restart: "unless-stopped"
-    environment:
-      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
-      MYSQL_DATABASE: "$DB_NAME"
-      MYSQL_USER: "$DB_USER"
-      MYSQL_PASSWORD: "$DB_PASSWORD"
-    depends_on:
-    - "fluentd"
-    networks:
-    - "shared"
-    volumes:
-    - "$DATA_DIR/mysql:/var/lib/mysql"
-    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
-    mem_limit: $CONTAINER_MEM_MYSQL
 
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
@@ -157,6 +131,8 @@ services:
     - "$FLUENTD_PORT:24224/udp"
     networks:
     - "log"
+    extra_hosts:
+    - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     logging: *jsonlog

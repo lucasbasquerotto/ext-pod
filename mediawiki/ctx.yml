@@ -35,8 +35,21 @@
 
 volumes:
 
+- when: false
+
+{% if var_pod_type in ['app', 'db'] %}
+
+- path: "{{ var_data_dir_task + '/mysql' }}"
+  mode: "0755"
+
+{% endif %}
+
+{% if var_pod_type in ['app', 'web'] %}
+
 - path: "{{ var_data_dir_task + '/mediawiki/images' }}"
   mode: "0777"
+
+{% endif %}
 
 {% if not var_local %}
 
@@ -55,18 +68,32 @@ templates:
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
+
+    {% if var_pod_type in ['app', 'web'] %}
+
     nginx_image: "{{ params.main.custom_images.nginx_image }}"
     nginx_version: "{{ params.main.custom_images.nginx_version }}"
     mediawiki_image: "{{ params.main.custom_images.mediawiki_image }}"
     mediawiki_version: "{{ params.main.custom_images.mediawiki_version }}"
     pma_image: "{{ params.main.custom_images.pma_image }}"
     pma_version: "{{ params.main.custom_images.pma_version }}"
+
+    {% endif %}
+
+    {% if var_pod_type in ['app', 'db'] %}
+
     mysql_image: "{{ params.main.custom_images.mysql_image }}"
     mysql_version: "{{ params.main.custom_images.mysql_version }}"
+
+    {% endif %}
+
     toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
     toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
     awscli_image: "{{ params.main.custom_images.awscli_image }}"
     awscli_version: "{{ params.main.custom_images.awscli_version }}"
+
+    {% if var_pod_type in ['app', 'web'] %}
+
     ssl: "{{ params.main.custom_domain.ssl }}"
     main_domain: "{{ params.main.custom_domain.main_domain }}"
     main_domain_port: "{{ params.main.custom_domain.main_port }}"
@@ -78,18 +105,38 @@ templates:
     nginx_private_https_port: "{{ params.main.custom_args.nginx.private_https_port }}"
     pma_login_cookie_validity: >-
       {{ params.main.custom_args.pma.login_cookie_validity | default('36000') }}
+
+    {% endif %}
+
     db_host: "{{ params.main.custom_args.mysql.host }}"
     db_port: "{{ params.main.custom_args.mysql.port }}"
     db_name: "{{ params.credentials.mediawiki.db.name }}"
     db_user: "{{ params.credentials.mediawiki.db.user }}"
     db_password: "{{ params.credentials.mediawiki.db.password }}"
+
+    {% if var_pod_type in ['app', 'db'] %}
+
     db_root_password: "{{ params.credentials.mediawiki.db.root_password }}"
+
+    {% endif %}
+
     s3_backup_access_key: "{{ params.credentials.mediawiki_backup_bucket.access_key }}"
     s3_backup_secret_key: "{{ params.credentials.mediawiki_backup_bucket.secret_key }}"
+
+    {% if var_pod_type in ['app', 'web'] %}
+
     container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
     container_mem_mediawiki: "{{ params.main.custom_memory.mediawiki }}"
     container_mem_pma: "{{ params.main.custom_memory.pma }}"
+
+    {% endif %}
+
+    {% if var_pod_type in ['app', 'db'] %}
+
     container_mem_mysql: "{{ params.main.custom_memory.mysql }}"
+
+    {% endif %}
+
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
 
