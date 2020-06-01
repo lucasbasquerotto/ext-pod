@@ -50,7 +50,26 @@ case "$command" in
 		"$pod_env_run_file" up rocketchat mongo
 
 		info "$command - init the mongo database if needed"
-		"$pod_env_run_file" run mongo_init
+		"$pod_env_run_file" run mongo_init /bin/bash <<-SHELL
+			set -eou pipefail
+
+			for i in "$(seq 1 30)"; do
+				mongo mongo/rocketchat --eval "
+					rs.initiate({
+						_id: 'rs0',
+						members: [ { _id: 0, host: 'localhost:27017' } ]
+					})
+				" && s=\$? && break || s=\$?;
+				echo "Tried \$i times. Waiting 5 secs...";
+				sleep 5;
+			done;
+
+			if [ "\$s" != "0" ]; then
+			  exit \$s
+			fi
+
+			mongo mongo/rocketchat /tmp/main/init.js
+		SHELL
 		;;
 	*)
 		"$pod_env_run_file" "$command" "$@"

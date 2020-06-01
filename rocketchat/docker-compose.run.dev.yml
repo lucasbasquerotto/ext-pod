@@ -3,7 +3,7 @@ version: "2.4"
 x-logging:
   mainlog: &mainlog
     driver: "json-file"
-    options: 
+    options:
       max-size: "50m"
 
 networks:
@@ -15,7 +15,7 @@ services:
   mongo_init:
     container_name: "${CTX_NAME}-run-mongo_init"
     hostname: "mongo_init"
-    build: 
+    build:
       context: .
       dockerfile: "main/mongo/Dockerfile"
       args:
@@ -24,23 +24,12 @@ services:
     networks:
     - "shared"
     logging: *mainlog
-    command: >
-      bash -c
-        "for i in `seq 1 30`; do
-          mongo mongo/rocketchat --eval \"
-            rs.initiate({
-              _id: 'rs0',
-              members: [ { _id: 0, host: 'localhost:27017' } ]})\" &&
-          s=$$? && break || s=$$?;
-          echo \"Tried $$i times. Waiting 5 secs...\";
-          sleep 5;
-        done; (exit $$s)"
     mem_limit: $CONTAINER_MEM_S3_BACKUP
-      
+
   s3_backup:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
-    build: 
+    build:
       context: .
       dockerfile: "main/awscli/Dockerfile"
       args:
@@ -52,11 +41,10 @@ services:
     restart: "unless-stopped"
     networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_BACKUP
-    
