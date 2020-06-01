@@ -18,17 +18,17 @@
 {% set var_main_dir = params.main.custom_dir + '/rocketchat' %}
 
 {% set var_pod_dir_rel = '../..' %}
-{% set var_data_dir = var_local 
+{% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
-{% set var_data_dir_task = params.pod.local_data_dir_inside 
-  | default(params.pod.data_dir, true) 
+{% set var_data_dir_task = params.pod.local_data_dir_inside
+  | default(params.pod.data_dir, true)
 %}
 
 {% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 {% set var_orchestration_run_file = 'docker-compose.run.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 
 ### main ###
@@ -75,7 +75,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
-  params: 
+  params:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -86,6 +86,8 @@ templates:
     rocketchat_version: "{{ params.main.custom_images.rocketchat_version }}"
     mongo_image: "{{ params.main.custom_images.mongo_image }}"
     mongo_version: "{{ params.main.custom_images.mongo_version }}"
+    mongo_express_image: "{{ params.main.custom_images.mongo_express_image }}"
+    mongo_express_version: "{{ params.main.custom_images.mongo_express_version }}"
     toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
     toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
     hubot_image: "{{ var_hubot_image }}"
@@ -95,8 +97,16 @@ templates:
     ssl: "{{ params.main.custom_domain.ssl }}"
     main_domain: "{{ params.main.custom_domain.main_domain }}"
     main_domain_port: "{{ params.main.custom_domain.main_port }}"
+    mongo_express_domain: "{{ params.main.custom_domain.mongo_express_domain }}"
+    mongo_express_domain_port: "{{ params.main.custom_domain.mongo_express_port }}"
     nginx_http_port: "{{ params.main.custom_args.nginx.http_port }}"
     nginx_https_port: "{{ params.main.custom_args.nginx.https_port }}"
+    nginx_private_http_port: "{{ params.main.custom_args.nginx.private_http_port }}"
+    nginx_private_https_port: "{{ params.main.custom_args.nginx.private_https_port }}"
+    db_name: "{{ params.credentials.rocketchat.db.name }}"
+    db_user: "{{ params.credentials.rocketchat.db.user }}"
+    db_password: "{{ params.credentials.rocketchat.db.password }}"
+    db_oplog_password: "{{ params.credentials.rocketchat.db.oploguser_password }}"
     use_bot: "{{ params.main.use_bot }}"
     hubot_room: "{{ var_hubot_room }}"
     hubot_user: "{{ var_hubot_user }}"
@@ -106,6 +116,7 @@ templates:
     s3_backup_secret_key: "{{ params.credentials.rocketchat_backup_bucket.secret_key }}"
     container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
     container_mem_rocketchat: "{{ params.main.custom_memory.rocketchat }}"
+    container_mem_mongo_express: "{{ params.main.custom_memory.mongo_express }}"
     container_mem_mongo: "{{ params.main.custom_memory.mongo }}"
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
     container_mem_hubot: "{{ var_container_mem_hubot }}"
@@ -119,21 +130,32 @@ templates:
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
 
-    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin 
+    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin
       | default(
         (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
-      ) 
+      )
     %}
-    
+
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
 
     {% if var_fluentd_output_plugin == 'elasticsearch' %}
 
     elasticsearch_host_ip: "{{ params.dependencies_node_ip_dict['elasticsearch'] }}"
-    
+
     {% endif %}
-    
+
     {% endif %}
+
+- src: "{{ var_main_dir }}/templates/mongo/init.js"
+  dest: "{{ var_main_dir }}/env/mongo/init.js"
+  root: true
+  params:
+    db_name: "{{ params.credentials.rocketchat.db.name }}"
+    db_user: "{{ params.credentials.rocketchat.db.user }}"
+    db_password: "{{ params.credentials.rocketchat.db.password }}"
+    root_password: "{{ params.credentials.rocketchat.db.root_password }}"
+    viewer_password: "{{ params.credentials.rocketchat.db.viewer_password }}"
+    oploguser_password: "{{ params.credentials.rocketchat.db.oploguser_password }}"
 
 children:
 

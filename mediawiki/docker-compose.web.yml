@@ -66,6 +66,8 @@ services:
     - "fluentd"
     networks:
     - "shared"
+    extra_hosts:
+    - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/mediawiki/images:/var/www/html/images"
     logging: *mainlog
@@ -90,6 +92,8 @@ services:
     - "fluentd"
     networks:
     - "shared"
+    extra_hosts:
+    - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
     logging: *mainlog
@@ -131,8 +135,6 @@ services:
     - "$FLUENTD_PORT:24224/udp"
     networks:
     - "log"
-    extra_hosts:
-    - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     logging: *jsonlog
