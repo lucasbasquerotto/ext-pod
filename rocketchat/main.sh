@@ -37,18 +37,6 @@ base_dir="$(dirname "$pod_layer_base_dir")"
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
-	"test")
-			for i in "$(seq 1 30)"; do
-				mongo mongo/"$var_custom_db_name" --eval "
-					rs.initiate({
-						_id: 'rs0',
-						members: [ { _id: 0, host: 'localhost:27017' } ]
-					})
-				" && s=\$? && break || s=\$?;
-				echo "Tried \$i times. Waiting 5 secs...";
-				sleep 5;
-			done;
-		;;
 	"clear")
 		"$pod_script_env_file" rm
 		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_db"
@@ -73,7 +61,7 @@ case "$command" in
 		"$pod_env_run_file" run mongo_init /bin/bash <<-SHELL
 			set -eou pipefail
 
-			for i in "$(seq 1 30)"; do
+			for i in $(seq 1 30); do
 				mongo mongo/"$var_custom_db_name" --eval "
 					rs.initiate({
 						_id: 'rs0',
@@ -88,7 +76,15 @@ case "$command" in
 			  exit \$s
 			fi
 
-			mongo mongo/admin /tmp/main/init.js
+			for i in $(seq 1 30); do
+				mongo mongo/admin /tmp/main/init.js && s=\$? && break || s=\$?;
+				echo "Tried \$i times. Waiting 5 secs...";
+				sleep 5;
+			done;
+
+			if [ "\$s" != "0" ]; then
+			  exit \$s
+			fi
 		SHELL
 		;;
 	*)
