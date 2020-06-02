@@ -131,6 +131,8 @@ services:
         IMAGE: $TOOLBOX_IMAGE
         VERSION: $TOOLBOX_VERSION
     restart: "unless-stopped"
+    depends_on:
+    - "fluentd"
     networks:
     - "shared"
     volumes:
