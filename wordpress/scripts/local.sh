@@ -84,8 +84,8 @@ case "$command" in
 		"$ctl_layer_dir/run" "$command"
 		;;
 	"clear-remote")
-		"$pod_script_env_file" "s3:task:wp_uploads" --s3_cmd=rb
-		"$pod_script_env_file" "s3:task:wp_db" --s3_cmd=rb
+		"$pod_script_env_file" "s3:task:uploads" --s3_cmd=rb
+		"$pod_script_env_file" "s3:task:db" --s3_cmd=rb
 		;;
 	"clear")
 		"$pod_script_env_file" rm

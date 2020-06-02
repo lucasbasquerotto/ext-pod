@@ -48,7 +48,7 @@ while getopts ':-:' OPT; do
 		setup_local_seed_data ) arg_setup_local_seed_data="${OPTARG:-}";;
 		setup_remote_seed_data ) arg_setup_remote_seed_data="${OPTARG:-}";;
 		old_domain_host ) arg_old_domain_host="${OPTARG:-}";;
-		new_domain_host ) arg_new_domain_host="${OPTARG:-}";; 
+		new_domain_host ) arg_new_domain_host="${OPTARG:-}";;
 		??* ) error "Illegal option --$OPT" ;;	# bad long option
 		\? )	exit 2 ;;	# bad short option (error reported via getopts)
 	esac
@@ -56,7 +56,7 @@ done
 shift $((OPTIND-1))
 
 case "$command" in
-	"setup:new:wp_db")
+	"setup:new:db")
 		"$pod_script_env_file" up wordpress
 
 		# Deploy a brand-new Wordpress site (with possibly seeded data)

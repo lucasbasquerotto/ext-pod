@@ -50,17 +50,17 @@ case "$command" in
 	"migrate:"*)
 		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"setup:new:wp_db")
+	"setup:new:db")
 		opts=()
 
-		opts+=( "--setup_url=$var_setup_new_wp_db_url" )
-		opts+=( "--setup_title=$var_setup_new_wp_db_title" )
-		opts+=( "--setup_admin_user=$var_setup_new_wp_db_admin_user" )
-		opts+=( "--setup_admin_password=$var_setup_new_wp_db_admin_password" )
-		opts+=( "--setup_admin_email=$var_setup_new_wp_db_admin_email" )
-		opts+=( "--setup_restore_seed=${var_setup_new_wp_db_restore_seed:-}" )
-		opts+=( "--setup_local_seed_data=${var_setup_new_wp_db_local_seed_data:-}" )
-		opts+=( "--setup_remote_seed_data=${var_setup_new_wp_db_remote_seed_data:-}" )
+		opts+=( "--setup_url=$var_setup_new_db_url" )
+		opts+=( "--setup_title=$var_setup_new_db_title" )
+		opts+=( "--setup_admin_user=$var_setup_new_db_admin_user" )
+		opts+=( "--setup_admin_password=$var_setup_new_db_admin_password" )
+		opts+=( "--setup_admin_email=$var_setup_new_db_admin_email" )
+		opts+=( "--setup_restore_seed=${var_setup_new_db_restore_seed:-}" )
+		opts+=( "--setup_local_seed_data=${var_setup_new_db_local_seed_data:-}" )
+		opts+=( "--setup_remote_seed_data=${var_setup_new_db_remote_seed_data:-}" )
 
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;

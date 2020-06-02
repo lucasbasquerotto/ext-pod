@@ -37,6 +37,18 @@ base_dir="$(dirname "$pod_layer_base_dir")"
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
+	"test")
+			for i in "$(seq 1 30)"; do
+				mongo mongo/"$var_custom_db_name" --eval "
+					rs.initiate({
+						_id: 'rs0',
+						members: [ { _id: 0, host: 'localhost:27017' } ]
+					})
+				" && s=\$? && break || s=\$?;
+				echo "Tried \$i times. Waiting 5 secs...";
+				sleep 5;
+			done;
+		;;
 	"clear")
 		"$pod_script_env_file" rm
 		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_db"
@@ -49,6 +61,10 @@ case "$command" in
 		sudo docker network prune -f
 		sudo docker volume prune -f
 		sudo rm -rf "${base_dir}/data/"*
+		;;
+	"clear-remote")
+		"$pod_script_env_file" "s3:task:uploads" --s3_cmd=rb
+		"$pod_script_env_file" "s3:task:db" --s3_cmd=rb
 		;;
 	"migrate")
 		"$pod_env_run_file" up mongo
