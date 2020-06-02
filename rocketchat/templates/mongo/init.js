@@ -21,7 +21,7 @@ const map = {
     }
 }
 
-for (let user in Object.keys(map)) {
+for (let user of Object.keys(map)) {
     const count = db.system.users.find({ user: user }).count();
 
     if (count === 0) {

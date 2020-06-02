@@ -125,6 +125,9 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
+    s3_uploads_access_key: "{{ params.credentials.mediawiki_uploads_bucket.access_key }}"
+    s3_uploads_secret_key: "{{ params.credentials.mediawiki_uploads_bucket.secret_key }}"
+
     container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
     container_mem_mediawiki: "{{ params.main.custom_memory.mediawiki }}"
     container_mem_pma: "{{ params.main.custom_memory.pma }}"
@@ -140,21 +143,27 @@ templates:
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
 
-    {% if var_local %}
+    {% if var_pod_type in ['app', 'web'] %}
 
-    db_host_ip: ""
+    container_mem_s3_uploads: "{{ params.main.custom_memory.s3_uploads }}"
 
-    {% else %}
+    {% endif %}
 
     {% if var_pod_type in ['web'] %}
 
-    db_host_ip: "{{ params.dependencies_node_ip_dict['mysql'] }}"
-
-    {% else %}
+    {% if not var_local %}
 
     db_host_ip: ""
 
+    {% else %}
+
+    db_host_ip: "{{ params.dependencies_node_ip_dict['mysql'] }}"
+
     {% endif %}
+
+    {% endif %}
+
+    {% if not var_local %}
 
     fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
     fluentd_version: "{{ params.main.custom_images.fluentd_version }}"

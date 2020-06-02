@@ -4,6 +4,7 @@ set -eou pipefail
 
 pod_vars_dir="$POD_VARS_DIR"
 pod_layer_dir="$POD_LAYER_DIR"
+pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 . "${pod_vars_dir}/vars.sh"
 
@@ -30,6 +31,9 @@ fi
 
 shift;
 
+pod_layer_base_dir="$(dirname "$pod_layer_dir")"
+base_dir="$(dirname "$pod_layer_base_dir")"
+
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
@@ -47,14 +51,14 @@ case "$command" in
 		sudo rm -rf "${base_dir}/data/"*
 		;;
 	"migrate")
-		"$pod_env_run_file" up rocketchat mongo
+		"$pod_env_run_file" up mongo
 
 		info "$command - init the mongo database if needed"
 		"$pod_env_run_file" run mongo_init /bin/bash <<-SHELL
 			set -eou pipefail
 
 			for i in "$(seq 1 30)"; do
-				mongo mongo/rocketchat --eval "
+				mongo mongo/"$var_custom_db_name" --eval "
 					rs.initiate({
 						_id: 'rs0',
 						members: [ { _id: 0, host: 'localhost:27017' } ]
@@ -68,7 +72,7 @@ case "$command" in
 			  exit \$s
 			fi
 
-			mongo mongo/rocketchat /tmp/main/init.js
+			mongo mongo/admin /tmp/main/init.js
 		SHELL
 		;;
 	*)

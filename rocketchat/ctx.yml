@@ -169,3 +169,4 @@ children:
       var_pod_type: "{{ var_pod_type }}"
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"
       var_orchestration_run_file: "{{ var_orchestration_run_file }}"
+      var_custom_db_name: "{{ params.credentials.rocketchat.db.name }}"

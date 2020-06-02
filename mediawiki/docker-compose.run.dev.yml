@@ -29,6 +29,29 @@ services:
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     mem_limit: $CONTAINER_MEM_MYSQL
 
+  s3_uploads:
+    container_name: "${CTX_NAME}-run-s3_uploads"
+    hostname: "s3_uploads"
+    build:
+      context: .
+      dockerfile: "main/awscli/Dockerfile"
+      args:
+        IMAGE: $AWSCLI_IMAGE
+        VERSION: $AWSCLI_VERSION
+        PERL_VERSION: $PERL_VERSION
+        S3_ACCESS_KEY: $S3_UPLOADS_ACCESS_KEY
+        S3_SECRET_KEY: $S3_UPLOADS_SECRET_KEY
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_S3_UPLOADS
+
   s3_backup:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
