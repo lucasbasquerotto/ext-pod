@@ -86,7 +86,6 @@ case "$command" in
 	"clear-remote")
 		"$pod_script_env_file" "s3:task:wp_uploads" --s3_cmd=rb
 		"$pod_script_env_file" "s3:task:wp_db" --s3_cmd=rb
-		"$pod_script_env_file" clear
 		;;
 	"clear")
 		"$pod_script_env_file" rm

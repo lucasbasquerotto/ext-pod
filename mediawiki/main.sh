@@ -49,6 +49,10 @@ case "$command" in
 		sudo docker volume prune -f
 		sudo rm -rf "${base_dir}/data/"*
 		;;
+	"clear-remote")
+		"$pod_script_env_file" "s3:task:uploads" --s3_cmd=rb
+		"$pod_script_env_file" "s3:task:db" --s3_cmd=rb
+		;;
 	"migrate")
 		if [ "$var_pod_type" = "app" ] || [ "$var_pod_type" = "db" ]; then
 			"$pod_env_run_file" up mysql
