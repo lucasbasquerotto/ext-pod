@@ -1,9 +1,4 @@
 const map = {
-    root: {
-        user: "root",
-        pwd: "{{ params.root_password }}",
-        roles: [{role: "root", db: "admin"}]
-    },
     viewer: {
         user: "viewer",
         pwd: "{{ params.viewer_password }}",
