@@ -96,6 +96,7 @@ services:
     restart: unless-stopped
     depends_on:
     - "fluentd"
+    - "rocketchat"
     environment:
     - ROCKETCHAT_URL=rocketchat:3000
     - LISTEN_ON_ALL_PUBLIC=true

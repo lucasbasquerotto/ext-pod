@@ -41,6 +41,7 @@ pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 case "$command" in
 	"clear")
 		"$pod_script_env_file" rm
+		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_uploads"
 		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_db"
 		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_dump"
 		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"

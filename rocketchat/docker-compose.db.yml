@@ -1,0 +1,84 @@
+version: '2.4'
+
+x-logging:
+  mainlog: &mainlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+networks:
+  shared:
+    external: true
+    name: "${CTX_NAME}-network"
+
+volumes:
+  mongo_db: {}
+  mongo_dump: {}
+
+services:
+
+  mongo:
+    container_name: "${CTX_NAME}-main-mongo"
+    hostname: "mongo"
+    build:
+      context: .
+      dockerfile: "main/mongo/Dockerfile"
+      args:
+        IMAGE: $MONGO_IMAGE
+        VERSION: $MONGO_VERSION
+    restart: "unless-stopped"
+    depends_on:
+    - "fluentd"
+    environment:
+    - MONGO_INITDB_ROOT_USERNAME=$DB_ROOT_USER
+    - MONGO_INITDB_ROOT_PASSWORD=$DB_ROOT_PASS
+    networks:
+    - "shared"
+    volumes:
+    - "mongo_db:/data/db"
+    - "mongo_dump:/dump"
+    command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
+    mem_limit: $CONTAINER_MEM_MONGO
+
+  toolbox:
+    container_name: "${CTX_NAME}-main-toolbox"
+    hostname: "toolbox"
+    build:
+      context: .
+      dockerfile: "main/toolbox/Dockerfile"
+      args:
+        IMAGE: $TOOLBOX_IMAGE
+        VERSION: $TOOLBOX_VERSION
+    restart: "unless-stopped"
+    depends_on:
+    - "fluentd"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_TOOLBOX
+
+  fluentd:
+    container_name: "${CTX_NAME}-main-fluentd"
+    hostname: "fluentd"
+    build:
+      context: .
+      dockerfile: "main/fluentd/Dockerfile"
+      args:
+        IMAGE: $FLUENTD_IMAGE
+        VERSION: $FLUENTD_VERSION
+        OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
+    restart: "unless-stopped"
+    ports:
+    - "$FLUENTD_PORT:24224"
+    - "$FLUENTD_PORT:24224/udp"
+    networks:
+    - "log"
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    logging: *jsonlog
+    mem_limit: $CONTAINER_MEM_FLUENTD

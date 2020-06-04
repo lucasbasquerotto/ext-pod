@@ -34,6 +34,7 @@ services:
         MONGO_EXPRESS_DOMAIN_PORT_SUFFIX: $MONGO_EXPRESS_DOMAIN_PORT_SUFFIX
     restart: "unless-stopped"
     depends_on:
+    - "fluentd"
     - "rocketchat"
     - "mongo-express"
     ports:
@@ -73,7 +74,7 @@ services:
     - MONGO_OPLOG_URL=mongodb://oploguser:$DB_OPLOG_PASSWORD@mongo:27017/local?authSource=admin
     - MAIL_URL=smtp://smtp.email
     depends_on:
-    - "mongo"
+    - "fluentd"
     networks:
     - "shared"
     volumes:
@@ -81,6 +82,7 @@ services:
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_ROCKETCHAT
 
+  # hubot, the popular chatbot (add the bot user first and change the password before starting this image)
   hubot:
     container_name: "${CTX_NAME}-main-hubot"
     hostname: "hubot"
@@ -92,6 +94,7 @@ services:
         VERSION: $HUBOT_VERSION
     restart: unless-stopped
     depends_on:
+    - "fluentd"
     - "rocketchat"
     environment:
     - ROCKETCHAT_URL=rocketchat:3000
@@ -108,53 +111,6 @@ services:
     volumes:
     - "$DATA_DIR/hubot/scripts:/home/hubot/scripts"
 
-  mongo-express:
-    container_name: "${CTX_NAME}-main-mongo-express"
-    hostname: "mongo-express"
-    build:
-      context: .
-      dockerfile: "main/mongo-express/Dockerfile"
-      args:
-        IMAGE: $MONGO_EXPRESS_IMAGE
-        VERSION: $MONGO_EXPRESS_VERSION
-    restart: "unless-stopped"
-    environment:
-    - ME_CONFIG_OPTIONS_EDITORTHEME=ambiance
-    - ME_CONFIG_MONGODB_SERVER=mongo
-    - ME_CONFIG_MONGODB_PORT=27017
-    # - ME_CONFIG_BASICAUTH_USERNAME=$DB_USER
-    # - ME_CONFIG_BASICAUTH_PASSWORD=$DB_PASS
-    # - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
-    # - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
-    # - ME_CONFIG_MONGODB_AUTH_USERNAME=$DB_ROOT_USER
-    # - ME_CONFIG_MONGODB_AUTH_PASSWORD=$DB_ROOT_PASS
-    - ME_CONFIG_MONGODB_ADMINUSERNAME=$DB_ROOT_USER
-    - ME_CONFIG_MONGODB_ADMINPASSWORD=$DB_ROOT_PASS
-    networks:
-    - "shared"
-    mem_limit: $CONTAINER_MEM_MONGO_EXPRESS
-
-  mongo:
-    container_name: "${CTX_NAME}-main-mongo"
-    hostname: "mongo"
-    build:
-      context: .
-      dockerfile: "main/mongo/Dockerfile"
-      args:
-        IMAGE: $MONGO_IMAGE
-        VERSION: $MONGO_VERSION
-    restart: "unless-stopped"
-    environment:
-    - MONGO_INITDB_ROOT_USERNAME=$DB_ROOT_USER
-    - MONGO_INITDB_ROOT_PASSWORD=$DB_ROOT_PASS
-    networks:
-    - "shared"
-    volumes:
-    - "mongo_db:/data/db"
-    - "mongo_dump:/dump"
-    command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
-    mem_limit: $CONTAINER_MEM_MONGO
-
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
@@ -165,6 +121,8 @@ services:
         IMAGE: $TOOLBOX_IMAGE
         VERSION: $TOOLBOX_VERSION
     restart: "unless-stopped"
+    depends_on:
+    - "fluentd"
     networks:
     - "shared"
     volumes:
@@ -174,3 +132,24 @@ services:
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
+
+  fluentd:
+    container_name: "${CTX_NAME}-main-fluentd"
+    hostname: "fluentd"
+    build:
+      context: .
+      dockerfile: "main/fluentd/Dockerfile"
+      args:
+        IMAGE: $FLUENTD_IMAGE
+        VERSION: $FLUENTD_VERSION
+        OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
+    restart: "unless-stopped"
+    ports:
+    - "$FLUENTD_PORT:24224"
+    - "$FLUENTD_PORT:24224/udp"
+    networks:
+    - "log"
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    logging: *jsonlog
+    mem_limit: $CONTAINER_MEM_FLUENTD
