@@ -5,7 +5,9 @@
 {% set var_local = params.main.local | default(false) | bool %}
 {% set var_services = params.main.services %}
 {% set var_run = params.main.run | default({}) %}
+{% set var_run_tasks = params.main.run_tasks | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
+{% set var_run_tasks_dict = params.main.run_tasks_dict | default({}) %}
 
 {% set var_containers_dict = params.main.containers_dict | default({}) %}
 {% set var_compose_orchestration = params.main.orchestration in ['docker_compose', 'none'] %}
@@ -234,7 +236,9 @@ children:
       {% endif %}
 
     run: {{ var_run | to_json }}
+    run_tasks: {{ var_run_tasks | to_json }}
     run_dict: {{ var_run_dict | to_json }}
+    run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
       var_dynamic: "true"
       var_wp_pod_type: "{{ var_wp_pod_type }}"

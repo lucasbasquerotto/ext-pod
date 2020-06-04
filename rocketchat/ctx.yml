@@ -2,7 +2,9 @@
 
 {% set var_local = params.main.local | default(false) | bool %}
 {% set var_run = params.main.run | default({}) %}
+{% set var_run_tasks = params.main.run_tasks | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
+{% set var_run_tasks_dict = params.main.run_tasks_dict | default({}) %}
 
 ## general vars - end ###
 
@@ -208,7 +210,9 @@ children:
     env_params: {{ params | to_json }}
     pod_custom_dir: "{{ var_main_dir }}"
     run: {{ var_run | to_json }}
+    run_tasks: {{ var_run_tasks | to_json }}
     run_dict: {{ var_run_dict | to_json }}
+    run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
       var_pod_type: "{{ var_pod_type }}"
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"

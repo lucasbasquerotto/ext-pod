@@ -2,7 +2,9 @@
 
 {% set var_local = params.main.local | default(false) | bool %}
 {% set var_run = params.main.run | default({}) %}
+{% set var_run_tasks = params.main.run_tasks | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
+{% set var_run_tasks_dict = params.main.run_tasks_dict | default({}) %}
 
 ## general vars - end ###
 
@@ -18,17 +20,17 @@
 {% set var_main_dir = params.main.custom_dir + '/wordpress' %}
 
 {% set var_pod_dir_rel = '../..' %}
-{% set var_data_dir = var_local 
+{% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
-{% set var_data_dir_task = params.pod.local_data_dir_inside 
-  | default(params.pod.data_dir, true) 
+{% set var_data_dir_task = params.pod.local_data_dir_inside
+  | default(params.pod.data_dir, true)
 %}
 
 {% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 {% set var_orchestration_run_file = 'docker-compose.run.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 
 ### main ###
@@ -63,7 +65,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
-  params: 
+  params:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -85,10 +87,10 @@ templates:
     {% if var_pod_type in ['app', 'web'] %}
 
     {% set var_apps_dir_base = params.dirs.apps_dir_base %}
-    {% set var_app_repo_dir = var_pod_dir_rel + '/' + var_apps_dir_base + '/' + 
-      (params.pod.app.wp_local.dir_rel | default('')) 
+    {% set var_app_repo_dir = var_pod_dir_rel + '/' + var_apps_dir_base + '/' +
+      (params.pod.app.wp_local.dir_rel | default(''))
     %}
-    
+
     nginx_image: "{{ params.main.custom_images.nginx_image }}"
     nginx_version: "{{ params.main.custom_images.nginx_version }}"
     wordpress_image: "{{ params.main.custom_images.wordpress_image }}"
@@ -106,9 +108,9 @@ templates:
     s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
     s3_uploads_secret_key: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
     wordpress_ini_file_type: >-
-      {{ 
-      (params.main.custom_args.wordpress.env == 'production') | 
-      ternary('production', 'development') 
+      {{
+      (params.main.custom_args.wordpress.env == 'production') |
+      ternary('production', 'development')
       }}
     wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_app_repo_dir, '') }}"
     container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
@@ -141,36 +143,36 @@ templates:
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
 
-    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin 
+    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin
       | default(
         (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
-      ) 
+      )
     %}
-    
+
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
 
     {% if var_fluentd_output_plugin == 'elasticsearch' %}
 
     elasticsearch_host_ip: "{{ params.dependencies_node_ip_dict['elasticsearch'] }}"
-    
+
     {% endif %}
-    
+
     {% endif %}
 
 {% if var_pod_type in ['app', 'web'] %}
 
 {% set var_wp_domain = params.main.custom_domain.main_domain %}
 {% set var_wp_external_port = params.main.custom_domain.main_port %}
-{% set var_wp_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http')) 
+{% set var_wp_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http'))
   + '://' + var_wp_domain
-  + (((var_wp_external_port | string) in ['80', '443']) 
-  | ternary('', ':' + (var_wp_external_port | string))) 
+  + (((var_wp_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_wp_external_port | string)))
 %}
 
 - src: "{{ var_main_dir }}/templates/wp.env"
   dest: "{{ var_main_dir }}/env/wordpress/.env"
   root: true
-  params: 
+  params:
     env: "{{ params.main.custom_args.wordpress.env }}"
     db_host: "{{ params.main.custom_args.mysql.host }}"
     db_port: "{{ params.main.custom_args.mysql.port }}"
@@ -199,7 +201,9 @@ children:
     env_params: {{ params | to_json }}
     pod_custom_dir: "{{ var_main_dir }}"
     run: {{ var_run | to_json }}
+    run_tasks: {{ var_run_tasks | to_json }}
     run_dict: {{ var_run_dict | to_json }}
+    run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
       var_wp_pod_type: "{{ var_pod_type }}"
       var_orchestration_main_file: "{{ var_orchestration_main_file }}"
