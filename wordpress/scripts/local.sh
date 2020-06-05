@@ -89,8 +89,8 @@ case "$command" in
 		;;
 	"clear")
 		"$pod_script_env_file" rm
-		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mysql"
-		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mysql"
+		sudo rm -rf "${base_dir}/data/${var_main__env}/${var_main__ctx}/${var_main__pod_name}/"
 		;;
 	"clear-all")
 		"$pod_script_env_file" rm

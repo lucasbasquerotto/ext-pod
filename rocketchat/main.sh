@@ -41,10 +41,10 @@ pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 case "$command" in
 	"clear")
 		"$pod_script_env_file" rm
-		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_uploads"
-		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_db"
-		sudo docker volume rm -f "${var_env}-${var_ctx}-${var_pod_name}_mongo_dump"
-		sudo rm -rf "${base_dir}/data/${var_env}/${var_ctx}/${var_pod_name}/"
+		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_uploads"
+		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mongo_db"
+		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mongo_dump"
+		sudo rm -rf "${base_dir}/data/${var_main__env}/${var_main__ctx}/${var_main__pod_name}/"
 		;;
 	"clear-all")
 		"$pod_script_env_file" rm
@@ -75,10 +75,10 @@ case "$command" in
 			set -eou pipefail
 
 			for i in \$(seq 1 30); do
-				mongo mongo/"$var_custom_db_name" \
+				mongo mongo/"$var_custom__db_name" \
 					--authenticationDatabase admin \
-					--username "$var_custom_user_name" \
-					--password "$var_custom_user_pass" \
+					--username "$var_custom__user_name" \
+					--password "$var_custom__user_pass" \
 					--eval "
 						rs.initiate({
 							_id: 'rs0',
@@ -96,8 +96,8 @@ case "$command" in
 			for i in \$(seq 1 30); do
 				mongo mongo/admin \
 					--authenticationDatabase admin \
-					--username "$var_custom_user_name" \
-					--password "$var_custom_user_pass" \
+					--username "$var_custom__user_name" \
+					--password "$var_custom__user_pass" \
 					/tmp/main/init.js && s=\$? && break || s=\$?;
 				echo "Tried \$i times. Waiting 5 secs...";
 				sleep 5;

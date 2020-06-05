@@ -42,25 +42,37 @@ case "$command" in
 	"migrate")
 		opts=()
 
-		opts+=( "--old_domain_host=${var_migrate_old_domain_host:-}" )
-		opts+=( "--new_domain_host=${var_migrate_new_domain_host:-}" )
+		opts+=( "--old_domain_host=${var_run__migrate__old_domain_host:-}" )
+		opts+=( "--new_domain_host=${var_run__migrate__new_domain_host:-}" )
 
 		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
 		;;
 	"migrate:"*)
 		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"setup:new:db")
+	"setup:new")
+		prefix="var_task__${arg_task_name}__setup_new_"
+
+		url="${prefix}_url"
+		title="${prefix}_title"
+		admin_user="${prefix}_admin_user"
+		admin_password="${prefix}_admin_password"
+		admin_email="${prefix}_admin_email"
+		restore_seed="${prefix}_restore_seed"
+		local_seed_data="${prefix}_local_seed_data"
+		remote_seed_data="${prefix}_remote_seed_data"
+
 		opts=()
 
-		opts+=( "--setup_url=$var_setup_new_db_url" )
-		opts+=( "--setup_title=$var_setup_new_db_title" )
-		opts+=( "--setup_admin_user=$var_setup_new_db_admin_user" )
-		opts+=( "--setup_admin_password=$var_setup_new_db_admin_password" )
-		opts+=( "--setup_admin_email=$var_setup_new_db_admin_email" )
-		opts+=( "--setup_restore_seed=${var_setup_new_db_restore_seed:-}" )
-		opts+=( "--setup_local_seed_data=${var_setup_new_db_local_seed_data:-}" )
-		opts+=( "--setup_remote_seed_data=${var_setup_new_db_remote_seed_data:-}" )
+		opts+=( "--setup_url=${!url}" )
+		opts+=( "--setup_title=${!title}" )
+		opts+=( "--setup_admin_user=${!admin_user}" )
+		opts+=( "--setup_admin_password=${!admin_password}" )
+		opts+=( "--setup_admin_email=${!admin_email}" )
+
+		opts+=( "--setup_restore_seed=${!restore_seed:-}" )
+		opts+=( "--setup_local_seed_data=${!local_seed_data:-}" )
+		opts+=( "--setup_remote_seed_data=${!remote_seed_data:-}" )
 
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;
