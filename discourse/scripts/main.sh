@@ -31,7 +31,7 @@ pod_env_shared_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
   "discourse:launcher")
-		"$var_discourse_dir"/launcher ${args[@]+"${args[@]}"}
+		"$var_custom__discourse_dir"/launcher ${args[@]+"${args[@]}"}
 		;;
   "discourse:bootstrap:"*)
 		ctx="${command#discourse:bootstrap:}"
@@ -48,7 +48,7 @@ case "$command" in
 		container_name="${prefix}_container_name"
 
 		local_image="local_discourse/${!container_name}"
-		
+
 		opts=()
 
 		opts+=( "--toolbox_service=${!toolbox_service}" )

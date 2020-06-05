@@ -18,10 +18,10 @@
 {% set var_main_dir = params.main.custom_dir + '/efk' %}
 
 {% set var_pod_dir_rel = '../..' %}
-{% set var_data_dir = var_local 
+{% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
-{% set var_data_dir_task = params.pod.local_data_dir_inside 
-  | default(params.pod.data_dir, true) 
+{% set var_data_dir_task = params.pod.local_data_dir_inside
+  | default(params.pod.data_dir, true)
 %}
 
 {% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.yml' %}
@@ -38,7 +38,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
-  params: 
+  params:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -49,10 +49,10 @@ templates:
     elasticsearch_version: "{{ params.main.custom_images.elasticsearch_version }}"
     kibana_image: "{{ params.main.custom_images.kibana_image }}"
     kibana_version: "{{ params.main.custom_images.kibana_version }}"
-    elasticsearch_java_opts: "{{ params.main.custom_args.elasticsearch.java_opts }}" 
+    elasticsearch_java_opts: "{{ params.main.custom_args.elasticsearch.java_opts }}"
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     elasticsearch_port: "{{ params.main.custom_args.elasticsearch.port }}"
-    kibana_port: "{{ params.main.custom_args.kibana.port }}"    
+    kibana_port: "{{ params.main.custom_args.kibana.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
     container_mem_elasticsearch: "{{ params.main.custom_memory.elasticsearch }}"
     container_mem_kibana: "{{ params.main.custom_memory.kibana }}"
@@ -66,5 +66,5 @@ children:
     run: {{ var_run | to_json }}
     run_dict: {{ var_run_dict | to_json }}
     run_custom:
-      var_pod_type: "{{ var_pod_type }}"
-      var_orchestration_main_file: "{{ var_orchestration_main_file }}"
+      var_orchestration__main_file: "{{ var_orchestration_main_file }}"
+      var_custom__pod_type: "{{ var_pod_type }}"

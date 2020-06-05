@@ -54,11 +54,11 @@ case "$command" in
 		"$pod_script_env_file" "s3:task:db" --s3_cmd=rb
 		;;
 	"migrate")
-		if [ "$var_pod_type" = "app" ] || [ "$var_pod_type" = "db" ]; then
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
 			"$pod_env_run_file" up mysql
 		fi
 
-		if [ "$var_pod_type" = "app" ] || [ "$var_pod_type" = "web" ]; then
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
 			"$pod_env_run_file" up mediawiki
 
 			info "$command - verify the need to setup the mediawiki database"
@@ -79,7 +79,7 @@ case "$command" in
 		db_port="3306"
 		db_remote=""
 
-		if [ "$var_pod_type" != "app" ]; then
+		if [ "$var_custom__pod_type" != "app" ]; then
 			db_service="mysql_cli"
 			db_cmd="run"
 			db_port="$var_migrate_db_port"

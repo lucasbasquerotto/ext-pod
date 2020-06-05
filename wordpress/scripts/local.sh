@@ -32,7 +32,7 @@ if [ -z "$base_dir" ] || [ "$base_dir" = "/" ]; then
 fi
 
 ctl_layer_dir="$base_dir/ctl"
-app_layer_dir="$base_dir/apps/$var_dev_repo_dir_wordpress"
+app_layer_dir="$base_dir/apps/$var_dev__repo_dir_wordpress"
 
 command="${1:-}"
 
@@ -54,7 +54,7 @@ case "$command" in
 	"prepare")
 		inner_dir="env"
 
-		if [ "${var_dynamic:-}" = "true" ]; then
+		if [ "${var_custom__dynamic:-}" = "true" ]; then
 			inner_dir="main"
 		fi
 

@@ -205,15 +205,15 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
-      var_wp_pod_type: "{{ var_pod_type }}"
-      var_orchestration_main_file: "{{ var_orchestration_main_file }}"
-      var_orchestration_run_file: "{{ var_orchestration_run_file }}"
+      var_orchestration__main_file: "{{ var_orchestration_main_file }}"
+      var_orchestration__run_file: "{{ var_orchestration_run_file }}"
+      var_custom__pod_type: "{{ var_pod_type }}"
 
       {% if var_local and (var_pod_type in ['app', 'web']) %}
 
       {% set var_wp_app_name = params.main.custom_args.wordpress.app_name | default('') %}
       {% set var_dev_repo_dir_wordpress = params.pod.app[var_wp_app_name].dir_rel | default('') %}
 
-      var_dev_repo_dir_wordpress: "{{ var_dev_repo_dir_wordpress }}"
+      var_dev__repo_dir_wordpress: "{{ var_dev_repo_dir_wordpress }}"
 
       {% endif %}

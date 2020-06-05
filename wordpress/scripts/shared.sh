@@ -45,7 +45,7 @@ case "$command" in
 		opts+=( "--old_domain_host=${var_migrate_old_domain_host:-}" )
 		opts+=( "--new_domain_host=${var_migrate_new_domain_host:-}" )
 
-		"$pod_env_shared_exec_file" "migrate:$var_wp_pod_type" "${opts[@]}"
+		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
 		;;
 	"migrate:"*)
 		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}

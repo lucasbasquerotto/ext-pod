@@ -14,15 +14,15 @@
 {% endif %}
 
 {% set var_pod_dir_rel = '../..' %}
-{% set var_data_dir = var_local 
-  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) 
+{% set var_data_dir = var_local
+  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
 %}
 
 {% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 {% set var_orchestration_run_file = 'docker-compose.run.' +
-  (var_local | ternary('dev.yml', 'yml')) 
+  (var_local | ternary('dev.yml', 'yml'))
 %}
 
 ### main ###
@@ -32,7 +32,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
-  params: 
+  params:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -69,7 +69,7 @@ templates:
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
     container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
     fluentd_output_plugin: "file"
-    
+
     {% endif %}
 
 children:
@@ -81,6 +81,6 @@ children:
     run: {{ var_run | to_json }}
     run_dict: {{ var_run_dict | to_json }}
     run_custom:
-      var_orchestration_main_file: "{{ var_orchestration_main_file }}"
-      var_orchestration_run_file: "{{ var_orchestration_run_file }}"
-      var_bind_zone: "{{ params.main.custom_args.bind.zone }}"
+      var_orchestration__main_file: "{{ var_orchestration_main_file }}"
+      var_orchestration__run_file: "{{ var_orchestration_run_file }}"
+      var_custom__bind_zone: "{{ params.main.custom_args.bind.zone }}"

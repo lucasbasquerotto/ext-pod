@@ -36,8 +36,8 @@ case "$command" in
 			>&2 mkdir -p /tmp/main/bind/keys
 
 			cd /tmp/main/bind/keys
-			>&2 dnssec-keygen -C -a HMAC-MD5 -b 512 -n USER "$var_bind_zone".
-			>&2 file_name="\$(ls -rt | grep "$var_bind_zone" | tail -n1)"
+			>&2 dnssec-keygen -C -a HMAC-MD5 -b 512 -n USER "$var_custom__bind_zone".
+			>&2 file_name="\$(ls -rt | grep "$var_custom__bind_zone" | tail -n1)"
 			>&2 new_key="\$(cat "\$file_name" | awk '{ print \$7 }')"
 			echo "\$new_key"
 		SHELL
@@ -52,7 +52,7 @@ case "$command" in
 		if [ "$result" = "systemd" ]; then
 			sudo systemctl stop systemd-resolved || :
 		fi
-		
+
 		"$pod_env_shared_file" "$command" "$@"
 	  ;;
 	"bind:"*)

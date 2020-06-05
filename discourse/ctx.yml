@@ -9,7 +9,7 @@
 {% set var_run_dict = params.main.run_dict | default({}) %}
 
 {% set var_pod_dir_rel = '../..' %}
-{% set var_data_dir = var_local 
+{% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
 
 {% set var_static = params.main.static | default('false') | bool %}
@@ -46,7 +46,7 @@ templates:
 {% set ns_docker_args = namespace(list=var_docker_args) %}
 
 {% for subitem in params.dependencies | default([]) %}
-  {% set ns_docker_args.list = ns_docker_args.list + 
+  {% set ns_docker_args.list = ns_docker_args.list +
     ['--add-host ' + subitem.host + ':' + subitem.ip]
   %}
 {% endfor %}
@@ -57,14 +57,14 @@ templates:
 {% set var_redis_host = params.dependencies_node_ip_dict['redis'] | default('') %}
 
 {% if var_db_host != '' %}
-  {% set var_params_env = var_params_env 
-    | combine({ 'DISCOURSE_DB_HOST': var_db_host }) 
+  {% set var_params_env = var_params_env
+    | combine({ 'DISCOURSE_DB_HOST': var_db_host })
   %}
 {% endif %}
 
 {% if var_redis_host != '' %}
-  {% set var_params_env = var_params_env 
-    | combine({ 'DISCOURSE_REDIS_HOST': var_redis_host }) 
+  {% set var_params_env = var_params_env
+    | combine({ 'DISCOURSE_REDIS_HOST': var_redis_host })
   %}
 {% endif %}
 
@@ -82,7 +82,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
-  params: 
+  params:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -117,6 +117,6 @@ children:
     run: {{ var_run | to_json }}
     run_dict: {{ var_run_dict | to_json }}
     run_custom:
-      var_discourse_dir: "{{ var_discourse_dir }}"
+      var_custom__discourse_dir: "{{ var_discourse_dir }}"
 
 {% endif %}

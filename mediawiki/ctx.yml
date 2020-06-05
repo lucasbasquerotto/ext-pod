@@ -225,6 +225,6 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
-      var_pod_type: "{{ var_pod_type }}"
-      var_orchestration_main_file: "{{ var_orchestration_main_file }}"
-      var_orchestration_run_file: "{{ var_orchestration_run_file }}"
+      var_orchestration__main_file: "{{ var_orchestration_main_file }}"
+      var_orchestration__run_file: "{{ var_orchestration_run_file }}"
+      var_custom__pod_type: "{{ var_pod_type }}"

@@ -58,7 +58,7 @@ case "$command" in
 		"$pod_script_env_file" "s3:task:db" --s3_cmd=rb
 		;;
 	"migrate")
-		"$pod_script_env_file" "migrate:$var_pod_type" "${args[@]}"
+		"$pod_script_env_file" "migrate:$var_custom__pod_type" "${args[@]}"
 		;;
 	"migrate:app")
 		"$pod_script_env_file" "migrate:db" "${args[@]}"

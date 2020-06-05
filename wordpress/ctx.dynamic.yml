@@ -18,7 +18,7 @@
 {% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
 
-{% set var_wp_pod_type = params.main.type %}
+{% set var_pod_type = params.main.type %}
 
 {% set var_wp_domain = var_containers_dict.wordpress.domain %}
 {% set var_wp_ssl = var_containers_dict.wordpress.ssl | default(false) %}
@@ -240,7 +240,7 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
-      var_dynamic: "true"
-      var_wp_pod_type: "{{ var_wp_pod_type }}"
-      var_dev_repo_dir_wordpress: >-
+      var_custom__dynamic: "true"
+      var_custom__pod_type: "{{ var_pod_type }}"
+      var_dev__repo_dir_wordpress: >-
         {{ var_local | ternary(params.pod.app.wp_local.dir_rel | default(''), '') }}
