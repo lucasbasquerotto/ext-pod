@@ -24,7 +24,7 @@ fi
 
 shift;
 
-pod_env_shared_file="$pod_layer_dir/$var_general_script_dir/shared.sh"
+pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 
 case "$command" in
 	"setup")

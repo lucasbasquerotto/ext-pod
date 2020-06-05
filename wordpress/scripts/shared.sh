@@ -7,7 +7,7 @@ pod_layer_dir="$POD_LAYER_DIR"
 
 . "${pod_vars_dir}/vars.sh"
 
-pod_env_shared_exec_file="$pod_layer_dir/$var_general_script_dir/shared.exec.sh"
+pod_env_shared_exec_file="$pod_layer_dir/$var_run__general__script_dir/shared.exec.sh"
 pod_script_run_main_file="$pod_layer_dir/main/scripts/main.sh"
 
 GRAY='\033[0;90m'
