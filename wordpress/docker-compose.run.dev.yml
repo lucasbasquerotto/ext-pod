@@ -3,14 +3,14 @@ version: "2.4"
 x-logging:
   mainlog: &mainlog
     driver: "json-file"
-    options: 
+    options:
       max-size: "50m"
 
 services:
-  wp_s3_uploads:
+  s3_uploads:
     container_name: "${CTX_NAME}-run-s3_uploads"
     hostname: "s3_uploads"
-    build: 
+    build:
       context: .
       dockerfile: "main/awscli/Dockerfile"
       args:
@@ -20,18 +20,18 @@ services:
         S3_ACCESS_KEY: $S3_UPLOADS_ACCESS_KEY
         S3_SECRET_KEY: $S3_UPLOADS_SECRET_KEY
     restart: "unless-stopped"
-    volumes: 
+    volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_UPLOADS
-    
-  wp_s3_backup:
+
+  s3_backup:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
-    build: 
+    build:
       context: .
       dockerfile: "main/awscli/Dockerfile"
       args:
@@ -41,11 +41,10 @@ services:
         S3_ACCESS_KEY: $S3_BACKUP_ACCESS_KEY
         S3_SECRET_KEY: $S3_BACKUP_SECRET_KEY
     restart: "unless-stopped"
-    volumes: 
+    volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_BACKUP
-    

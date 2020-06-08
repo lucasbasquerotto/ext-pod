@@ -62,14 +62,14 @@ services:
     networks:
     - "shared"
     volumes:
-    - "$DATA_DIR/mediawiki/images:/var/www/html/images"
+    - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_MEDIAWIKI
-    
+
   phpmyadmin:
     container_name: "${CTX_NAME}-main-phpmyadmin"
     hostname: "phpmyadmin"
-    build: 
+    build:
       context: .
       dockerfile: "main/phpmyadmin/Dockerfile"
       args:
@@ -83,9 +83,9 @@ services:
       PMA_PORT: $DB_PORT
     depends_on:
     - "mysql"
-    networks: 
+    networks:
     - "shared"
-    volumes: 
+    volumes:
     - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_PMA

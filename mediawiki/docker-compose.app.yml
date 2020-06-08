@@ -68,7 +68,7 @@ services:
     networks:
     - "shared"
     volumes:
-    - "$DATA_DIR/mediawiki/images:/var/www/html/images"
+    - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_MEDIAWIKI
 

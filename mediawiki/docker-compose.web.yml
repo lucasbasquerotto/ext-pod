@@ -69,7 +69,7 @@ services:
     extra_hosts:
     - "mysql:$DB_HOST_IP"
     volumes:
-    - "$DATA_DIR/mediawiki/images:/var/www/html/images"
+    - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_MEDIAWIKI
 
