@@ -4,6 +4,7 @@ set -eou pipefail
 
 pod_vars_dir="$POD_VARS_DIR"
 pod_layer_dir="$POD_LAYER_DIR"
+pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 . "${pod_vars_dir}/vars.sh"
 

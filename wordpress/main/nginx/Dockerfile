@@ -56,12 +56,12 @@ RUN mkdir -p /tmp/main/ \
     -e 's/\Q{{PMA_LISTEN_REDIRECT}}\E/$ENV{PMA_LISTEN_REDIRECT}/g;' \
     -e 's/\Q{{PMA_NON_SSL_COMMENT}}\E/$ENV{PMA_NON_SSL_COMMENT}/g;' \
     > /tmp/main/nginx.conf \
- && cat /tmp/tpl/nginx.conf | \
+ && cat /tmp/tpl/include/ssl.conf | \
     DOMAIN="${MAIN_DOMAIN}" \
     perl -p \
     -e 's/\Q{{DOMAIN}}\E/$ENV{DOMAIN}/g;' \
     > /tmp/main/main.ssl.conf \
- && cat /tmp/tpl/nginx.conf | \
+ && cat /tmp/tpl/include/ssl.conf | \
     DOMAIN="${PMA_DOMAIN}" \
     perl -p \
     -e 's/\Q{{DOMAIN}}\E/$ENV{DOMAIN}/g;' \
