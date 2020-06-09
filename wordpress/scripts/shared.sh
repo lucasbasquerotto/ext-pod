@@ -49,6 +49,11 @@ case "$command" in
 		;;
 	"migrate:"*)
 		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
+
+		if [ "${var_custom__use_certbot:-}" = "true" ]; then
+			info "$command - start certbot if needed..."
+			"$pod_script_env_file" "main:task:certbot" "${args[@]}"
+		fi
 		;;
 	"setup:new")
 		prefix="var_task__${arg_task_name}__setup_new_"
