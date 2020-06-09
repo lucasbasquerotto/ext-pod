@@ -96,6 +96,11 @@ case "$command" in
 	"migrate:app")
 		"$pod_script_env_file" "migrate:db" "${args[@]}"
 		"$pod_script_env_file" "migrate:web" "${args[@]}"
+
+		if [ "${var_custom__use_certbot:-}" = "true" ]; then
+			info "$command - start certbot if needed..."
+			"$pod_script_env_file" "main:task:certbot" "${args[@]}"
+		fi
 		;;
 	"migrate:db")
 		info "$command - nothing to do..."

@@ -8,6 +8,22 @@ x-logging:
       fluentd-address: "localhost:$FLUENTD_PORT"
 
 services:
+
+  certbot:
+    container_name: "${CTX_NAME}-run-certbot"
+    hostname: "certbot"
+    build:
+      context: .
+      dockerfile: "main/certbot/Dockerfile"
+      args:
+        IMAGE: $CERTBOT_IMAGE
+        VERSION: $CERTBOT_VERSION
+    volumes:
+    - "$DATA_DIR/vol/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/vol/certbot/www/:/var/www/certbot/"
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_CERTBOT
+
   s3_uploads:
     container_name: "${CTX_NAME}-run-s3_uploads"
     hostname: "s3_uploads"

@@ -33,6 +33,13 @@
   (var_local | ternary('dev.yml', 'yml'))
 %}
 
+{% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
+  ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
+%}
+{% set var_pma_domain_port = params.main.custom_domain.pma_ssl | bool |
+  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+%}
+
 ### main ###
 
 volumes:
@@ -99,10 +106,16 @@ templates:
     pma_version: "{{ params.main.custom_images.pma_version }}"
     composer_image: "{{ params.main.custom_images.composer_image }}"
     composer_version: "{{ params.main.custom_images.composer_version }}"
+    public_http_port: "{{ params.main.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.main.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.main.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.main.custom_domain.private_https_port }}"
     main_domain: "{{ params.main.custom_domain.main_domain }}"
-    main_domain_port: "{{ params.main.custom_domain.main_port }}"
+    main_domain_port: "{{ var_main_domain_port }}"
+    main_ssl: "{{ params.main.custom_domain.main_ssl }}"
     pma_domain: "{{ params.main.custom_domain.pma_domain }}"
-    pma_domain_port: "{{ params.main.custom_domain.pma_port }}"
+    pma_domain_port: "{{ var_pma_domain_port }}"
+    pma_ssl: "{{ params.main.custom_domain.pma_ssl }}"
     pma_login_cookie_validity: >-
       {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
     s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
@@ -118,6 +131,16 @@ templates:
     container_mem_pma: "{{ params.main.custom_memory.pma }}"
     container_mem_composer: "{{ params.main.custom_memory.composer }}"
     container_mem_s3_uploads: "{{ params.main.custom_memory.s3_uploads }}"
+
+    use_certbot: "{{ params.main.use_certbot }}"
+
+    {% if params.main.use_certbot | bool %}
+
+    certbot_image: "{{ params.main.custom_images.certbot_image }}"
+    certbot_version: "{{ params.main.custom_images.certbot_version }}"
+    container_mem_certbot: "{{ params.main.custom_memory.certbot }}"
+
+    {% endif %}
 
     {% endif %}
 
@@ -161,12 +184,12 @@ templates:
 
 {% if var_pod_type in ['app', 'web'] %}
 
-{% set var_wp_domain = params.main.custom_domain.main_domain %}
-{% set var_wp_external_port = params.main.custom_domain.main_port %}
-{% set var_wp_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http'))
-  + '://' + var_wp_domain
-  + (((var_wp_external_port | string) in ['80', '443'])
-  | ternary('', ':' + (var_wp_external_port | string)))
+{% set var_main_domain = params.main.custom_domain.main_domain %}
+{% set var_main_external_port = var_main_domain_port %}
+{% set var_main_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http'))
+  + '://' + var_main_domain
+  + (((var_main_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_main_external_port | string)))
 %}
 
 - src: "{{ var_main_dir }}/templates/wp.env"
@@ -179,7 +202,7 @@ templates:
     db_name: "{{ params.credentials.wordpress.db.name }}"
     db_user: "{{ params.credentials.wordpress.db.user }}"
     db_password: "{{ params.credentials.wordpress.db.password }}"
-    home: "{{ var_wp_external_host }}"
+    home: "{{ var_main_external_host }}"
     auth_key: "{{ params.credentials.wordpress.config.auth_key }}"
     secure_auth_key: "{{ params.credentials.wordpress.config.secure_auth_key }}"
     logged_in_key: "{{ params.credentials.wordpress.config.logged_in_key }}"
@@ -208,6 +231,12 @@ children:
       var_orchestration__main_file: "{{ var_orchestration_main_file }}"
       var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
+
+      {% if var_local and (var_pod_type in ['app', 'web']) %}
+
+      var_custom__use_certbot: "{{ params.main.use_certbot }}"
+
+      {% endif %}
 
       {% if var_local and (var_pod_type in ['app', 'web']) %}
 

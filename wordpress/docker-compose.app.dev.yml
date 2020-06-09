@@ -30,20 +30,31 @@ services:
         MAIN_DOMAIN: $MAIN_DOMAIN
         MAIN_DOMAIN_PORT: $MAIN_DOMAIN_PORT
         MAIN_DOMAIN_PORT_SUFFIX: $MAIN_DOMAIN_PORT_SUFFIX
+        MAIN_PROTOCOL: $MAIN_PROTOCOL
+        MAIN_LISTEN: $MAIN_LISTEN
+        MAIN_LISTEN_REDIRECT: $MAIN_LISTEN_REDIRECT
+        MAIN_NON_SSL_COMMENT: $MAIN_NON_SSL_COMMENT
         PMA_DOMAIN: $PMA_DOMAIN
         PMA_DOMAIN_PORT: $PMA_DOMAIN_PORT
         PMA_DOMAIN_PORT_SUFFIX: $PMA_DOMAIN_PORT_SUFFIX
+        PMA_PROTOCOL: $PMA_PROTOCOL
+        PMA_LISTEN: $PMA_LISTEN
+        PMA_LISTEN_REDIRECT: $PMA_LISTEN_REDIRECT
+        PMA_NON_SSL_COMMENT: $PMA_NON_SSL_COMMENT
     restart: "unless-stopped"
     depends_on:
     - "wordpress"
     - "phpmyadmin"
     ports:
-    - "$MAIN_DOMAIN_PORT:80"
-    - "$PMA_DOMAIN_PORT:9080"
+    - "$PUBLIC_HTTP_PORT:80"
+    - "$PUBLIC_HTTPS_PORT:443"
+    - "$PRIVATE_HTTP_PORT:9080"
+    - "$PRIVATE_HTTPS_PORT:9443"
     networks:
     - "internet"
     - "local"
     volumes:
+    - "$DATA_DIR/vol/certbot/etc/live:/etc/ssl:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_NGINX

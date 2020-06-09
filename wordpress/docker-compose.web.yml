@@ -1,23 +1,23 @@
 version: "2.4"
 
 networks:
-  internet: 
+  internet:
     driver: "bridge"
-  log: 
+  log:
     driver: "bridge"
-  local: 
+  local:
     internal: true
     driver: "bridge"
 
 x-logging:
   mainlog: &mainlog
     driver: "fluentd"
-    options: 
+    options:
       tag: "docker.{{.Name}}.{{.ID}}"
-      fluentd-address: "localhost:$FLUENTD_PORT"  
+      fluentd-address: "localhost:$FLUENTD_PORT"
   jsonlog: &jsonlog
     driver: "json-file"
-    options: 
+    options:
       max-size: "50m"
 
 services:
@@ -25,7 +25,7 @@ services:
   nginx:
     container_name: "${CTX_NAME}-main-nginx"
     hostname: "nginx"
-    build: 
+    build:
       context: .
       dockerfile: "main/nginx/Dockerfile"
       args:
@@ -35,29 +35,40 @@ services:
         MAIN_DOMAIN: $MAIN_DOMAIN
         MAIN_DOMAIN_PORT: $MAIN_DOMAIN_PORT
         MAIN_DOMAIN_PORT_SUFFIX: $MAIN_DOMAIN_PORT_SUFFIX
+        MAIN_PROTOCOL: $MAIN_PROTOCOL
+        MAIN_LISTEN: $MAIN_LISTEN
+        MAIN_LISTEN_REDIRECT: $MAIN_LISTEN_REDIRECT
+        MAIN_NON_SSL_COMMENT: $MAIN_NON_SSL_COMMENT
         PMA_DOMAIN: $PMA_DOMAIN
         PMA_DOMAIN_PORT: $PMA_DOMAIN_PORT
         PMA_DOMAIN_PORT_SUFFIX: $PMA_DOMAIN_PORT_SUFFIX
+        PMA_PROTOCOL: $PMA_PROTOCOL
+        PMA_LISTEN: $PMA_LISTEN
+        PMA_LISTEN_REDIRECT: $PMA_LISTEN_REDIRECT
+        PMA_NON_SSL_COMMENT: $PMA_NON_SSL_COMMENT
     restart: "unless-stopped"
     depends_on:
     - "wordpress"
     - "phpmyadmin"
     - "fluentd"
     ports:
-    - "$MAIN_DOMAIN_PORT:80"
-    - "$PMA_DOMAIN_PORT:9080"
+    - "$PUBLIC_HTTP_PORT:80"
+    - "$PUBLIC_HTTPS_PORT:443"
+    - "$PRIVATE_HTTP_PORT:9080"
+    - "$PRIVATE_HTTPS_PORT:9443"
     networks:
     - "internet"
     - "local"
     volumes:
+    - "$DATA_DIR/vol/certbot/etc/live:/etc/ssl:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_NGINX
-    
+
   wordpress:
     container_name: "${CTX_NAME}-main-wordpress"
     hostname: "wordpress"
-    build: 
+    build:
       context: .
       dockerfile: "main/wordpress/Dockerfile"
       args:
@@ -81,11 +92,11 @@ services:
     - "mysql:$MYSQL_HOST_IP"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_WORDPRESS
-    
+
   phpmyadmin:
     container_name: "${CTX_NAME}-main-phpmyadmin"
     hostname: "phpmyadmin"
-    build: 
+    build:
       context: .
       dockerfile: "main/phpmyadmin/Dockerfile"
       args:
@@ -108,11 +119,11 @@ services:
     - "mysql:$MYSQL_HOST_IP"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_PMA
-    
+
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
-    build: 
+    build:
       context: .
       dockerfile: "main/toolbox/Dockerfile"
       args:
@@ -131,11 +142,11 @@ services:
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
-    
+
   fluentd:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
-    build: 
+    build:
       context: .
       dockerfile: "main/fluentd/Dockerfile"
       args:
@@ -154,4 +165,3 @@ services:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd/"
     logging: *jsonlog
     mem_limit: $CONTAINER_MEM_FLUENTD
-    
