@@ -48,7 +48,7 @@ volumes:
 
 {% if var_pod_type in ['app', 'web'] %}
 
-- path: "{{ var_data_dir_task + '/mediawiki/images' }}"
+- path: "{{ var_data_dir_task + '/mediawiki/uploads' }}"
   mode: "0777"
 
 {% endif %}
