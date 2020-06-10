@@ -110,12 +110,6 @@ templates:
     public_https_port: "{{ params.main.custom_domain.public_https_port }}"
     private_http_port: "{{ params.main.custom_domain.private_http_port }}"
     private_https_port: "{{ params.main.custom_domain.private_https_port }}"
-    main_domain: "{{ params.main.custom_domain.main_domain }}"
-    main_domain_port: "{{ var_main_domain_port }}"
-    main_ssl: "{{ params.main.custom_domain.main_ssl }}"
-    pma_domain: "{{ params.main.custom_domain.pma_domain }}"
-    pma_domain_port: "{{ var_pma_domain_port }}"
-    pma_ssl: "{{ params.main.custom_domain.pma_ssl }}"
     pma_login_cookie_validity: >-
       {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
     s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
@@ -191,6 +185,35 @@ templates:
   + (((var_main_external_port | string) in ['80', '443'])
   | ternary('', ':' + (var_main_external_port | string)))
 %}
+
+{% if not params.main.custom_args.nginx.custom | default(false) | bool %}
+
+- src: "{{ var_main_dir }}/templates/nginx.conf"
+  dest: "{{ var_main_dir }}/env/nginx/nginx.conf"
+  root: true
+  params:
+    worker_process: "{{ params.main.custom_args.nginx.worker_process | default('') }}"
+    worker_connections: "{{ params.main.custom_args.nginx.worker_connections | default('') }}"
+    log_format: "{{ params.main.custom_args.nginx.log_format | default('') }}"
+    limit_req_zone_rate: "{{ params.main.custom_args.nginx.limit_req_zone_rate | default('') }}"
+    web_cache: "{{ params.main.custom_args.nginx.web_cache | default('') }}"
+    web_cache_max_size: "{{ params.main.custom_args.nginx.web_cache_max_size | default('') }}"
+    web_cache_inactive: "{{ params.main.custom_args.nginx.web_cache_inactive | default('') }}"
+    proxy_connect_timeout: "{{ params.main.custom_args.nginx.proxy_connect_timeout | default('') }}"
+    proxy_send_timeout: "{{ params.main.custom_args.nginx.proxy_send_timeout | default('') }}"
+    proxy_read_timeout: "{{ params.main.custom_args.nginx.proxy_read_timeout | default('') }}"
+    send_timeout: "{{ params.main.custom_args.nginx.send_timeout | default('') }}"
+    client_body_timeout: "{{ params.main.custom_args.nginx.client_body_timeout | default('') }}"
+    client_header_timeout: "{{ params.main.custom_args.nginx.client_header_timeout | default('') }}"
+    main_domain: "{{ params.main.custom_domain.main_domain }}"
+    main_port: "{{ var_main_domain_port }}"
+    main_ssl: "{{ params.main.custom_domain.main_ssl }}"
+    main: "{{ params.main.custom_args.nginx.main | default({}) }}"
+    pma_domain: "{{ params.main.custom_domain.pma_domain }}"
+    pma_port: "{{ var_pma_domain_port }}"
+    pma_ssl: "{{ params.main.custom_domain.pma_ssl }}"
+
+{% endif %}
 
 - src: "{{ var_main_dir }}/templates/wp.env"
   dest: "{{ var_main_dir }}/env/wordpress/.env"
