@@ -232,7 +232,7 @@ children:
       var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
 
-      {% if var_local and (var_pod_type in ['app', 'web']) %}
+      {% if var_pod_type in ['app', 'web'] %}
 
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
 
