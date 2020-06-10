@@ -41,6 +41,7 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+    - "$DATA_DIR/sync:/var/sync/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_UPLOADS
@@ -62,6 +63,7 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+    - "$DATA_DIR/sync:/var/sync/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_BACKUP

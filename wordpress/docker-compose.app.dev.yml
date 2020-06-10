@@ -39,8 +39,8 @@ services:
     - "internet"
     - "local"
     volumes:
-    - "$DATA_DIR/vol/certbot/etc/live:/etc/ssl:ro"
-    - "$DATA_DIR/vol/certbot/www:/var/www/certbot:ro"
+    - "$DATA_DIR/sync/certbot/etc/live:/etc/ssl:ro"
+    - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_NGINX
@@ -136,6 +136,7 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+    - "$DATA_DIR/sync:/var/sync/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
