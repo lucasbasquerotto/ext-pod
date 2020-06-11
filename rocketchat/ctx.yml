@@ -153,6 +153,8 @@ templates:
 
     container_mem_s3_uploads: "{{ params.main.custom_memory.s3_uploads }}"
 
+    use_certbot: "{{ params.main.use_certbot }}"
+
     {% if params.main.use_certbot | bool %}
 
     certbot_image: "{{ params.main.custom_images.certbot_image }}"

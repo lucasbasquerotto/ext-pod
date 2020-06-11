@@ -74,7 +74,7 @@ case "$command" in
 				error "$command - seed_data not provided"
 			else
 				info "$command - migrate..."
-				"$pod_script_env_file" migrate "${args[@]}"
+				"$pod_script_env_file" migrate ${args[@]+"${args[@]}"}
 
 				if [ -n "$arg_setup_local_seed_data" ]; then
 					info "$command - import local seed data"
@@ -94,8 +94,8 @@ case "$command" in
 		fi
 		;;
 	"migrate:app")
-		"$pod_script_env_file" "migrate:db" "${args[@]}"
-		"$pod_script_env_file" "migrate:web" "${args[@]}"
+		"$pod_script_env_file" "migrate:db" ${args[@]+"${args[@]}"}
+		"$pod_script_env_file" "migrate:web" ${args[@]+"${args[@]}"}
 		;;
 	"migrate:db")
 		info "$command - nothing to do..."

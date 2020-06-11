@@ -79,10 +79,10 @@ case "$command" in
 			fi
 		SHELL
 
-		"$pod_script_env_file" "$command" "$@"
+		"$pod_env_run_file" "$command" "$@"
 		;;
 	"migrate")
-		"$pod_script_env_file" "migrate:$var_custom__pod_type" "${args[@]}"
+		"$pod_script_env_file" "migrate:$var_custom__pod_type" ${args[@]+"${args[@]}"}
 
 		if [ "${var_custom__use_certbot:-}" = "true" ]; then
 			info "$command - start certbot if needed..."
@@ -90,8 +90,8 @@ case "$command" in
 		fi
 		;;
 	"migrate:app")
-		"$pod_script_env_file" "migrate:db" "${args[@]}"
-		"$pod_script_env_file" "migrate:web" "${args[@]}"
+		"$pod_script_env_file" "migrate:db" ${args[@]+"${args[@]}"}
+		"$pod_script_env_file" "migrate:web" ${args[@]+"${args[@]}"}
 		;;
 	"migrate:web")
 		info "$command - nothing to do..."
