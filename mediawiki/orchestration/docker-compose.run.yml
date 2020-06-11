@@ -2,9 +2,10 @@ version: "2.4"
 
 x-logging:
   mainlog: &mainlog
-    driver: "json-file"
+    driver: "fluentd"
     options:
-      max-size: "50m"
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"
 
 networks:
   shared:
@@ -12,11 +13,27 @@ networks:
     name: "${CTX_NAME}-network"
 
 services:
+
+  certbot:
+    container_name: "${CTX_NAME}-run-certbot"
+    hostname: "certbot"
+    build:
+      context: ..
+      dockerfile: "main/certbot/Dockerfile"
+      args:
+        IMAGE: $CERTBOT_IMAGE
+        VERSION: $CERTBOT_VERSION
+    volumes:
+    - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_CERTBOT
+
   mysql_cli:
     container_name: "${CTX_NAME}-main-mysql_cli"
     hostname: "mysql_cli"
     build:
-      context: .
+      context: ..
       dockerfile: "main/mysql/Dockerfile"
       args:
         IMAGE: $MYSQL_IMAGE
@@ -33,7 +50,7 @@ services:
     container_name: "${CTX_NAME}-run-s3_uploads"
     hostname: "s3_uploads"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE
@@ -48,6 +65,7 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+    - "$DATA_DIR/sync:/var/sync/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_UPLOADS
@@ -56,7 +74,7 @@ services:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE
@@ -71,6 +89,7 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+    - "$DATA_DIR/sync:/var/sync/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_BACKUP

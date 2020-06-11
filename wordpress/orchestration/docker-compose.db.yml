@@ -3,20 +3,20 @@ version: "2.4"
 x-logging:
   mainlog: &mainlog
     driver: "fluentd"
-    options: 
+    options:
       tag: "docker.{{.Name}}.{{.ID}}"
-      fluentd-address: "localhost:$FLUENTD_PORT"  
+      fluentd-address: "localhost:$FLUENTD_PORT"
   jsonlog: &jsonlog
     driver: "json-file"
-    options: 
+    options:
       max-size: "50m"
 
 networks:
-  internet: 
+  internet:
     driver: "bridge"
-  log: 
+  log:
     driver: "bridge"
-  local: 
+  local:
     internal: true
     driver: "bridge"
 
@@ -25,8 +25,8 @@ services:
   mysql:
     container_name: "${CTX_NAME}-main-mysql"
     hostname: "mysql"
-    build: 
-      context: .
+    build:
+      context: ..
       dockerfile: "main/mysql/Dockerfile"
       args:
         IMAGE: $MYSQL_IMAGE
@@ -49,12 +49,12 @@ services:
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_MYSQL
-    
+
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
-    build: 
-      context: .
+    build:
+      context: ..
       dockerfile: "main/toolbox/Dockerfile"
       args:
         IMAGE: $TOOLBOX_IMAGE
@@ -69,15 +69,16 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+    - "$DATA_DIR/sync:/var/sync/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
-    
+
   fluentd:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
-    build: 
-      context: .
+    build:
+      context: ..
       dockerfile: "main/fluentd/Dockerfile"
       args:
         IMAGE: $FLUENTD_IMAGE
@@ -95,4 +96,3 @@ services:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd/"
     logging: *jsonlog
     mem_limit: $CONTAINER_MEM_FLUENTD
-    

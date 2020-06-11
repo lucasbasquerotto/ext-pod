@@ -26,7 +26,7 @@ services:
     container_name: "${CTX_NAME}-main-mysql"
     hostname: "mysql"
     build:
-      context: .
+      context: ..
       dockerfile: "main/mysql/Dockerfile"
       args:
         IMAGE: $MYSQL_IMAGE
@@ -54,7 +54,7 @@ services:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
     build:
-      context: .
+      context: ..
       dockerfile: "main/toolbox/Dockerfile"
       args:
         IMAGE: $TOOLBOX_IMAGE
@@ -78,7 +78,7 @@ services:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
     build:
-      context: .
+      context: ..
       dockerfile: "main/fluentd/Dockerfile"
       args:
         IMAGE: $FLUENTD_IMAGE

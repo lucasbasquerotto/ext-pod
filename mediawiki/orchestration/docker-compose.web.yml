@@ -2,47 +2,47 @@ version: '2.4'
 
 x-logging:
   mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"
+  jsonlog: &jsonlog
     driver: "json-file"
     options:
       max-size: "50m"
-
-volumes:
-  mysql: {}
 
 networks:
   shared:
     external: true
     name: "${CTX_NAME}-network"
+  log:
+    driver: "bridge"
 
 services:
   nginx:
     container_name: "${CTX_NAME}-main-nginx"
     hostname: "nginx"
     build:
-      context: .
+      context: ..
       dockerfile: "main/nginx/Dockerfile"
       args:
         IMAGE: $NGINX_IMAGE
         VERSION: $NGINX_VERSION
-        PERL_VERSION: $PERL_VERSION
-        MAIN_DOMAIN: $MAIN_DOMAIN
-        MAIN_DOMAIN_PORT: $MAIN_DOMAIN_PORT
-        MAIN_DOMAIN_PORT_SUFFIX: $MAIN_DOMAIN_PORT_SUFFIX
-        PMA_DOMAIN: $PMA_DOMAIN
-        PMA_DOMAIN_PORT: $PMA_DOMAIN_PORT
-        PMA_DOMAIN_PORT_SUFFIX: $PMA_DOMAIN_PORT_SUFFIX
     restart: "unless-stopped"
     depends_on:
     - "mediawiki"
+    - "fluentd"
     - "phpmyadmin"
     ports:
-    - "$NGINX_HTTP_PORT:80"
-    - "$NGINX_HTTPS_PORT:443"
-    - "$NGINX_PRIVATE_HTTP_PORT:9080"
-    - "$NGINX_PRIVATE_HTTPS_PORT:9443"
+    - "$PUBLIC_HTTP_PORT:80"
+    - "$PUBLIC_HTTPS_PORT:443"
+    - "$PRIVATE_HTTP_PORT:9080"
+    - "$PRIVATE_HTTPS_PORT:9443"
     networks:
     - "shared"
     volumes:
+    - "$DATA_DIR/sync/certbot/etc/live:/etc/ssl:ro"
+    - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_NGINX
@@ -51,16 +51,18 @@ services:
     container_name: "${CTX_NAME}-main-mediawiki"
     hostname: "mediawiki"
     build:
-      context: .
+      context: ..
       dockerfile: "main/mediawiki/Dockerfile"
       args:
         IMAGE: $MEDIAWIKI_IMAGE
         VERSION: $MEDIAWIKI_VERSION
     restart: "unless-stopped"
     depends_on:
-    - "mysql"
+    - "fluentd"
     networks:
     - "shared"
+    extra_hosts:
+    - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
     logging: *mainlog
@@ -70,7 +72,7 @@ services:
     container_name: "${CTX_NAME}-main-phpmyadmin"
     hostname: "phpmyadmin"
     build:
-      context: .
+      context: ..
       dockerfile: "main/phpmyadmin/Dockerfile"
       args:
         IMAGE: $PMA_IMAGE
@@ -82,52 +84,56 @@ services:
       PMA_HOST: $DB_HOST
       PMA_PORT: $DB_PORT
     depends_on:
-    - "mysql"
+    - "fluentd"
     networks:
     - "shared"
+    extra_hosts:
+    - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_PMA
 
-  mysql:
-    container_name: "${CTX_NAME}-main-mysql"
-    hostname: "mysql"
-    build:
-      context: .
-      dockerfile: "main/mysql/Dockerfile"
-      args:
-        IMAGE: $MYSQL_IMAGE
-        VERSION: $MYSQL_VERSION
-    restart: "unless-stopped"
-    environment:
-      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
-      MYSQL_DATABASE: "$DB_NAME"
-      MYSQL_USER: "$DB_USER"
-      MYSQL_PASSWORD: "$DB_PASSWORD"
-    networks:
-    - "shared"
-    volumes:
-    - "mysql:/var/lib/mysql"
-    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
-    mem_limit: $CONTAINER_MEM_MYSQL
-
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
     build:
-      context: .
+      context: ..
       dockerfile: "main/toolbox/Dockerfile"
       args:
         IMAGE: $TOOLBOX_IMAGE
         VERSION: $TOOLBOX_VERSION
     restart: "unless-stopped"
+    depends_on:
+    - "fluentd"
     networks:
     - "shared"
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+    - "$DATA_DIR/sync:/var/sync/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_TOOLBOX
+
+  fluentd:
+    container_name: "${CTX_NAME}-main-fluentd"
+    hostname: "fluentd"
+    build:
+      context: ..
+      dockerfile: "main/fluentd/Dockerfile"
+      args:
+        IMAGE: $FLUENTD_IMAGE
+        VERSION: $FLUENTD_VERSION
+        OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
+    restart: "unless-stopped"
+    ports:
+    - "$FLUENTD_PORT:24224"
+    - "$FLUENTD_PORT:24224/udp"
+    networks:
+    - "log"
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    logging: *jsonlog
+    mem_limit: $CONTAINER_MEM_FLUENTD

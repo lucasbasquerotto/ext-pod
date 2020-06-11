@@ -2,6 +2,11 @@ version: '2.4'
 
 x-logging:
   mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"
+  jsonlog: &jsonlog
     driver: "json-file"
     options:
       max-size: "50m"
@@ -11,40 +16,31 @@ networks:
     external: true
     name: "${CTX_NAME}-network"
 
-volumes:
-  mongo_db: {}
-  mongo_dump: {}
-
 services:
   nginx:
     container_name: "${CTX_NAME}-main-nginx"
     hostname: "nginx"
     build:
-      context: .
+      context: ..
       dockerfile: "main/nginx/Dockerfile"
       args:
         IMAGE: $NGINX_IMAGE
         VERSION: $NGINX_VERSION
-        PERL_VERSION: $PERL_VERSION
-        MAIN_DOMAIN: $MAIN_DOMAIN
-        MAIN_DOMAIN_PORT: $MAIN_DOMAIN_PORT
-        MAIN_DOMAIN_PORT_SUFFIX: $MAIN_DOMAIN_PORT_SUFFIX
-        MONGO_EXPRESS_DOMAIN: $MONGO_EXPRESS_DOMAIN
-        MONGO_EXPRESS_DOMAIN_PORT: $MONGO_EXPRESS_DOMAIN_PORT
-        MONGO_EXPRESS_DOMAIN_PORT_SUFFIX: $MONGO_EXPRESS_DOMAIN_PORT_SUFFIX
     restart: "unless-stopped"
     depends_on:
     - "fluentd"
     - "rocketchat"
     - "mongo-express"
     ports:
-    - "$NGINX_HTTP_PORT:80"
-    - "$NGINX_HTTPS_PORT:443"
-    - "$NGINX_PRIVATE_HTTP_PORT:9080"
-    - "$NGINX_PRIVATE_HTTPS_PORT:9443"
+    - "$PUBLIC_HTTP_PORT:80"
+    - "$PUBLIC_HTTPS_PORT:443"
+    - "$PRIVATE_HTTP_PORT:9080"
+    - "$PRIVATE_HTTPS_PORT:9443"
     networks:
     - "shared"
     volumes:
+    - "$DATA_DIR/sync/certbot/etc/live:/etc/ssl:ro"
+    - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_NGINX
@@ -53,7 +49,7 @@ services:
     container_name: "${CTX_NAME}-main-rocketchat"
     hostname: "rocketchat"
     build:
-      context: .
+      context: ..
       dockerfile: "main/rocketchat/Dockerfile"
       args:
         IMAGE: $ROCKETCHAT_IMAGE
@@ -75,7 +71,6 @@ services:
     - MAIL_URL=smtp://smtp.email
     depends_on:
     - "fluentd"
-    - "mongo"
     networks:
     - "shared"
     volumes:
@@ -88,7 +83,7 @@ services:
     container_name: "${CTX_NAME}-main-hubot"
     hostname: "hubot"
     build:
-      context: .
+      context: ..
       dockerfile: "main/$HUBOT_DIR/Dockerfile"
       args:
         IMAGE: $HUBOT_IMAGE
@@ -112,34 +107,11 @@ services:
     volumes:
     - "$DATA_DIR/hubot/scripts:/home/hubot/scripts"
 
-  mongo:
-    container_name: "${CTX_NAME}-main-mongo"
-    hostname: "mongo"
-    build:
-      context: .
-      dockerfile: "main/mongo/Dockerfile"
-      args:
-        IMAGE: $MONGO_IMAGE
-        VERSION: $MONGO_VERSION
-    restart: "unless-stopped"
-    depends_on:
-    - "fluentd"
-    environment:
-    - MONGO_INITDB_ROOT_USERNAME=$DB_ROOT_USER
-    - MONGO_INITDB_ROOT_PASSWORD=$DB_ROOT_PASS
-    networks:
-    - "shared"
-    volumes:
-    - "mongo_db:/data/db"
-    - "mongo_dump:/dump"
-    command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
-    mem_limit: $CONTAINER_MEM_MONGO
-
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
     build:
-      context: .
+      context: ..
       dockerfile: "main/toolbox/Dockerfile"
       args:
         IMAGE: $TOOLBOX_IMAGE
@@ -161,7 +133,7 @@ services:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
     build:
-      context: .
+      context: ..
       dockerfile: "main/fluentd/Dockerfile"
       args:
         IMAGE: $FLUENTD_IMAGE

@@ -12,14 +12,14 @@ services:
     container_name: "${CTX_NAME}-run-certbot"
     hostname: "certbot"
     build:
-      context: .
+      context: ..
       dockerfile: "main/certbot/Dockerfile"
       args:
         IMAGE: $CERTBOT_IMAGE
         VERSION: $CERTBOT_VERSION
     volumes:
-    - "$DATA_DIR/vol/certbot/etc/:/etc/letsencrypt/"
-    - "$DATA_DIR/vol/certbot/www/:/var/www/certbot/"
+    - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_CERTBOT
 
@@ -27,7 +27,7 @@ services:
     container_name: "${CTX_NAME}-run-s3_uploads"
     hostname: "s3_uploads"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE
@@ -49,7 +49,7 @@ services:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE

@@ -21,7 +21,7 @@ services:
     container_name: "${CTX_NAME}-main-nginx"
     hostname: "nginx"
     build:
-      context: .
+      context: ..
       dockerfile: "main/nginx/Dockerfile"
       args:
         IMAGE: $NGINX_IMAGE
@@ -49,7 +49,7 @@ services:
     container_name: "${CTX_NAME}-main-wordpress"
     hostname: "wordpress"
     build:
-      context: .
+      context: ..
       dockerfile: "main/wordpress/Dockerfile"
       args:
         IMAGE: $WORDPRESS_IMAGE
@@ -76,7 +76,7 @@ services:
     container_name: "${CTX_NAME}-main-phpmyadmin"
     hostname: "phpmyadmin"
     build:
-      context: .
+      context: ..
       dockerfile: "main/phpmyadmin/Dockerfile"
       args:
         IMAGE: $PMA_IMAGE
@@ -100,7 +100,7 @@ services:
     container_name: "${CTX_NAME}-main-mysql"
     hostname: "mysql"
     build:
-      context: .
+      context: ..
       dockerfile: "main/mysql/Dockerfile"
       args:
         IMAGE: $MYSQL_IMAGE
@@ -123,7 +123,7 @@ services:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
     build:
-      context: .
+      context: ..
       dockerfile: "main/toolbox/Dockerfile"
       args:
         IMAGE: $TOOLBOX_IMAGE
@@ -145,7 +145,7 @@ services:
     container_name: "${CTX_NAME}-main-composer"
     hostname: "composer"
     build:
-      context: .
+      context: ..
       dockerfile: "main/composer/Dockerfile"
       args:
         IMAGE: $COMPOSER_IMAGE

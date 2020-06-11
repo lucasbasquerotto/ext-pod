@@ -26,39 +26,21 @@
   | default(params.pod.data_dir, true)
 %}
 
-{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
+{% set var_orchestration_main_file = 'orchestration/docker-compose.' + var_pod_type + '.' +
   (var_local | ternary('dev.yml', 'yml'))
 %}
-{% set var_orchestration_run_file = 'docker-compose.run.' +
+{% set var_orchestration_run_file = 'orchestration/docker-compose.run.' +
   (var_local | ternary('dev.yml', 'yml'))
+%}
+
+{% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
+  ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
+%}
+{% set var_pma_domain_port = params.main.custom_domain.pma_ssl | bool |
+  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
 %}
 
 ### main ###
-
-volumes:
-
-- when: false
-
-{% if var_pod_type in ['app', 'db'] %}
-
-- path: "{{ var_data_dir_task + '/mysql' }}"
-  mode: "0755"
-
-{% endif %}
-
-{% if var_pod_type in ['app', 'web'] %}
-
-- path: "{{ var_data_dir_task + '/mediawiki/uploads' }}"
-  mode: "0777"
-
-{% endif %}
-
-{% if not var_local %}
-
-- path: "{{ var_data_dir_task + '/log/fluentd' }}"
-  mode: "0777"
-
-{% endif %}
 
 templates:
 
@@ -96,15 +78,10 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    ssl: "{{ params.main.custom_domain.ssl }}"
-    main_domain: "{{ params.main.custom_domain.main_domain }}"
-    main_domain_port: "{{ params.main.custom_domain.main_port }}"
-    pma_domain: "{{ params.main.custom_domain.pma_domain }}"
-    pma_domain_port: "{{ params.main.custom_domain.pma_port }}"
-    nginx_http_port: "{{ params.main.custom_args.nginx.http_port }}"
-    nginx_https_port: "{{ params.main.custom_args.nginx.https_port }}"
-    nginx_private_http_port: "{{ params.main.custom_args.nginx.private_http_port }}"
-    nginx_private_https_port: "{{ params.main.custom_args.nginx.private_https_port }}"
+    public_http_port: "{{ params.main.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.main.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.main.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.main.custom_domain.private_https_port }}"
     pma_login_cookie_validity: >-
       {{ params.main.custom_args.pma.login_cookie_validity | default('36000') }}
 
@@ -149,6 +126,16 @@ templates:
 
     container_mem_s3_uploads: "{{ params.main.custom_memory.s3_uploads }}"
 
+    use_certbot: "{{ params.main.use_certbot }}"
+
+    {% if params.main.use_certbot | bool %}
+
+    certbot_image: "{{ params.main.custom_images.certbot_image }}"
+    certbot_version: "{{ params.main.custom_images.certbot_version }}"
+    container_mem_certbot: "{{ params.main.custom_memory.certbot }}"
+
+    {% endif %}
+
     {% endif %}
 
     {% if var_pod_type in ['web'] %}
@@ -188,11 +175,42 @@ templates:
 
     {% endif %}
 
-{% set var_server = (params.main.custom_domain.ssl | bool) |
+{% if var_pod_type in ['app', 'web'] %}
+
+{% if not params.main.custom_args.nginx.custom | default(false) | bool %}
+
+- src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
+  dest: "{{ var_main_dir }}/env/nginx/nginx.conf"
+  root: true
+  params:
+    worker_process: "{{ params.main.custom_args.nginx.worker_process | default('') }}"
+    worker_connections: "{{ params.main.custom_args.nginx.worker_connections | default('') }}"
+    log_format: "{{ params.main.custom_args.nginx.log_format | default('') }}"
+    limit_req_zone_rate: "{{ params.main.custom_args.nginx.limit_req_zone_rate | default('') }}"
+    web_cache: "{{ params.main.custom_args.nginx.web_cache | default('') }}"
+    web_cache_max_size: "{{ params.main.custom_args.nginx.web_cache_max_size | default('') }}"
+    web_cache_inactive: "{{ params.main.custom_args.nginx.web_cache_inactive | default('') }}"
+    proxy_connect_timeout: "{{ params.main.custom_args.nginx.proxy_connect_timeout | default('') }}"
+    proxy_send_timeout: "{{ params.main.custom_args.nginx.proxy_send_timeout | default('') }}"
+    proxy_read_timeout: "{{ params.main.custom_args.nginx.proxy_read_timeout | default('') }}"
+    send_timeout: "{{ params.main.custom_args.nginx.send_timeout | default('') }}"
+    client_body_timeout: "{{ params.main.custom_args.nginx.client_body_timeout | default('') }}"
+    client_header_timeout: "{{ params.main.custom_args.nginx.client_header_timeout | default('') }}"
+    main_domain: "{{ params.main.custom_domain.main_domain }}"
+    main_port: "{{ var_main_domain_port }}"
+    main_ssl: "{{ params.main.custom_domain.main_ssl }}"
+    main: "{{ params.main.custom_args.nginx.main | default({}) }}"
+    pma_domain: "{{ params.main.custom_domain.pma_domain }}"
+    pma_port: "{{ var_pma_domain_port }}"
+    pma_ssl: "{{ params.main.custom_domain.pma_ssl }}"
+
+{% endif %}
+
+{% set var_server = (params.main.custom_domain.main_ssl | bool) |
   ternary('https', 'http') + '://' +
   params.main.custom_domain.main_domain
-  + (not (params.main.custom_domain.main_port in ['80', '443'])) |
-  ternary(':' + params.main.custom_domain.main_port, '')
+  + (not (var_main_domain_port in ['80', '443'])) |
+  ternary(':' + var_main_domain_port, '')
 %}
 
 - src: "{{ var_main_dir }}/templates/mediawiki/LocalSettings.php"
@@ -214,6 +232,8 @@ templates:
     secret_key: "{{ params.credentials.mediawiki.secret_key }}"
     authentication_token_version: "{{ params.main.mediawiki.authentication_token_version }}"
 
+{% endif %}
+
 children:
 
 - name: "main/scripts/vars.run.yml"
@@ -228,3 +248,10 @@ children:
       var_orchestration__main_file: "{{ var_orchestration_main_file }}"
       var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
+      var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
+
+      {% if var_pod_type in ['app', 'web'] %}
+
+      var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+
+      {% endif %}

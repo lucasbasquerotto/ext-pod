@@ -9,7 +9,6 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 . "${pod_vars_dir}/vars.sh"
 
 pod_env_shared_exec_file="$pod_layer_dir/$var_run__general__script_dir/shared.exec.sh"
-pod_script_run_main_file="$pod_layer_dir/main/scripts/main.sh"
 
 GRAY='\033[0;90m'
 RED='\033[0;31m'
@@ -36,9 +35,47 @@ shift;
 
 args=("$@")
 
+pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
+
 case "$command" in
 	"prepare")
 		info "$command - do nothing..."
+		;;
+	"setup")
+		data_dir="/var/main/data"
+
+		"$pod_script_env_file" up "$var_run__general__toolbox_service"
+
+		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+				dir="$data_dir/mysql"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 755 "\$dir"
+				fi
+			fi
+
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+				dir="$data_dir/wordpress/uploads"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
+			fi
+
+			if [ "$var_custom__local" != "true" ]; then
+				dir="$data_dir/log/fluentd"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
+			fi
+		SHELL
+
+		"$pod_env_run_file" "$command" "$@"
 		;;
 	"migrate")
 		opts=()
@@ -47,14 +84,14 @@ case "$command" in
 		opts+=( "--new_domain_host=${var_run__migrate__new_domain_host:-}" )
 
 		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
-		;;
-	"migrate:"*)
-		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
 
 		if [ "${var_custom__use_certbot:-}" = "true" ]; then
 			info "$command - start certbot if needed..."
-			"$pod_script_env_file" "main:task:certbot" "${args[@]}"
+			"$pod_script_env_file" "main:task:certbot"
 		fi
+		;;
+	"migrate:"*)
+		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"setup:new")
 		prefix="var_task__${arg_task_name}__setup_new_"
@@ -83,6 +120,6 @@ case "$command" in
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;
 	*)
-		"$pod_script_run_main_file" "$command" ${args[@]+"${args[@]}"}
+		"$pod_env_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 esac

@@ -21,15 +21,13 @@
 
 {% set var_pod_dir_rel = '../..' %}
 {% set var_data_dir = var_local
-  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
-{% set var_data_dir_task = params.pod.local_data_dir_inside
-  | default(params.pod.data_dir, true)
+  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
 %}
 
-{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
+{% set var_orchestration_main_file = 'orchestration/docker-compose.' + var_pod_type + '.' +
   (var_local | ternary('dev.yml', 'yml'))
 %}
-{% set var_orchestration_run_file = 'docker-compose.run.' +
+{% set var_orchestration_run_file = 'orchestration/docker-compose.run.' +
   (var_local | ternary('dev.yml', 'yml'))
 %}
 
@@ -41,31 +39,6 @@
 %}
 
 ### main ###
-
-volumes:
-
-- when: false
-
-{% if var_pod_type in ['app', 'db'] %}
-
-- path: "{{ var_data_dir_task + '/mysql' }}"
-  mode: "0755"
-
-{% endif %}
-
-{% if var_pod_type in ['app', 'web'] %}
-
-- path: "{{ var_data_dir_task + '/wordpress/uploads' }}"
-  mode: "0777"
-
-{% endif %}
-
-{% if not var_local %}
-
-- path: "{{ var_data_dir_task + '/log/fluentd' }}"
-  mode: "0777"
-
-{% endif %}
 
 templates:
 
@@ -178,17 +151,9 @@ templates:
 
 {% if var_pod_type in ['app', 'web'] %}
 
-{% set var_main_domain = params.main.custom_domain.main_domain %}
-{% set var_main_external_port = var_main_domain_port %}
-{% set var_main_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http'))
-  + '://' + var_main_domain
-  + (((var_main_external_port | string) in ['80', '443'])
-  | ternary('', ':' + (var_main_external_port | string)))
-%}
-
 {% if not params.main.custom_args.nginx.custom | default(false) | bool %}
 
-- src: "{{ var_main_dir }}/templates/nginx.conf"
+- src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
   dest: "{{ var_main_dir }}/env/nginx/nginx.conf"
   root: true
   params:
@@ -215,7 +180,15 @@ templates:
 
 {% endif %}
 
-- src: "{{ var_main_dir }}/templates/wp.env"
+{% set var_main_domain = params.main.custom_domain.main_domain %}
+{% set var_main_external_port = var_main_domain_port %}
+{% set var_main_external_host = (params.main.custom_domain.main_ssl | bool | ternary('https', 'http'))
+  + '://' + var_main_domain
+  + (((var_main_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_main_external_port | string)))
+%}
+
+- src: "{{ var_main_dir }}/templates/wordpress/wp.env"
   dest: "{{ var_main_dir }}/env/wordpress/.env"
   root: true
   params:
@@ -254,6 +227,7 @@ children:
       var_orchestration__main_file: "{{ var_orchestration_main_file }}"
       var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
+      var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
 
       {% if var_pod_type in ['app', 'web'] %}
 

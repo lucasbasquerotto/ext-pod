@@ -2,6 +2,11 @@ version: '2.4'
 
 x-logging:
   mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"
+  jsonlog: &jsonlog
     driver: "json-file"
     options:
       max-size: "50m"
@@ -11,17 +16,13 @@ networks:
     external: true
     name: "${CTX_NAME}-network"
 
-volumes:
-  mongo_db: {}
-  mongo_dump: {}
-
 services:
 
   mongo:
     container_name: "${CTX_NAME}-main-mongo"
     hostname: "mongo"
     build:
-      context: .
+      context: ..
       dockerfile: "main/mongo/Dockerfile"
       args:
         IMAGE: $MONGO_IMAGE
@@ -35,8 +36,8 @@ services:
     networks:
     - "shared"
     volumes:
-    - "mongo_db:/data/db"
-    - "mongo_dump:/dump"
+    - "$DATA_DIR/mongo/db:/data/db"
+    - "$DATA_DIR/mongo/dump:/dump"
     command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
     mem_limit: $CONTAINER_MEM_MONGO
 
@@ -44,7 +45,7 @@ services:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
     build:
-      context: .
+      context: ..
       dockerfile: "main/toolbox/Dockerfile"
       args:
         IMAGE: $TOOLBOX_IMAGE
@@ -66,7 +67,7 @@ services:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
     build:
-      context: .
+      context: ..
       dockerfile: "main/fluentd/Dockerfile"
       args:
         IMAGE: $FLUENTD_IMAGE

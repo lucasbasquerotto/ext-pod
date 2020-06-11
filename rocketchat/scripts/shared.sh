@@ -38,8 +38,56 @@ case "$command" in
 		"$pod_env_run_file" "setup:main:network"
 		"$pod_env_run_file" "$command" "$@"
 		;;
+	"setup")
+		data_dir="/var/main/data"
+
+		"$pod_script_env_file" up "$var_run__general__toolbox_service"
+
+		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+				dir="$data_dir/mongo/db"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 755 "\$dir"
+				fi
+
+				dir="$data_dir/mongo/dump"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 755 "\$dir"
+				fi
+			fi
+
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+				dir="$data_dir/rocketchat/uploads"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
+			fi
+
+			if [ "$var_custom__local" != "true" ]; then
+				dir="$data_dir/log/fluentd"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
+			fi
+		SHELL
+
+		"$pod_script_env_file" "$command" "$@"
+		;;
 	"migrate")
 		"$pod_script_env_file" "migrate:$var_custom__pod_type" "${args[@]}"
+
+		if [ "${var_custom__use_certbot:-}" = "true" ]; then
+			info "$command - start certbot if needed..."
+			"$pod_script_env_file" "main:task:certbot"
+		fi
 		;;
 	"migrate:app")
 		"$pod_script_env_file" "migrate:db" "${args[@]}"

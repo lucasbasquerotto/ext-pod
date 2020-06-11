@@ -21,34 +21,24 @@
 
 {% set var_pod_dir_rel = '../..' %}
 {% set var_data_dir = var_local
-  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
-{% set var_data_dir_task = params.pod.local_data_dir_inside
-  | default(params.pod.data_dir, true)
+  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
 %}
 
-{% set var_orchestration_main_file = 'docker-compose.' + var_pod_type + '.' +
+{% set var_orchestration_main_file = 'orchestration/docker-compose.' + var_pod_type + '.' +
   (var_local | ternary('dev.yml', 'yml'))
 %}
-{% set var_orchestration_run_file = 'docker-compose.run.' +
+{% set var_orchestration_run_file = 'orchestration/docker-compose.run.' +
   (var_local | ternary('dev.yml', 'yml'))
+%}
+
+{% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
+  ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
+%}
+{% set var_me_domain_port = params.main.custom_domain.me_ssl | bool |
+  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
 %}
 
 ### main ###
-
-volumes:
-
-- path: "{{ var_data_dir_task }}/mongo/db"
-  mode: "0777"
-
-- path: "{{ var_data_dir_task }}/mongo/dump"
-  mode: "0777"
-
-{% if not var_local %}
-
-- path: "{{ var_data_dir_task + '/log/fluentd' }}"
-  mode: "0777"
-
-{% endif %}
 
 templates:
 
@@ -110,15 +100,10 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    ssl: "{{ params.main.custom_domain.ssl }}"
-    main_domain: "{{ params.main.custom_domain.main_domain }}"
-    main_domain_port: "{{ params.main.custom_domain.main_port }}"
-    mongo_express_domain: "{{ params.main.custom_domain.mongo_express_domain }}"
-    mongo_express_domain_port: "{{ params.main.custom_domain.mongo_express_port }}"
-    nginx_http_port: "{{ params.main.custom_args.nginx.http_port }}"
-    nginx_https_port: "{{ params.main.custom_args.nginx.https_port }}"
-    nginx_private_http_port: "{{ params.main.custom_args.nginx.private_http_port }}"
-    nginx_private_https_port: "{{ params.main.custom_args.nginx.private_https_port }}"
+    public_http_port: "{{ params.main.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.main.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.main.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.main.custom_domain.private_https_port }}"
     use_bot: "{{ params.main.use_bot }}"
     hubot_room: "{{ var_hubot_room }}"
     hubot_user: "{{ var_hubot_user }}"
@@ -168,6 +153,14 @@ templates:
 
     container_mem_s3_uploads: "{{ params.main.custom_memory.s3_uploads }}"
 
+    {% if params.main.use_certbot | bool %}
+
+    certbot_image: "{{ params.main.custom_images.certbot_image }}"
+    certbot_version: "{{ params.main.custom_images.certbot_version }}"
+    container_mem_certbot: "{{ params.main.custom_memory.certbot }}"
+
+    {% endif %}
+
     {% endif %}
 
     {% if not var_local %}
@@ -193,6 +186,41 @@ templates:
 
     {% endif %}
 
+{% if var_pod_type in ['app', 'web'] %}
+
+{% if not params.main.custom_args.nginx.custom | default(false) | bool %}
+
+- src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
+  dest: "{{ var_main_dir }}/env/nginx/nginx.conf"
+  root: true
+  params:
+    worker_process: "{{ params.main.custom_args.nginx.worker_process | default('') }}"
+    worker_connections: "{{ params.main.custom_args.nginx.worker_connections | default('') }}"
+    log_format: "{{ params.main.custom_args.nginx.log_format | default('') }}"
+    limit_req_zone_rate: "{{ params.main.custom_args.nginx.limit_req_zone_rate | default('') }}"
+    web_cache: "{{ params.main.custom_args.nginx.web_cache | default('') }}"
+    web_cache_max_size: "{{ params.main.custom_args.nginx.web_cache_max_size | default('') }}"
+    web_cache_inactive: "{{ params.main.custom_args.nginx.web_cache_inactive | default('') }}"
+    proxy_connect_timeout: "{{ params.main.custom_args.nginx.proxy_connect_timeout | default('') }}"
+    proxy_send_timeout: "{{ params.main.custom_args.nginx.proxy_send_timeout | default('') }}"
+    proxy_read_timeout: "{{ params.main.custom_args.nginx.proxy_read_timeout | default('') }}"
+    send_timeout: "{{ params.main.custom_args.nginx.send_timeout | default('') }}"
+    client_body_timeout: "{{ params.main.custom_args.nginx.client_body_timeout | default('') }}"
+    client_header_timeout: "{{ params.main.custom_args.nginx.client_header_timeout | default('') }}"
+    main_domain: "{{ params.main.custom_domain.main_domain }}"
+    main_port: "{{ var_main_domain_port }}"
+    main_ssl: "{{ params.main.custom_domain.main_ssl }}"
+    main: "{{ params.main.custom_args.nginx.main | default({}) }}"
+    me_domain: "{{ params.main.custom_domain.me_domain }}"
+    me_port: "{{ var_me_domain_port }}"
+    me_ssl: "{{ params.main.custom_domain.me_ssl }}"
+
+{% endif %}
+
+{% endif %}
+
+{% if var_pod_type in ['app', 'db'] %}
+
 - src: "{{ var_main_dir }}/templates/mongo/init.js"
   dest: "{{ var_main_dir }}/env/mongo/init.js"
   root: true
@@ -202,6 +230,8 @@ templates:
     db_password: "{{ params.credentials.rocketchat.db.password }}"
     viewer_password: "{{ params.credentials.rocketchat.db.viewer_password }}"
     oploguser_password: "{{ params.credentials.rocketchat.db.oploguser_password }}"
+
+{% endif %}
 
 children:
 
@@ -217,6 +247,13 @@ children:
       var_orchestration__main_file: "{{ var_orchestration_main_file }}"
       var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
+      var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
       var_custom__db_name: "{{ params.credentials.rocketchat.db.name }}"
       var_custom__user_name: "{{ params.credentials.rocketchat.db.root_user }}"
       var_custom__user_pass: "{{ params.credentials.rocketchat.db.root_password }}"
+
+      {% if var_pod_type in ['app', 'web'] %}
+
+      var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+
+      {% endif %}

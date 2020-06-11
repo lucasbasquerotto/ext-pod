@@ -1,14 +1,5 @@
 version: "2.4"
 
-networks:
-  internet:
-    driver: "bridge"
-  log:
-    driver: "bridge"
-  local:
-    internal: true
-    driver: "bridge"
-
 x-logging:
   mainlog: &mainlog
     driver: "fluentd"
@@ -20,13 +11,21 @@ x-logging:
     options:
       max-size: "50m"
 
-services:
+networks:
+  internet:
+    driver: "bridge"
+  log:
+    driver: "bridge"
+  local:
+    internal: true
+    driver: "bridge"
 
+services:
   nginx:
     container_name: "${CTX_NAME}-main-nginx"
     hostname: "nginx"
     build:
-      context: .
+      context: ..
       dockerfile: "main/nginx/Dockerfile"
       args:
         IMAGE: $NGINX_IMAGE
@@ -55,27 +54,26 @@ services:
     container_name: "${CTX_NAME}-main-wordpress"
     hostname: "wordpress"
     build:
-      context: .
+      context: ..
       dockerfile: "main/wordpress/Dockerfile"
       args:
         IMAGE: $WORDPRESS_IMAGE
         VERSION: $WORDPRESS_VERSION
         WORDPRESS_INI_FILE_TYPE: $WORDPRESS_INI_FILE_TYPE
     restart: "unless-stopped"
-    depends_on:
-    - "fluentd"
     environment:
       DB_HOST: $DB_HOST:$DB_PORT
       DB_NAME: $DB_NAME
       DB_USER: $DB_USER
+    depends_on:
+    - "mysql"
+    - "fluentd"
     networks:
     - "internet"
     - "local"
     volumes:
     - "$DATA_DIR/wordpress/uploads:/var/www/html/web/app/uploads"
     - "$DATA_DIR/tmp/wordpress:/tmp/main/wordpress"
-    extra_hosts:
-    - "mysql:$MYSQL_HOST_IP"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_WORDPRESS
 
@@ -83,7 +81,7 @@ services:
     container_name: "${CTX_NAME}-main-phpmyadmin"
     hostname: "phpmyadmin"
     build:
-      context: .
+      context: ..
       dockerfile: "main/phpmyadmin/Dockerfile"
       args:
         IMAGE: $PMA_IMAGE
@@ -91,26 +89,49 @@ services:
         PERL_VERSION: $PERL_VERSION
         LOGIN_COOKIE_VALIDITY: $PMA_LOGIN_COOKIE_VALIDITY
     restart: "unless-stopped"
-    depends_on:
-    - "fluentd"
     environment:
       PMA_HOST: $DB_HOST
       PMA_PORT: $DB_PORT
+    depends_on:
+    - "mysql"
+    - "fluentd"
     networks:
-    - "internet"
     - "local"
     volumes:
     - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
-    extra_hosts:
-    - "mysql:$MYSQL_HOST_IP"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_PMA
+
+  mysql:
+    container_name: "${CTX_NAME}-main-mysql"
+    hostname: "mysql"
+    build:
+      context: ..
+      dockerfile: "main/mysql/Dockerfile"
+      args:
+        IMAGE: $MYSQL_IMAGE
+        VERSION: $MYSQL_VERSION
+    restart: "unless-stopped"
+    environment:
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_PASSWORD: $DB_PASSWORD
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_USER: $DB_USER
+    depends_on:
+    - "fluentd"
+    networks:
+    - "local"
+    volumes:
+    - "$DATA_DIR/mysql:/var/lib/mysql"
+    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_MYSQL
 
   toolbox:
     container_name: "${CTX_NAME}-main-toolbox"
     hostname: "toolbox"
     build:
-      context: .
+      context: ..
       dockerfile: "main/toolbox/Dockerfile"
       args:
         IMAGE: $TOOLBOX_IMAGE
@@ -134,7 +155,7 @@ services:
     container_name: "${CTX_NAME}-main-fluentd"
     hostname: "fluentd"
     build:
-      context: .
+      context: ..
       dockerfile: "main/fluentd/Dockerfile"
       args:
         IMAGE: $FLUENTD_IMAGE
@@ -146,9 +167,7 @@ services:
     - "$FLUENTD_PORT:24224/udp"
     networks:
     - "log"
-    extra_hosts:
-    - "elasticsearch:$ELASTICSEARCH_HOST_IP"
     volumes:
-    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd/"
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     logging: *jsonlog
     mem_limit: $CONTAINER_MEM_FLUENTD

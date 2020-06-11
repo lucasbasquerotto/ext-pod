@@ -2,9 +2,10 @@ version: "2.4"
 
 x-logging:
   mainlog: &mainlog
-    driver: "json-file"
+    driver: "fluentd"
     options:
-      max-size: "50m"
+      tag: "docker.{{.Name}}.{{.ID}}"
+      fluentd-address: "localhost:$FLUENTD_PORT"
 
 networks:
   shared:
@@ -12,11 +13,27 @@ networks:
     name: "${CTX_NAME}-network"
 
 services:
+
+  certbot:
+    container_name: "${CTX_NAME}-run-certbot"
+    hostname: "certbot"
+    build:
+      context: ..
+      dockerfile: "main/certbot/Dockerfile"
+      args:
+        IMAGE: $CERTBOT_IMAGE
+        VERSION: $CERTBOT_VERSION
+    volumes:
+    - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_CERTBOT
+
   mongo_init:
     container_name: "${CTX_NAME}-run-mongo_init"
     hostname: "mongo_init"
     build:
-      context: .
+      context: ..
       dockerfile: "main/mongo/Dockerfile"
       args:
         IMAGE: $MONGO_IMAGE
@@ -24,13 +41,24 @@ services:
     networks:
     - "shared"
     logging: *mainlog
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          mongo mongo/rocketchat --eval \"
+            rs.initiate({
+              _id: 'rs0',
+              members: [ { _id: 0, host: 'localhost:27017' } ]})\" &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 secs...\";
+          sleep 5;
+        done; (exit $$s)"
     mem_limit: $CONTAINER_MEM_S3_BACKUP
 
   s3_uploads:
     container_name: "${CTX_NAME}-run-s3_uploads"
     hostname: "s3_uploads"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE
@@ -53,7 +81,7 @@ services:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE

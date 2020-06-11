@@ -2,10 +2,9 @@ version: "2.4"
 
 x-logging:
   mainlog: &mainlog
-    driver: "fluentd"
+    driver: "json-file"
     options:
-      tag: "docker.{{.Name}}.{{.ID}}"
-      fluentd-address: "localhost:$FLUENTD_PORT"
+      max-size: "50m"
 
 networks:
   shared:
@@ -13,28 +12,41 @@ networks:
     name: "${CTX_NAME}-network"
 
 services:
-  mysql_cli:
-    container_name: "${CTX_NAME}-main-mysql_cli"
-    hostname: "mysql_cli"
+
+  certbot:
+    container_name: "${CTX_NAME}-run-certbot"
+    hostname: "certbot"
     build:
-      context: .
-      dockerfile: "main/mysql/Dockerfile"
+      context: ..
+      dockerfile: "main/certbot/Dockerfile"
       args:
-        IMAGE: $MYSQL_IMAGE
-        VERSION: $MYSQL_VERSION
+        IMAGE: $CERTBOT_IMAGE
+        VERSION: $CERTBOT_VERSION
+    volumes:
+    - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_CERTBOT
+
+  mongo_init:
+    container_name: "${CTX_NAME}-run-mongo_init"
+    hostname: "mongo_init"
+    build:
+      context: ..
+      dockerfile: "main/mongo/Dockerfile"
+      args:
+        IMAGE: $MONGO_IMAGE
+        VERSION: $MONGO_VERSION
     networks:
     - "shared"
-    extra_hosts:
-    - "mysql:$DB_HOST_IP"
-    volumes:
-    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
-    mem_limit: $CONTAINER_MEM_MYSQL
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_S3_BACKUP
 
   s3_uploads:
     container_name: "${CTX_NAME}-run-s3_uploads"
     hostname: "s3_uploads"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE
@@ -57,7 +69,7 @@ services:
     container_name: "${CTX_NAME}-run-s3_backup"
     hostname: "s3_backup"
     build:
-      context: .
+      context: ..
       dockerfile: "main/awscli/Dockerfile"
       args:
         IMAGE: $AWSCLI_IMAGE
