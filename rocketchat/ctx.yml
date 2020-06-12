@@ -100,10 +100,37 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
+    {% set var_storage_type = params.main.custom_args.rocketchat.storage_type | default('FileSystem') %}
+
     public_http_port: "{{ params.main.custom_domain.public_http_port }}"
     public_https_port: "{{ params.main.custom_domain.public_https_port }}"
     private_http_port: "{{ params.main.custom_domain.private_http_port }}"
     private_https_port: "{{ params.main.custom_domain.private_https_port }}"
+    rocketchat_mail_url: "{{ credentials.rocketchat.mail_url | default('smtp://smtp.email') }}"
+    rocketchat_fileupload_storage_type: "{{ var_storage_type }}"
+
+    {% if var_storage_type == 'AmazonS3' %}
+
+    rocketchat_fileupload_s3_bucketurl: "{{ params.main.custom_args.rocketchat.uploads_bucket_endpoint }}"
+    rocketchat_fileupload_s3_bucket: "{{ params.main.custom_args.rocketchat.uploads_bucket_name }}"
+    rocketchat_fileupload_s3_region: "{{ params.main.custom_args.rocketchat.uploads_bucket_region | default('') }}"
+    rocketchat_fileupload_s3_acl: "{{ params.main.custom_args.rocketchat.uploads_bucket_acl | default('') }}"
+    rocketchat_fileupload_s3_awsaccesskeyid: "{{ credentials.rocketchat_uploads_bucket.access_key }}"
+    rocketchat_fileupload_s3_awssecretaccesskey: "{{ credentials.rocketchat_uploads_bucket.secret_key }}"
+    rocketchat_fileupload_s3_cdn: "{{ params.main.custom_args.rocketchat.s3_cdn | default('') }}"
+
+    {% else %}
+
+    rocketchat_fileupload_s3_bucketurl: ""
+    rocketchat_fileupload_s3_bucket: ""
+    rocketchat_fileupload_s3_region: ""
+    rocketchat_fileupload_s3_acl: ""
+    rocketchat_fileupload_s3_awsaccesskeyid: ""
+    rocketchat_fileupload_s3_awssecretaccesskey: ""
+    rocketchat_fileupload_s3_cdn: ""
+
+    {% endif %}
+
     use_bot: "{{ params.main.use_bot }}"
     hubot_room: "{{ var_hubot_room }}"
     hubot_user: "{{ var_hubot_user }}"

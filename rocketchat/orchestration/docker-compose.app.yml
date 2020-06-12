@@ -68,7 +68,17 @@ services:
     - ROOT_URL=http://localhost:3000
     - MONGO_URL=mongodb://$DB_USER:$DB_PASSWORD@mongo:27017/$DB_NAME?authSource=admin
     - MONGO_OPLOG_URL=mongodb://oploguser:$DB_OPLOG_PASSWORD@mongo:27017/local?authSource=admin
-    - MAIL_URL=smtp://smtp.email
+    - MAIL_URL=$ROCKETCHAT_MAIL_URL
+    - FileUpload_Storage_Type=$ROCKETCHAT_FILEUPLOAD_STORAGE_TYPE
+    - FileUpload_S3_Bucket=$ROCKETCHAT_FILEUPLOAD_S3_BUCKET
+    - FileUpload_S3_Region=$ROCKETCHAT_FILEUPLOAD_S3_REGION
+    - FileUpload_S3_BucketURL=$ROCKETCHAT_FILEUPLOAD_S3_BUCKETURL
+    - FileUpload_FileSystemPath=/app/uploads
+    - SETTINGS_BLOCKED=FileUpload_Storage_Type,FileUpload_S3_Bucket,FileUpload_S3_Region,FileUpload_S3_BucketURL,FileUpload_FileSystemPath
+    - FileUpload_S3_Acl=$ROCKETCHAT_FILEUPLOAD_S3_ACL
+    - FileUpload_S3_AWSAccessKeyId=$ROCKETCHAT_FILEUPLOAD_S3_AWSACCESSKEYID
+    - FileUpload_S3_AWSSecretAccessKey=$ROCKETCHAT_FILEUPLOAD_S3_AWSSECRETACCESSKEY
+    - FileUpload_S3_CDN=$ROCKETCHAT_FILEUPLOAD_S3_CDN
     depends_on:
     - "fluentd"
     - "mongo"
