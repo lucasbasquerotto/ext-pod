@@ -39,7 +39,7 @@ services:
     networks:
     - "shared"
     volumes:
-    - "$DATA_DIR/sync/certbot/etc/live:/etc/ssl:ro"
+    - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
