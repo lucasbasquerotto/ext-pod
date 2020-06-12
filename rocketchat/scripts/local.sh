@@ -52,8 +52,8 @@ case "$command" in
 		sudo rm -rf "${base_dir}/data/"*
 		;;
 	"clear-remote")
-		"$pod_script_env_file" "s3:task:uploads" --s3_cmd=rb
-		"$pod_script_env_file" "s3:task:db" --s3_cmd=rb
+		"$pod_script_env_file" "s3:run" --s3_cmd=rb --task_name="uploads_backup" --subtask_cmd="$command"
+		"$pod_script_env_file" "s3:run" --s3_cmd=rb --task_name="db_backup" --subtask_cmd="$command"
 		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"
