@@ -13,7 +13,6 @@ networks:
 
 volumes:
   mongo_db: {}
-  mongo_dump: {}
 
 services:
   nginx:
@@ -156,7 +155,7 @@ services:
     - "shared"
     volumes:
     - "mongo_db:/data/db"
-    - "mongo_dump:/dump"
+    - "$DATA_DIR/tmp/mongo:/tmp/main/mongo"
     command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
     mem_limit: $CONTAINER_MEM_MONGO
 

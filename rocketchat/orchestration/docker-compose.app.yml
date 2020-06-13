@@ -137,7 +137,7 @@ services:
     - "shared"
     volumes:
     - "$DATA_DIR/mongo/db:/data/db"
-    - "$DATA_DIR/mongo/dump:/dump"
+    - "$DATA_DIR/tmp/mongo:/tmp/main/mongo"
     command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
     mem_limit: $CONTAINER_MEM_MONGO
 
