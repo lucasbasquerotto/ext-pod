@@ -12,6 +12,8 @@ x-logging:
       max-size: "50m"
 
 networks:
+  log:
+    driver: "bridge"
   shared:
     external: true
     name: "${CTX_NAME}-network"
