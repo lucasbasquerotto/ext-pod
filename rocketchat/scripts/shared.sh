@@ -79,63 +79,55 @@ case "$command" in
 			fi
 		SHELL
 
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+			"$pod_env_run_file" up mongo
+
+			info "$command - init the mongo database if needed"
+			"$pod_env_run_file" run mongo_init /bin/bash <<-SHELL
+				set -eou pipefail
+
+				for i in \$(seq 1 30); do
+					mongo mongo/"$var_custom__db_name" \
+						--authenticationDatabase admin \
+						--username "$var_custom__user_name" \
+						--password "$var_custom__user_pass" \
+						--eval "
+							rs.initiate({
+								_id: 'rs0',
+								members: [ { _id: 0, host: 'localhost:27017' } ]
+							})
+						" && s=\$? && break || s=\$?;
+					echo "Tried \$i times. Waiting 5 secs...";
+					sleep 5;
+				done;
+
+				if [ "\$s" != "0" ]; then
+					exit "\$s"
+				fi
+
+				for i in \$(seq 1 30); do
+					mongo mongo/admin \
+						--authenticationDatabase admin \
+						--username "$var_custom__user_name" \
+						--password "$var_custom__user_pass" \
+						/tmp/main/init.js && s=\$? && break || s=\$?;
+					echo "Tried \$i times. Waiting 5 secs...";
+					sleep 5;
+				done;
+
+				if [ "\$s" != "0" ]; then
+					exit "\$s"
+				fi
+			SHELL
+		fi
+
 		"$pod_env_run_file" "$command" "$@"
 		;;
 	"migrate")
-		"$pod_script_env_file" "migrate:$var_custom__pod_type" ${args[@]+"${args[@]}"}
-
 		if [ "${var_custom__use_certbot:-}" = "true" ]; then
 			info "$command - start certbot if needed..."
 			"$pod_script_env_file" "main:task:certbot"
 		fi
-		;;
-	"migrate:app")
-		"$pod_script_env_file" "migrate:db" ${args[@]+"${args[@]}"}
-		"$pod_script_env_file" "migrate:web" ${args[@]+"${args[@]}"}
-		;;
-	"migrate:web")
-		info "$command - nothing to do..."
-		;;
-	"migrate:db")
-		"$pod_env_run_file" up mongo
-
-		info "$command - init the mongo database if needed"
-		"$pod_env_run_file" run mongo_init /bin/bash <<-SHELL
-			set -eou pipefail
-
-			for i in \$(seq 1 30); do
-				mongo mongo/"$var_custom__db_name" \
-					--authenticationDatabase admin \
-					--username "$var_custom__user_name" \
-					--password "$var_custom__user_pass" \
-					--eval "
-						rs.initiate({
-							_id: 'rs0',
-							members: [ { _id: 0, host: 'localhost:27017' } ]
-						})
-					" && s=\$? && break || s=\$?;
-				echo "Tried \$i times. Waiting 5 secs...";
-				sleep 5;
-			done;
-
-			if [ "\$s" != "0" ]; then
-			  exit "\$s"
-			fi
-
-			for i in \$(seq 1 30); do
-				mongo mongo/admin \
-					--authenticationDatabase admin \
-					--username "$var_custom__user_name" \
-					--password "$var_custom__user_pass" \
-					/tmp/main/init.js && s=\$? && break || s=\$?;
-				echo "Tried \$i times. Waiting 5 secs...";
-				sleep 5;
-			done;
-
-			if [ "\$s" != "0" ]; then
-			  exit "\$s"
-			fi
-		SHELL
 		;;
 	*)
 		"$pod_env_run_file" "$command" "$@"
