@@ -1,6 +1,8 @@
 ## general vars - start ###
 
 {% set var_local = params.main.local | default(false) | bool %}
+{% set var_remote_test = params.main.remote_test | default(false) | bool %}
+{% set var_local_dev = var_local and (not var_remote_test) %}
 {% set var_run = params.main.run | default({}) %}
 {% set var_run_tasks = params.main.run_tasks | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
@@ -25,10 +27,10 @@
 %}
 
 {% set var_orchestration_main_file = 'orchestration/docker-compose.' + var_pod_type + '.' +
-  (var_local | ternary('dev.yml', 'yml'))
+  (var_local_dev | ternary('dev.yml', 'yml'))
 %}
 {% set var_orchestration_run_file = 'orchestration/docker-compose.run.' +
-  (var_local | ternary('dev.yml', 'yml'))
+  (var_local_dev | ternary('dev.yml', 'yml'))
 %}
 
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
@@ -49,6 +51,7 @@ templates:
     ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local_dev: "{{ var_local_dev | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
     toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
     toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
@@ -120,13 +123,21 @@ templates:
 
     {% endif %}
 
+    {% if var_pod_type in ['web'] %}
+
     {% if not var_local %}
 
-    {% if var_pod_type in ['web'] %}
+    mysql_host_ip: ""
+
+    {% else %}
 
     mysql_host_ip: "{{ params.dependencies_node_ip_dict['mysql'] }}"
 
     {% endif %}
+
+    {% endif %}
+
+    {% if not var_local_dev %}
 
     fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
     fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
@@ -228,6 +239,7 @@ children:
       var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
+      var_custom__local_dev: "{{ var_local_dev | bool | ternary('true', 'false') }}"
 
       {% if var_pod_type in ['app', 'web'] %}
 

@@ -62,13 +62,10 @@ case "$command" in
 				fi
 			fi
 
-			if [ "$var_custom__local" != "true" ]; then
+			if [ "$var_custom__local_dev" != "true" ]; then
 				dir="$data_dir/log/fluentd"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-					chmod 777 "\$dir"
-				fi
+				mkdir -p "\$dir"
+				chmod 777 "\$dir"
 			fi
 		SHELL
 
