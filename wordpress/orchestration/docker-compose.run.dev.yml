@@ -9,7 +9,7 @@ x-logging:
 services:
 
   certbot:
-    container_name: "${CTX_NAME}-run-certbot"
+    container_name: "${CTX_PREFIX_RUN}certbot"
     hostname: "certbot"
     build:
       context: ..
@@ -24,7 +24,7 @@ services:
     mem_limit: $CONTAINER_MEM_CERTBOT
 
   s3_uploads:
-    container_name: "${CTX_NAME}-run-s3_uploads"
+    container_name: "${CTX_PREFIX_RUN}s3_uploads"
     hostname: "s3_uploads"
     build:
       context: ..
@@ -46,7 +46,7 @@ services:
     mem_limit: $CONTAINER_MEM_S3_UPLOADS
 
   s3_backup:
-    container_name: "${CTX_NAME}-run-s3_backup"
+    container_name: "${CTX_PREFIX_RUN}s3_backup"
     hostname: "s3_backup"
     build:
       context: ..

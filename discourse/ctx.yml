@@ -79,11 +79,21 @@ templates:
 
 {% if var_run | default({}) | dict2items | list | length > 0 %}
 
+{% set var_ctx_full_name = params.env_name  + '-' + params.ctx_name + '-' + params.pod.name %}
+{% set var_ctx_prefix_main = params.main.use_prefix | bool
+  | ternary(var_ctx_full_name + '-main', '')
+%}
+{% set var_ctx_prefix_run = params.main.use_prefix | bool
+  | ternary(var_ctx_full_name + '-run', '')
+%}
+
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
   params:
-    ctx_name: "{{ params.env_name }}-{{ params.ctx_name }}-{{ params.pod.name }}"
+    ctx_full_name: "{{ var_ctx_full_name }}"
+    ctx_prefix_main: "{{ var_ctx_prefix_main }}"
+    ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     toolbox_image: "{{ params.main.custom_images.toolbox_image }}"

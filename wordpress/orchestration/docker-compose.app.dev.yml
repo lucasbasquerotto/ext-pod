@@ -18,7 +18,7 @@ networks:
 
 services:
   nginx:
-    container_name: "${CTX_NAME}-main-nginx"
+    container_name: "${CTX_PREFIX_MAIN}nginx"
     hostname: "nginx"
     build:
       context: ..
@@ -46,7 +46,7 @@ services:
     mem_limit: $CONTAINER_MEM_NGINX
 
   wordpress:
-    container_name: "${CTX_NAME}-main-wordpress"
+    container_name: "${CTX_PREFIX_MAIN}wordpress"
     hostname: "wordpress"
     build:
       context: ..
@@ -73,7 +73,7 @@ services:
     mem_limit: $CONTAINER_MEM_WORDPRESS
 
   phpmyadmin:
-    container_name: "${CTX_NAME}-main-phpmyadmin"
+    container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
     hostname: "phpmyadmin"
     build:
       context: ..
@@ -97,7 +97,7 @@ services:
     mem_limit: $CONTAINER_MEM_PMA
 
   mysql:
-    container_name: "${CTX_NAME}-main-mysql"
+    container_name: "${CTX_PREFIX_MAIN}mysql"
     hostname: "mysql"
     build:
       context: ..
@@ -120,7 +120,7 @@ services:
     mem_limit: $CONTAINER_MEM_MYSQL
 
   toolbox:
-    container_name: "${CTX_NAME}-main-toolbox"
+    container_name: "${CTX_PREFIX_MAIN}toolbox"
     hostname: "toolbox"
     build:
       context: ..
@@ -142,7 +142,7 @@ services:
     mem_limit: $CONTAINER_MEM_TOOLBOX
 
   composer:
-    container_name: "${CTX_NAME}-main-composer"
+    container_name: "${CTX_PREFIX_MAIN}composer"
     hostname: "composer"
     build:
       context: ..
