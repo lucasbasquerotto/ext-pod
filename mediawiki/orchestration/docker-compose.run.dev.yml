@@ -29,7 +29,7 @@ services:
     mem_limit: $CONTAINER_MEM_CERTBOT
 
   mysql_cli:
-    container_name: "${CTX_NAME}-main-mysql_cli"
+    container_name: "${CTX_PREFIX_RUN}mysql_cli"
     hostname: "mysql_cli"
     build:
       context: ..
