@@ -1,8 +1,6 @@
 ## general vars - start ###
 
 {% set var_local = params.main.local | default(false) | bool %}
-{% set var_remote_test = params.main.remote_test | default(false) | bool %}
-{% set var_local_dev = var_local and (not var_remote_test) %}
 {% set var_run = params.main.run | default({}) %}
 {% set var_run_tasks = params.main.run_tasks | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
@@ -24,13 +22,6 @@
 {% set var_pod_dir_rel = '../..' %}
 {% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
-%}
-
-{% set var_orchestration_main_file = 'orchestration/docker-compose.' + var_pod_type + '.' +
-  (var_local_dev | ternary('dev.yml', 'yml'))
-%}
-{% set var_orchestration_run_file = 'orchestration/docker-compose.run.' +
-  (var_local_dev | ternary('dev.yml', 'yml'))
 %}
 
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
@@ -67,12 +58,30 @@ templates:
 {% endif %}
 
 {% set var_ctx_full_name = params.env_name  + '-' + params.ctx_name + '-' + params.pod.name %}
-{% set var_ctx_prefix_main = params.main.use_prefix | bool
-  | ternary(var_ctx_full_name + '-main', '')
+{% set var_ctx_prefix_main = params.main.ctx_prefix_main
+  | default(params.main.use_prefix | bool | ternary(var_ctx_full_name + '-main', ''))
 %}
-{% set var_ctx_prefix_run = params.main.use_prefix | bool
-  | ternary(var_ctx_full_name + '-run', '')
+{% set var_ctx_prefix_run = params.main.ctx_prefix_run
+  | default(params.main.use_prefix | bool | ternary(var_ctx_full_name + '-run', ''))
 %}
+
+- src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
+  dest: "{{ var_main_dir }}/docker-compose.yml"
+  root: true
+  params:
+    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    pod_type: "{{ var_pod_type }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
+    use_bot: "{{ params.main.use_bot }}"
+    external_volumes: "{{ params.main.external_volumes | default('false') }}"
+
+- src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
+  dest: "{{ var_main_dir }}/docker-compose.run.yml"
+  root: true
+  params:
+    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    pod_type: "{{ var_pod_type }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
@@ -83,8 +92,8 @@ templates:
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
-    local_dev: "{{ var_local_dev | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
+    use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
@@ -205,7 +214,7 @@ templates:
 
     {% endif %}
 
-    {% if not var_local_dev %}
+    {% if params.main.use_fluentd | bool %}
 
     fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
     fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
@@ -286,11 +295,9 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
-      var_orchestration__main_file: "{{ var_orchestration_main_file }}"
-      var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
-      var_custom__local_dev: "{{ var_local_dev | bool | ternary('true', 'false') }}"
+      var_custom__use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
       var_custom__db_name: "{{ params.credentials.rocketchat.db.name }}"
       var_custom__user_name: "{{ params.credentials.rocketchat.db.root_user }}"
       var_custom__user_pass: "{{ params.credentials.rocketchat.db.root_password }}"

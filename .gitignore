@@ -5,10 +5,16 @@
 /discourse/repo
 /efk/.env
 /efk/env/
+/rocketchat/docker-compose.yml
+/rocketchat/docker-compose.run.yml
 /rocketchat/.env
 /rocketchat/env/
+/mediawiki/docker-compose.yml
+/mediawiki/docker-compose.run.yml
 /mediawiki/.env
 /mediawiki/env/
+/wordpress/docker-compose.yml
+/wordpress/docker-compose.run.yml
 /wordpress/.env
 /wordpress/env/
 

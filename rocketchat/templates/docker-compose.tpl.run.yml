@@ -1,0 +1,129 @@
+version: "2.4"
+
+x-logging:
+
+{% if params.use_fluentd | bool %}
+
+  mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "{% raw %}docker.{{.Name}}{% endraw %}"
+      fluentd-address: "localhost:$FLUENTD_PORT"
+  jsonlog: &jsonlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+{% else %}
+
+  mainlog: &mainlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+{% endif %}
+
+networks:
+  shared:
+    external: true
+    name: "${CTX_NAME}-network"
+
+services:
+
+{% if params.pod_type in ['app', 'web'] %}
+
+  certbot:
+    container_name: "${CTX_PREFIX_RUN}certbot"
+    hostname: "certbot"
+    build:
+      context: ..
+      dockerfile: "main/certbot/Dockerfile"
+      args:
+        IMAGE: $CERTBOT_IMAGE
+        VERSION: $CERTBOT_VERSION
+    volumes:
+    - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
+    logging: *mainlog
+    mem_limit: $CONTAINER_MEM_CERTBOT
+
+{% endif %}
+
+{% if params.pod_type in ['app', 'db'] %}
+
+  mongo_init:
+    container_name: "${CTX_PREFIX_RUN}mongo_init"
+    hostname: "mongo_init"
+    build:
+      context: ..
+      dockerfile: "main/mongo/Dockerfile"
+      args:
+        IMAGE: $MONGO_IMAGE
+        VERSION: $MONGO_VERSION
+    networks:
+    - "shared"
+    logging: *mainlog
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          mongo mongo/rocketchat --eval \"
+            rs.initiate({
+              _id: 'rs0',
+              members: [ { _id: 0, host: 'localhost:27017' } ]})\" &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 secs...\";
+          sleep 5;
+        done; (exit $$s)"
+    mem_limit: $CONTAINER_MEM_S3_BACKUP
+
+{% endif %}
+
+{% if params.pod_type in ['app', 'web'] %}
+
+  s3_uploads:
+    container_name: "${CTX_PREFIX_RUN}s3_uploads"
+    hostname: "s3_uploads"
+    build:
+      context: ..
+      dockerfile: "main/awscli/Dockerfile"
+      args:
+        IMAGE: $AWSCLI_IMAGE
+        VERSION: $AWSCLI_VERSION
+        PERL_VERSION: $PERL_VERSION
+        S3_ACCESS_KEY: $S3_UPLOADS_ACCESS_KEY
+        S3_SECRET_KEY: $S3_UPLOADS_SECRET_KEY
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_S3_UPLOADS
+
+{% endif %}
+
+  s3_backup:
+    container_name: "${CTX_PREFIX_RUN}s3_backup"
+    hostname: "s3_backup"
+    build:
+      context: ..
+      dockerfile: "main/awscli/Dockerfile"
+      args:
+        IMAGE: $AWSCLI_IMAGE
+        VERSION: $AWSCLI_VERSION
+        PERL_VERSION: $PERL_VERSION
+        S3_ACCESS_KEY: $S3_BACKUP_ACCESS_KEY
+        S3_SECRET_KEY: $S3_BACKUP_SECRET_KEY
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: $CONTAINER_MEM_S3_BACKUP
