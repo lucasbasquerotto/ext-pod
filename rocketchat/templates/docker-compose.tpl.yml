@@ -90,14 +90,6 @@ services:
       args:
         IMAGE: $ROCKETCHAT_IMAGE
         VERSION: $ROCKETCHAT_VERSION
-    command: >
-      bash -c
-        "for i in `seq 1 30`; do
-          node main.js &&
-          s=$$? && break || s=$$?;
-          echo \"Tried $$i times. Waiting 5 secs...\";
-          sleep 5;
-        done; (exit $$s)"
     restart: "unless-stopped"
 
     {% if (params.use_fluentd | bool) or (params.pod_type == 'app') %}
@@ -138,6 +130,14 @@ services:
     - "shared"
     volumes:
     - "$DATA_DIR/rocketchat/uploads:/app/uploads"
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          node main.js &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 secs...\";
+          sleep 5;
+        done; (exit $$s)"
     logging: *mainlog
     mem_limit: $CONTAINER_MEM_ROCKETCHAT
 
