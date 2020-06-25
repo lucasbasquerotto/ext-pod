@@ -38,6 +38,10 @@ args=("$@")
 pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
+	"upgrade")
+		"$pod_env_run_file" "setup:main:network"
+		"$pod_env_run_file" "$command" "$@"
+		;;
 	"prepare")
 		info "$command - do nothing..."
 		;;
@@ -65,7 +69,7 @@ case "$command" in
 				fi
 			fi
 
-			if [ "$var_custom__local_dev" != "true" ]; then
+			if [ "$var_custom__use_fluentd" = "true" ]; then
 				dir="$data_dir/log/fluentd"
 				mkdir -p "\$dir"
 				chmod 777 "\$dir"

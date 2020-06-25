@@ -54,24 +54,27 @@ services:
 
 {% endif %}
 
-{% if params.pod_type in ['app', 'db'] %}
+{% if params.pod_type in ['web'] %}
 
-  mongo_init:
-    container_name: "${CTX_PREFIX_RUN}mongo_init"
-    hostname: "mongo_init"
+  mysql_cli:
+    container_name: "${CTX_PREFIX_RUN}mysql_cli"
+    hostname: "mysql_cli"
     build:
       context: .
-      dockerfile: "main/mongo/Dockerfile"
+      dockerfile: "main/mysql/Dockerfile"
       args:
-        IMAGE: "{{ params.images.mongo_image }}"
-        VERSION: "{{ params.images.mongo_version }}"
+        IMAGE: "{{ params.images.mysql_image }}"
+        VERSION: "{{ params.images.mysql_version }}"
     networks:
     - "shared"
-    logging: *mainlog
+    extra_hosts:
+    - "mysql:$DB_HOST_IP"
+    volumes:
+    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
 
-    {% if (params.memory.mongo_init | default('')) != '' %}
+    {% if (params.memory.mysql_cli | default('')) != '' %}
 
-    mem_limit: "{{ params.memory.mongo_init }}"
+    mem_limit: "{{ params.memory.mysql_cli }}"
 
     {% endif %}
 

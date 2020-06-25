@@ -1,8 +1,6 @@
 ## general vars - start ###
 
 {% set var_local = params.main.local | default(false) | bool %}
-{% set var_remote_test = params.main.remote_test | default(false) | bool %}
-{% set var_local_dev = var_local and (not var_remote_test) %}
 {% set var_run = params.main.run | default({}) %}
 {% set var_run_tasks = params.main.run_tasks | default({}) %}
 {% set var_run_dict = params.main.run_dict | default({}) %}
@@ -28,13 +26,6 @@
   | default(params.pod.data_dir, true)
 %}
 
-{% set var_orchestration_main_file = 'orchestration/docker-compose.' + var_pod_type + '.' +
-  (var_local_dev | ternary('dev.yml', 'yml'))
-%}
-{% set var_orchestration_run_file = 'orchestration/docker-compose.run.' +
-  (var_local_dev | ternary('dev.yml', 'yml'))
-%}
-
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
   ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
 %}
@@ -54,6 +45,27 @@ templates:
   | ternary(var_ctx_full_name + '-run', '')
 %}
 
+- src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
+  dest: "{{ var_main_dir }}/docker-compose.yml"
+  root: true
+  params:
+    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    pod_type: "{{ var_pod_type }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
+    external_volumes: "{{ params.main.external_volumes | default('false') }}"
+    images: {{ params.main.custom_images | to_json }}
+    memory: {{ params.main.custom_memory | to_json }}
+
+- src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
+  dest: "{{ var_main_dir }}/docker-compose.run.yml"
+  root: true
+  params:
+    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    pod_type: "{{ var_pod_type }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
+    images: {{ params.main.custom_images | to_json }}
+    memory: {{ params.main.custom_memory | to_json }}
+
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
@@ -63,31 +75,8 @@ templates:
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
-    local_dev: "{{ var_local_dev | default(false) | bool | ternary('true', 'false') }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
     type: "{{ var_pod_type }}"
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    nginx_image: "{{ params.main.custom_images.nginx_image }}"
-    nginx_version: "{{ params.main.custom_images.nginx_version }}"
-    mediawiki_image: "{{ params.main.custom_images.mediawiki_image }}"
-    mediawiki_version: "{{ params.main.custom_images.mediawiki_version }}"
-    pma_image: "{{ params.main.custom_images.pma_image }}"
-    pma_version: "{{ params.main.custom_images.pma_version }}"
-
-    {% endif %}
-
-    {% if var_pod_type in ['app', 'db'] %}
-
-    mysql_image: "{{ params.main.custom_images.mysql_image }}"
-    mysql_version: "{{ params.main.custom_images.mysql_version }}"
-
-    {% endif %}
-
-    toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
-    toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
-    awscli_image: "{{ params.main.custom_images.awscli_image }}"
-    awscli_version: "{{ params.main.custom_images.awscli_version }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
@@ -120,40 +109,17 @@ templates:
     s3_uploads_access_key: "{{ params.credentials.mediawiki_uploads_bucket.access_key }}"
     s3_uploads_secret_key: "{{ params.credentials.mediawiki_uploads_bucket.secret_key }}"
 
-    container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
-    container_mem_mediawiki: "{{ params.main.custom_memory.mediawiki }}"
-    container_mem_pma: "{{ params.main.custom_memory.pma }}"
-
     {% endif %}
-
-    {% if var_pod_type in ['app', 'db'] %}
-
-    container_mem_mysql: "{{ params.main.custom_memory.mysql }}"
-
-    {% endif %}
-
-    container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
-    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    container_mem_s3_uploads: "{{ params.main.custom_memory.s3_uploads }}"
-
     use_certbot: "{{ params.main.use_certbot }}"
-
-    {% if params.main.use_certbot | bool %}
-
-    certbot_image: "{{ params.main.custom_images.certbot_image }}"
-    certbot_version: "{{ params.main.custom_images.certbot_version }}"
-    container_mem_certbot: "{{ params.main.custom_memory.certbot }}"
-
-    {% endif %}
 
     {% endif %}
 
     {% if var_pod_type in ['web'] %}
 
-    {% if not var_local %}
+    {% if var_local %}
 
     db_host_ip: ""
 
@@ -165,12 +131,9 @@ templates:
 
     {% endif %}
 
-    {% if not var_local_dev %}
+    {% if params.main.use_fluentd %}
 
-    fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
-    fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
-    container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
 
     {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin
       | default(
@@ -258,11 +221,9 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
-      var_orchestration__main_file: "{{ var_orchestration_main_file }}"
-      var_orchestration__run_file: "{{ var_orchestration_run_file }}"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
-      var_custom__local_dev: "{{ var_local_dev | bool | ternary('true', 'false') }}"
+      var_custom__use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
 
       {% if var_pod_type in ['app', 'web'] %}
 

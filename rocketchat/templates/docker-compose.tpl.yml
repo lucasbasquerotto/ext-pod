@@ -36,7 +36,7 @@ networks:
     external: true
     name: "${CTX_NAME}-network"
 
-{% if params.local | bool %}
+{% if (params.local | bool) and (not (params.external_volumes | bool)) %}
 
 volumes:
   mongo_db: {}
@@ -51,15 +51,15 @@ services:
     container_name: "${CTX_PREFIX_MAIN}nginx"
     hostname: "nginx"
     build:
-      context: ..
+      context: .
       dockerfile: "main/nginx/Dockerfile"
       args:
-        IMAGE: $NGINX_IMAGE
-        VERSION: $NGINX_VERSION
+        IMAGE: "{{ params.images.nginx_image }}"
+        VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
     depends_on:
     - "rocketchat"
-    - "mongo-express"
+    - "mongo_express"
 
     {% if params.use_fluentd | bool %}
 
@@ -79,17 +79,22 @@ services:
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
-    mem_limit: $CONTAINER_MEM_NGINX
+
+    {% if (params.memory.nginx | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.nginx }}"
+
+    {% endif %}
 
   rocketchat:
     container_name: "${CTX_PREFIX_MAIN}rocketchat"
     hostname: "rocketchat"
     build:
-      context: ..
+      context: .
       dockerfile: "main/rocketchat/Dockerfile"
       args:
-        IMAGE: $ROCKETCHAT_IMAGE
-        VERSION: $ROCKETCHAT_VERSION
+        IMAGE: "{{ params.images.rocketchat_image }}"
+        VERSION: "{{ params.images.rocketchat_version }}"
     restart: "unless-stopped"
 
     {% if (params.use_fluentd | bool) or (params.pod_type == 'app') %}
@@ -139,8 +144,12 @@ services:
           sleep 5;
         done; (exit $$s)"
     logging: *mainlog
-    mem_limit: $CONTAINER_MEM_ROCKETCHAT
 
+    {% if (params.memory.rocketchat | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.rocketchat }}"
+
+    {% endif %}
 
   {% if params.use_bot | bool %}
 
@@ -148,11 +157,11 @@ services:
     container_name: "${CTX_PREFIX_MAIN}hubot"
     hostname: "hubot"
     build:
-      context: ..
-      dockerfile: "main/$HUBOT_DIR/Dockerfile"
+      context: .
+      dockerfile: "main/hubot/Dockerfile"
       args:
-        IMAGE: $HUBOT_IMAGE
-        VERSION: $HUBOT_VERSION
+        IMAGE: "{{ params.images.hubot_image }}"
+        VERSION: "{{ params.images.hubot_version }}"
     restart: unless-stopped
     depends_on:
     - "rocketchat"
@@ -176,17 +185,23 @@ services:
     volumes:
     - "$DATA_DIR/hubot/scripts:/home/hubot/scripts"
 
+    {% if (params.memory.hubot | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.hubot }}"
+
+    {% endif %}
+
   {% endif %}
 
-  mongo-express:
-    container_name: "${CTX_PREFIX_MAIN}mongo-express"
-    hostname: "mongo-express"
+  mongo_express:
+    container_name: "${CTX_PREFIX_MAIN}mongo_express"
+    hostname: "mongo_express"
     build:
-      context: ..
+      context: .
       dockerfile: "main/mongo-express/Dockerfile"
       args:
-        IMAGE: $MONGO_EXPRESS_IMAGE
-        VERSION: $MONGO_EXPRESS_VERSION
+        IMAGE: "{{ params.images.mongo_express_image }}"
+        VERSION: "{{ params.images.mongo_express_version }}"
     restart: "unless-stopped"
 
     {% if params.use_fluentd | bool %}
@@ -210,7 +225,12 @@ services:
     - ME_CONFIG_MONGODB_ADMINPASSWORD=$DB_ROOT_PASS
     networks:
     - "shared"
-    mem_limit: $CONTAINER_MEM_MONGO_EXPRESS
+
+    {% if (params.memory.mongo_express | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.mongo_express }}"
+
+    {% endif %}
 
 {% endif %}
 
@@ -220,11 +240,11 @@ services:
     container_name: "${CTX_PREFIX_MAIN}mongo"
     hostname: "mongo"
     build:
-      context: ..
+      context: .
       dockerfile: "main/mongo/Dockerfile"
       args:
-        IMAGE: $MONGO_IMAGE
-        VERSION: $MONGO_VERSION
+        IMAGE: "{{ params.images.mongo_image }}"
+        VERSION: "{{ params.images.mongo_version }}"
     restart: "unless-stopped"
 
     {% if params.use_fluentd | bool %}
@@ -253,7 +273,12 @@ services:
 
     - "$DATA_DIR/tmp/mongo:/tmp/main/mongo"
     command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
-    mem_limit: $CONTAINER_MEM_MONGO
+
+    {% if (params.memory.mongo | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.mongo }}"
+
+    {% endif %}
 
 {% endif %}
 
@@ -261,11 +286,11 @@ services:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
     hostname: "toolbox"
     build:
-      context: ..
+      context: .
       dockerfile: "main/toolbox/Dockerfile"
       args:
-        IMAGE: $TOOLBOX_IMAGE
-        VERSION: $TOOLBOX_VERSION
+        IMAGE: "{{ params.images.toolbox_image }}"
+        VERSION: "{{ params.images.toolbox_version }}"
     restart: "unless-stopped"
 
     {% if params.use_fluentd | bool %}
@@ -283,7 +308,12 @@ services:
     - "$DATA_DIR/log:/var/log/main/{{ params.pod_type }}"
     logging: *mainlog
     command: "tail -f /dev/null"
-    mem_limit: $CONTAINER_MEM_TOOLBOX
+
+    {% if (params.memory.toolbox | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.toolbox }}"
+
+    {% endif %}
 
 {% if params.use_fluentd | bool %}
 
@@ -291,11 +321,11 @@ services:
     container_name: "${CTX_PREFIX_MAIN}fluentd"
     hostname: "fluentd"
     build:
-      context: ..
+      context: .
       dockerfile: "main/fluentd/Dockerfile"
       args:
-        IMAGE: $FLUENTD_IMAGE
-        VERSION: $FLUENTD_VERSION
+        IMAGE: "{{ params.images.fluentd_image }}"
+        VERSION: "{{ params.images.fluentd_version }}"
         OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
     restart: "unless-stopped"
     ports:
@@ -306,6 +336,11 @@ services:
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     logging: *jsonlog
-    mem_limit: $CONTAINER_MEM_FLUENTD
+
+    {% if (params.memory.fluentd | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.fluentd }}"
+
+    {% endif %}
 
 {% endif %}

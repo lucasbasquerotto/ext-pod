@@ -35,28 +35,6 @@
 
 templates:
 
-{% if params.main.use_bot | bool %}
-
-  {% set var_hubot_image = params.main.custom_images.hubot_image %}
-  {% set var_hubot_version = params.main.custom_images.hubot_version %}
-  {% set var_hubot_room = params.credentials.hubot.room %}
-  {% set var_hubot_user = params.credentials.hubot.user %}
-  {% set var_hubot_password = params.credentials.hubot.password %}
-  {% set var_hubot_bot_name = params.credentials.hubot.bot_name %}
-  {% set var_container_mem_hubot = params.main.custom_memory.hubot %}
-
-{% else %}
-
-  {% set var_hubot_image = params.main.custom_images.hubot_fake_image | default('alpine') %}
-  {% set var_hubot_version = params.main.custom_images.hubot_fake_version | default('3.11.6') %}
-  {% set var_hubot_room = '' %}
-  {% set var_hubot_user = '' %}
-  {% set var_hubot_password = '' %}
-  {% set var_hubot_bot_name = '' %}
-  {% set var_container_mem_hubot = '64mb' %}
-
-{% endif %}
-
 {% set var_ctx_full_name = params.env_name  + '-' + params.ctx_name + '-' + params.pod.name %}
 {% set var_ctx_prefix_main = params.main.ctx_prefix_main
   | default(params.main.use_prefix | bool | ternary(var_ctx_full_name + '-main', ''))
@@ -74,6 +52,8 @@ templates:
     use_fluentd: "{{ params.main.use_fluentd }}"
     use_bot: "{{ params.main.use_bot }}"
     external_volumes: "{{ params.main.external_volumes | default('false') }}"
+    images: {{ params.main.custom_images | to_json }}
+    memory: {{ params.main.custom_memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "{{ var_main_dir }}/docker-compose.run.yml"
@@ -82,6 +62,8 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
+    images: {{ params.main.custom_images | to_json }}
+    memory: {{ params.main.custom_memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
@@ -94,31 +76,6 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    nginx_image: "{{ params.main.custom_images.nginx_image }}"
-    nginx_version: "{{ params.main.custom_images.nginx_version }}"
-    rocketchat_image: "{{ params.main.custom_images.rocketchat_image }}"
-    rocketchat_version: "{{ params.main.custom_images.rocketchat_version }}"
-    hubot_image: "{{ var_hubot_image }}"
-    hubot_version: "{{ var_hubot_version }}"
-    mongo_express_image: "{{ params.main.custom_images.mongo_express_image }}"
-    mongo_express_version: "{{ params.main.custom_images.mongo_express_version }}"
-
-    {% endif %}
-
-    {% if var_pod_type in ['app', 'db'] %}
-
-    mongo_image: "{{ params.main.custom_images.mongo_image }}"
-    mongo_version: "{{ params.main.custom_images.mongo_version }}"
-
-    {% endif %}
-
-    toolbox_image: "{{ params.main.custom_images.toolbox_image }}"
-    toolbox_version: "{{ params.main.custom_images.toolbox_version }}"
-    awscli_image: "{{ params.main.custom_images.awscli_image }}"
-    awscli_version: "{{ params.main.custom_images.awscli_version }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
@@ -154,10 +111,15 @@ templates:
     {% endif %}
 
     use_bot: "{{ params.main.use_bot }}"
+
+    {% if params.main.use_bot | bool %}
+
     hubot_room: "{{ var_hubot_room }}"
     hubot_user: "{{ var_hubot_user }}"
     hubot_password: "{{ var_hubot_password }}"
     hubot_bot_name: "{{ var_hubot_bot_name }}"
+
+    {% endif %}
 
     {% endif %}
 
@@ -181,45 +143,17 @@ templates:
     s3_uploads_access_key: "{{ params.credentials.rocketchat_uploads_bucket.access_key }}"
     s3_uploads_secret_key: "{{ params.credentials.rocketchat_uploads_bucket.secret_key }}"
 
-    container_mem_nginx: "{{ params.main.custom_memory.nginx }}"
-    container_mem_rocketchat: "{{ params.main.custom_memory.rocketchat }}"
-    container_mem_hubot: "{{ var_container_mem_hubot }}"
-    container_mem_mongo_express: "{{ params.main.custom_memory.mongo_express }}"
-
     {% endif %}
-
-    {% if var_pod_type in ['app', 'db'] %}
-
-    container_mem_mongo: "{{ params.main.custom_memory.mongo }}"
-    container_mem_mongo_init: "{{ params.main.custom_memory.mongo_init }}"
-
-    {% endif %}
-
-    container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
-    container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    container_mem_s3_uploads: "{{ params.main.custom_memory.s3_uploads }}"
-
     use_certbot: "{{ params.main.use_certbot }}"
-
-    {% if params.main.use_certbot | bool %}
-
-    certbot_image: "{{ params.main.custom_images.certbot_image }}"
-    certbot_version: "{{ params.main.custom_images.certbot_version }}"
-    container_mem_certbot: "{{ params.main.custom_memory.certbot }}"
-
-    {% endif %}
 
     {% endif %}
 
     {% if params.main.use_fluentd | bool %}
 
-    fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
-    fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
-    container_mem_fluentd: "{{ params.main.custom_memory.fluentd }}"
 
     {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin
       | default(

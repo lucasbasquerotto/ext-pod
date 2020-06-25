@@ -1,0 +1,277 @@
+version: '2.4'
+
+x-logging:
+
+{% if params.use_fluentd | bool %}
+
+  mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "{% raw %}docker.{{.Name}}{% endraw %}"
+      fluentd-address: "localhost:$FLUENTD_PORT"
+  jsonlog: &jsonlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+{% else %}
+
+  mainlog: &mainlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+{% endif %}
+
+networks:
+
+{% if params.use_fluentd | bool %}
+
+  log:
+    driver: "bridge"
+
+{% endif %}
+
+  shared:
+    external: true
+    name: "${CTX_NAME}-network"
+
+{% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+volumes:
+  mysql: {}
+
+{% endif %}
+
+services:
+
+{% if params.pod_type in ['app', 'web'] %}
+
+  nginx:
+    container_name: "${CTX_PREFIX_MAIN}nginx"
+    hostname: "nginx"
+    build:
+      context: .
+      dockerfile: "main/nginx/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.nginx_image }}"
+        VERSION: "{{ params.images.nginx_version }}"
+    restart: "unless-stopped"
+    depends_on:
+    - "mediawiki"
+    - "phpmyadmin"
+
+    {% if params.use_fluentd | bool %}
+
+    - "fluentd"
+
+    {% endif %}
+
+    ports:
+    - "$PUBLIC_HTTP_PORT:80"
+    - "$PUBLIC_HTTPS_PORT:443"
+    - "$PRIVATE_HTTP_PORT:9080"
+    - "$PRIVATE_HTTPS_PORT:9443"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
+    - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
+    - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
+    logging: *mainlog
+
+    {% if (params.memory.nginx | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.nginx }}"
+
+    {% endif %}
+
+  mediawiki:
+    container_name: "${CTX_PREFIX_MAIN}mediawiki"
+    hostname: "mediawiki"
+    build:
+      context: .
+      dockerfile: "main/mediawiki/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.mediawiki_image }}"
+        VERSION: "{{ params.images.mediawiki_version }}"
+    restart: "unless-stopped"
+
+    {% if (params.use_fluentd | bool) or (params.pod_type == 'app') %}
+
+    depends_on:
+
+    {% if params.use_fluentd | bool %}
+
+    - "fluentd"
+
+    {% endif %}
+
+    {% if params.pod_type == 'app' %}
+
+    - "mysql"
+
+    {% endif %}
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
+    logging: *mainlog
+
+    {% if (params.memory.mediawiki | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.mediawiki }}"
+
+    {% endif %}
+
+  phpmyadmin:
+    container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
+    hostname: "phpmyadmin"
+    build:
+      context: .
+      dockerfile: "main/phpmyadmin/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.pma_image }}"
+        VERSION: "{{ params.images.pma_version }}"
+        PERL_VERSION: $PERL_VERSION
+        LOGIN_COOKIE_VALIDITY: $PMA_LOGIN_COOKIE_VALIDITY
+    restart: "unless-stopped"
+    environment:
+      PMA_HOST: $DB_HOST
+      PMA_PORT: $DB_PORT
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
+    logging: *mainlog
+
+    {% if (params.memory.phpmyadmin | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.phpmyadmin }}"
+
+    {% endif %}
+
+{% endif %}
+
+{% if params.pod_type in ['app', 'db'] %}
+
+  mysql:
+    container_name: "${CTX_PREFIX_MAIN}mysql"
+    hostname: "mysql"
+    build:
+      context: .
+      dockerfile: "main/mysql/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.mysql_image }}"
+        VERSION: "{{ params.images.mysql_version }}"
+    restart: "unless-stopped"
+    environment:
+      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
+      MYSQL_DATABASE: "$DB_NAME"
+      MYSQL_USER: "$DB_USER"
+      MYSQL_PASSWORD: "$DB_PASSWORD"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+
+    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+    - "mysql:/var/lib/mysql"
+
+    {% else %}
+
+    - "$DATA_DIR/mysql:/var/lib/mysql"
+
+    {% endif %}
+
+    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+
+    {% if (params.memory.mysql | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.mysql }}"
+
+    {% endif %}
+
+{% endif %}
+
+  toolbox:
+    container_name: "${CTX_PREFIX_MAIN}toolbox"
+    hostname: "toolbox"
+    build:
+      context: .
+      dockerfile: "main/toolbox/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.toolbox_image }}"
+        VERSION: "{{ params.images.toolbox_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main/{{ params.pod_type }}"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+
+    {% if (params.memory.toolbox | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.toolbox }}"
+
+    {% endif %}
+
+{% if params.use_fluentd | bool %}
+
+  fluentd:
+    container_name: "${CTX_PREFIX_MAIN}fluentd"
+    hostname: "fluentd"
+    build:
+      context: .
+      dockerfile: "main/fluentd/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.fluentd_image }}"
+        VERSION: "{{ params.images.fluentd_version }}"
+        OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
+    restart: "unless-stopped"
+    ports:
+    - "$FLUENTD_PORT:24224"
+    - "$FLUENTD_PORT:24224/udp"
+    networks:
+    - "log"
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    logging: *jsonlog
+
+    {% if (params.memory.fluentd | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.fluentd }}"
+
+    {% endif %}
+
+{% endif %}

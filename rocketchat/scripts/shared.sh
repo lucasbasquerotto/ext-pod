@@ -69,7 +69,7 @@ case "$command" in
 				fi
 			fi
 
-			if [ "$var_custom__use_fluentd" != "true" ]; then
+			if [ "$var_custom__use_fluentd" = "true" ]; then
 				dir="$data_dir/log/fluentd"
 				mkdir -p "\$dir"
 				chmod 777 "\$dir"
