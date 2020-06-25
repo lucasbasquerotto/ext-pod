@@ -39,9 +39,7 @@ pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 case "$command" in
 	"clear")
 		"$pod_script_env_file" rm
-		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_uploads"
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mongo_db"
-		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mongo_dump"
 		sudo rm -rf "${base_dir}/data/${var_main__env}/${var_main__ctx}/${var_main__pod_name}/"
 		;;
 	"clear-all")
@@ -52,8 +50,8 @@ case "$command" in
 		sudo rm -rf "${base_dir}/data/"*
 		;;
 	"clear-remote")
-		"$pod_script_env_file" "s3:run" --s3_cmd=rb --task_name="uploads_backup" --subtask_cmd="$command"
-		"$pod_script_env_file" "s3:run" --s3_cmd=rb --task_name="db_backup" --subtask_cmd="$command"
+		"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb
+		"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
 		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"

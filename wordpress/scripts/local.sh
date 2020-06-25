@@ -84,8 +84,8 @@ case "$command" in
 		"$ctl_layer_dir/run" "$command"
 		;;
 	"clear-remote")
-		"$pod_script_env_file" "s3:run" --s3_cmd=rb --task_name="uploads_backup" --subtask_cmd="$command"
-		"$pod_script_env_file" "s3:run" --s3_cmd=rb --task_name="db_backup" --subtask_cmd="$command"
+		"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb
+		"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
 		;;
 	"clear")
 		"$pod_script_env_file" rm
