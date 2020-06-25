@@ -75,8 +75,8 @@ templates:
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
-    use_fluentd: "{{ params.main.use_fluentd }}"
     type: "{{ var_pod_type }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 

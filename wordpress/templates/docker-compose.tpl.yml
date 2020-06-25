@@ -217,6 +217,7 @@ services:
     {% endif %}
 
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    logging: *mainlog
 
     {% if (params.memory.mysql | default('')) != '' %}
 

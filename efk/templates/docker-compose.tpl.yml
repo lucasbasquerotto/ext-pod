@@ -39,13 +39,15 @@ networks:
 {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
 
 volumes:
-  mysql: {}
+  elasticsearch: {}
 
 {% endif %}
 
 services:
 
 {% if params.pod_type in ['app', 'web'] %}
+
+{% if params.use_nginx | bool %}
 
   nginx:
     container_name: "${CTX_PREFIX_MAIN}nginx"
@@ -58,8 +60,7 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
     depends_on:
-    - "mediawiki"
-    - "phpmyadmin"
+    - "kibana"
 
     {% if params.use_fluentd | bool %}
 
@@ -86,79 +87,43 @@ services:
 
     {% endif %}
 
-  mediawiki:
-    container_name: "${CTX_PREFIX_MAIN}mediawiki"
-    hostname: "mediawiki"
+  {% endif %}
+
+  kibana:
+    container_name: "${CTX_PREFIX_MAIN}kibana"
+    hostname: "kibana"
     build:
       context: .
-      dockerfile: "main/mediawiki/Dockerfile"
+      dockerfile: "main/kibana/Dockerfile"
       args:
-        IMAGE: "{{ params.images.mediawiki_image }}"
-        VERSION: "{{ params.images.mediawiki_version }}"
+        IMAGE: "{{ params.images.kibana_image }}"
+        VERSION: "{{ params.images.kibana_version }}"
     restart: "unless-stopped"
 
-    {% if (params.use_fluentd | bool) or (params.pod_type == 'app') %}
+    {% if not (params.use_nginx | bool) %}
 
-    depends_on:
-
-    {% if params.use_fluentd | bool %}
-
-    - "fluentd"
-
-    {% endif %}
-
-    {% if params.pod_type == 'app' %}
-
-    - "mysql"
-
-    {% endif %}
+    ports:
+    - "$KIBANA_PORT:5601"
 
     {% endif %}
 
     networks:
     - "shared"
-    volumes:
-    - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
-    logging: *mainlog
 
-    {% if (params.memory.mediawiki | default('')) != '' %}
+    {% if params.pod_type == 'web' %}
 
-    mem_limit: "{{ params.memory.mediawiki }}"
+    extra_hosts:
+    - "elasticsearch:$DB_HOST_IP"
 
     {% endif %}
 
-  phpmyadmin:
-    container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
-    hostname: "phpmyadmin"
-    build:
-      context: .
-      dockerfile: "main/phpmyadmin/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.pma_image }}"
-        VERSION: "{{ params.images.pma_version }}"
-        PERL_VERSION: $PERL_VERSION
-        LOGIN_COOKIE_VALIDITY: $PMA_LOGIN_COOKIE_VALIDITY
-    restart: "unless-stopped"
-    environment:
-      PMA_HOST: $DB_HOST
-      PMA_PORT: $DB_PORT
-
-    {% if params.use_fluentd | bool %}
-
-    depends_on:
-    - "fluentd"
-
-    {% endif %}
-
-    networks:
-    - "shared"
     volumes:
-    - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
+    - "$DATA_DIR/tmp/kibana:/tmp/main/kibana"
     logging: *mainlog
 
-    {% if (params.memory.phpmyadmin | default('')) != '' %}
+    {% if (params.memory.kibana | default('')) != '' %}
 
-    mem_limit: "{{ params.memory.phpmyadmin }}"
+    mem_limit: "{{ params.memory.kibana }}"
 
     {% endif %}
 
@@ -166,26 +131,31 @@ services:
 
 {% if params.pod_type in ['app', 'db'] %}
 
-  mysql:
-    container_name: "${CTX_PREFIX_MAIN}mysql"
-    hostname: "mysql"
+  elasticsearch:
+    container_name: "${CTX_PREFIX_MAIN}elasticsearch"
+    hostname: "elasticsearch"
     build:
       context: .
-      dockerfile: "main/mysql/Dockerfile"
+      dockerfile: "main/elasticsearch/Dockerfile"
       args:
-        IMAGE: "{{ params.images.mysql_image }}"
-        VERSION: "{{ params.images.mysql_version }}"
+        IMAGE: "{{ params.images.elasticsearch_image }}"
+        VERSION: "{{ params.images.elasticsearch_version }}"
     restart: "unless-stopped"
     environment:
-      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
-      MYSQL_DATABASE: "$DB_NAME"
-      MYSQL_USER: "$DB_USER"
-      MYSQL_PASSWORD: "$DB_PASSWORD"
+      cluster.initial_master_nodes: elasticsearch
+      ES_JAVA_OPTS: "$ELASTICSEARCH_JAVA_OPTS"
 
     {% if params.use_fluentd | bool %}
 
     depends_on:
     - "fluentd"
+
+    {% endif %}
+
+    {% if not (params.internal_elasticsearch | bool) %}
+
+    ports:
+    - "$ELASTICSEARCH_PORT:9200"
 
     {% endif %}
 
@@ -195,20 +165,28 @@ services:
 
     {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
 
-    - "mysql:/var/lib/mysql"
+    - "elasticsearch:/usr/share/elasticsearch/data"
 
     {% else %}
 
-    - "$DATA_DIR/mysql:/var/lib/mysql"
+    - "$DATA_DIR/elasticsearch:/usr/share/elasticsearch/data"
 
     {% endif %}
 
-    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    - "$DATA_DIR/tmp/elasticsearch:/tmp/main/elasticsearch"
+
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+      memlock:
+        hard: -1
+        soft: -1
     logging: *mainlog
 
-    {% if (params.memory.mysql | default('')) != '' %}
+    {% if (params.memory.elasticsearch | default('')) != '' %}
 
-    mem_limit: "{{ params.memory.mysql }}"
+    mem_limit: "{{ params.memory.elasticsearch }}"
 
     {% endif %}
 
@@ -265,6 +243,14 @@ services:
     - "$FLUENTD_PORT:24224/udp"
     networks:
     - "log"
+
+    {% if params.pod_type == 'web' %}
+
+    extra_hosts:
+    - "elasticsearch:$DB_HOST_IP"
+
+    {% endif %}
+
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     logging: *jsonlog

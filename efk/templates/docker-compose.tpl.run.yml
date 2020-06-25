@@ -54,65 +54,6 @@ services:
 
 {% endif %}
 
-{% if params.pod_type in ['web'] %}
-
-  mysql_cli:
-    container_name: "${CTX_PREFIX_RUN}mysql_cli"
-    hostname: "mysql_cli"
-    build:
-      context: .
-      dockerfile: "main/mysql/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.mysql_image }}"
-        VERSION: "{{ params.images.mysql_version }}"
-    networks:
-    - "shared"
-    extra_hosts:
-    - "mysql:$DB_HOST_IP"
-    volumes:
-    - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
-    logging: *mainlog
-
-    {% if (params.memory.mysql_cli | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.mysql_cli }}"
-
-    {% endif %}
-
-{% endif %}
-
-{% if params.pod_type in ['app', 'web'] %}
-
-  s3_uploads:
-    container_name: "${CTX_PREFIX_RUN}s3_uploads"
-    hostname: "s3_uploads"
-    build:
-      context: .
-      dockerfile: "main/awscli/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.awscli_image }}"
-        VERSION: "{{ params.images.awscli_version }}"
-        PERL_VERSION: $PERL_VERSION
-        S3_ACCESS_KEY: $S3_UPLOADS_ACCESS_KEY
-        S3_SECRET_KEY: $S3_UPLOADS_SECRET_KEY
-    restart: "unless-stopped"
-    networks:
-    - "shared"
-    volumes:
-    - "$DATA_DIR:/var/main/data"
-    - "$DATA_DIR/tmp:/tmp/main"
-    - "$DATA_DIR/log:/var/log/main"
-    logging: *mainlog
-    command: "tail -f /dev/null"
-
-    {% if (params.memory.s3_uploads | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.s3_uploads }}"
-
-    {% endif %}
-
-{% endif %}
-
   s3_backup:
     container_name: "${CTX_PREFIX_RUN}s3_backup"
     hostname: "s3_backup"

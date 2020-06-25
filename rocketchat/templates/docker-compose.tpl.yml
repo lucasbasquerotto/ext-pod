@@ -184,6 +184,7 @@ services:
     - "shared"
     volumes:
     - "$DATA_DIR/hubot/scripts:/home/hubot/scripts"
+    logging: *mainlog
 
     {% if (params.memory.hubot | default('')) != '' %}
 
@@ -225,6 +226,7 @@ services:
     - ME_CONFIG_MONGODB_ADMINPASSWORD=$DB_ROOT_PASS
     networks:
     - "shared"
+    logging: *mainlog
 
     {% if (params.memory.mongo_express | default('')) != '' %}
 
@@ -272,6 +274,7 @@ services:
     {% endif %}
 
     - "$DATA_DIR/tmp/mongo:/tmp/main/mongo"
+    logging: *mainlog
     command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
 
     {% if (params.memory.mongo | default('')) != '' %}

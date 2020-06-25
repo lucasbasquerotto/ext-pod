@@ -71,6 +71,7 @@ services:
     - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    logging: *mainlog
 
     {% if (params.memory.mysql_cli | default('')) != '' %}
 

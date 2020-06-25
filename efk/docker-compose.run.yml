@@ -1,0 +1,47 @@
+version: "2.4"
+x-logging:
+  mainlog: &mainlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+networks:
+  shared:
+    external: true
+    name: "${CTX_NAME}-network"
+services:
+  certbot:
+    container_name: "${CTX_PREFIX_RUN}certbot"
+    hostname: "certbot"
+    build:
+      context: .
+      dockerfile: "main/certbot/Dockerfile"
+      args:
+        IMAGE: "certbot/certbot"
+        VERSION: "v1.2.0"
+    volumes:
+    - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
+    logging: *mainlog
+    mem_limit: "256mb"
+  s3_backup:
+    container_name: "${CTX_PREFIX_RUN}s3_backup"
+    hostname: "s3_backup"
+    build:
+      context: .
+      dockerfile: "main/awscli/Dockerfile"
+      args:
+        IMAGE: "lucasbasquerotto/aws-cli"
+        VERSION: "1.0.0"
+        PERL_VERSION: $PERL_VERSION
+        S3_ACCESS_KEY: $S3_BACKUP_ACCESS_KEY
+        S3_SECRET_KEY: $S3_BACKUP_SECRET_KEY
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    mem_limit: "512mb"
