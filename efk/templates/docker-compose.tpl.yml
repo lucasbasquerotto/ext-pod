@@ -212,6 +212,13 @@ services:
 
     networks:
     - "shared"
+
+    {% if params.use_fluentd | bool %}
+
+    - "log"
+
+    {% endif %}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"

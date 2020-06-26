@@ -35,6 +35,18 @@
 
 ### main ###
 
+env_files:
+
+- when: false
+
+{% if var_pod_type in ['app', 'web'] %}
+
+- src: "{{ params.main.auth_file }}"
+  dest: "{{ var_main_dir }}/env/nginx/conf/.htpasswd"
+  root: true
+
+{% endif %}
+
 templates:
 
 {% set var_ctx_full_name = params.env_name  + '-' + params.ctx_name + '-' + params.pod.name %}
