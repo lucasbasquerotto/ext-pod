@@ -82,6 +82,10 @@ templates:
 
     {% endif %}
 
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+
+    {% endif %}
+
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "{{ var_main_dir }}/docker-compose.run.yml"
   root: true
@@ -148,7 +152,6 @@ templates:
     {% if params.main.use_fluentd %}
 
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
-    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
 
     {% endif %}
 

@@ -145,13 +145,6 @@ services:
       cluster.initial_master_nodes: elasticsearch
       ES_JAVA_OPTS: "$ELASTICSEARCH_JAVA_OPTS"
 
-    {% if params.use_fluentd | bool %}
-
-    depends_on:
-    - "fluentd"
-
-    {% endif %}
-
     {% if not (params.internal_elasticsearch | bool) %}
 
     ports:
@@ -243,8 +236,16 @@ services:
       args:
         IMAGE: "{{ params.images.fluentd_image }}"
         VERSION: "{{ params.images.fluentd_version }}"
-        OUTPUT_PLUGIN: $FLUENTD_OUTPUT_PLUGIN
+        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
     restart: "unless-stopped"
+
+    {% if (params.pod_type in ['app', 'db']) and (params.fluentd_output_plugin == 'elasticsearch') %}
+
+    depends_on:
+    - "elasticsearch"
+
+    {% endif %}
+
     ports:
     - "$FLUENTD_PORT:24224"
     - "$FLUENTD_PORT:24224/udp"
