@@ -3,6 +3,8 @@
 /discourse/.env
 /discourse/env/
 /discourse/repo
+/efk/docker-compose.yml
+/efk/docker-compose.run.yml
 /efk/.env
 /efk/env/
 /rocketchat/docker-compose.yml

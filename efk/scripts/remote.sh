@@ -24,10 +24,10 @@ fi
 
 shift;
 
-pod_env_shared_file="$pod_layer_dir/main/log/scripts/efk.sh"
+pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 
 case "$command" in
-  *)
-    "$pod_env_shared_file" "$command" "$@"
-    ;;
+	*)
+		"$pod_env_shared_file" "$command" "$@"
+		;;
 esac
