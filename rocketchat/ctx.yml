@@ -126,10 +126,10 @@ templates:
 
     {% if params.main.use_bot | bool %}
 
-    hubot_room: "{{ var_hubot_room }}"
-    hubot_user: "{{ var_hubot_user }}"
-    hubot_password: "{{ var_hubot_password }}"
-    hubot_bot_name: "{{ var_hubot_bot_name }}"
+    hubot_room: "{{ params.credentials.hubot.room }}"
+    hubot_user: "{{ params.credentials.hubot.user }}"
+    hubot_password: "{{ params.credentials.hubot.password }}"
+    hubot_bot_name: "{{ params.credentials.hubot.bot_name }}"
 
     {% endif %}
 

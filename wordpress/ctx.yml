@@ -27,9 +27,18 @@
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
   ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
 %}
-{% set var_pma_domain_port = params.main.custom_domain.pma_ssl | bool |
-  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
-%}
+
+{% if params.main.use_pma | bool %}
+  {% set var_pma_domain_port = params.main.custom_domain.pma_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
+{% if params.main.use_theia | bool %}
+  {% set var_theia_domain_port = params.main.custom_domain.theia_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
 
 ### main ###
 
@@ -62,9 +71,16 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
+    use_theia: "{{ params.main.use_theia }}"
     external_volumes: "{{ params.main.external_volumes | default('false') }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
+
+    {% if var_pod_type in ['app', 'web'] %}
+
+    use_pma: "{{ params.main.use_pma }}"
+
+    {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "{{ var_main_dir }}/docker-compose.run.yml"
@@ -87,6 +103,7 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
+    use_theia: "{{ params.main.use_theia }}"
     db_host: "{{ params.main.custom_args.mysql.host }}"
     db_port: "{{ params.main.custom_args.mysql.port }}"
     db_name: "{{ params.credentials.wordpress.db.name }}"
@@ -106,8 +123,6 @@ templates:
     public_https_port: "{{ params.main.custom_domain.public_https_port }}"
     private_http_port: "{{ params.main.custom_domain.private_http_port }}"
     private_https_port: "{{ params.main.custom_domain.private_https_port }}"
-    pma_login_cookie_validity: >-
-      {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
     s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
     s3_uploads_secret_key: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
     wordpress_ini_file_type: >-
@@ -117,6 +132,14 @@ templates:
       }}
     wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_app_repo_dir, '') }}"
     use_certbot: "{{ params.main.use_certbot }}"
+    use_pma: "{{ params.main.use_pma }}"
+
+    {% if params.main.use_pma | bool %}
+
+    pma_login_cookie_validity: >-
+      {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
+
+    {% endif %}
 
     {% endif %}
 
@@ -185,9 +208,25 @@ templates:
     main_port: "{{ var_main_domain_port }}"
     main_ssl: "{{ params.main.custom_domain.main_ssl }}"
     main: "{{ params.main.custom_args.nginx.main | default({}) }}"
+    use_theia: "{{ params.main.use_theia }}"
+
+    {% if params.main.use_theia | bool %}
+
+    theia_domain: "{{ params.main.custom_domain.theia_domain }}"
+    theia_port: "{{ var_theia_domain_port }}"
+    theia_ssl: "{{ params.main.custom_domain.theia_ssl }}"
+
+    {% endif %}
+
+    use_pma: "{{ params.main.use_pma }}"
+
+    {% if params.main.use_pma | bool %}
+
     pma_domain: "{{ params.main.custom_domain.pma_domain }}"
     pma_port: "{{ var_pma_domain_port }}"
     pma_ssl: "{{ params.main.custom_domain.pma_ssl }}"
+
+    {% endif %}
 
 {% endif %}
 
