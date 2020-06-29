@@ -62,26 +62,32 @@ case "$command" in
 
 		"$pod_env_run_file" "$command" "$@"
 		;;
-  "migrate")
-    "$pod_script_env_file" "migrate:$var_custom__pod_type" ${args[@]+"${args[@]}"}
+	"migrate")
+		"$pod_script_env_file" "migrate:$var_custom__pod_type" ${args[@]+"${args[@]}"}
 
-		if [ "${var_custom__use_certbot:-}" = "true" ]; then
-			info "$command - start certbot if needed..."
-			"$pod_script_env_file" "main:task:certbot"
-		fi
-    ;;
-  "migrate:app")
-    "$pod_script_env_file" "migrate:web" ${args[@]+"${args[@]}"}
-    "$pod_script_env_file" "migrate:db" ${args[@]+"${args[@]}"}
-    ;;
-  "migrate:web")
-    info "$command - nothing to do..."
-    ;;
-  "migrate:db")
-    vm_max_map_count="${var_migrate_es_vm_max_map_count:-262144}"
-    info "$command increasing vm max map count to $vm_max_map_count"
-    sudo sysctl -w vm.max_map_count="$vm_max_map_count"
-    ;;
+			if [ "${var_custom__use_certbot:-}" = "true" ]; then
+				info "$command - start certbot if needed..."
+				"$pod_script_env_file" "main:task:certbot"
+			fi
+		;;
+	"migrate:app")
+		"$pod_script_env_file" "migrate:web" ${args[@]+"${args[@]}"}
+		"$pod_script_env_file" "migrate:db" ${args[@]+"${args[@]}"}
+		;;
+	"migrate:web")
+		info "$command - nothing to do..."
+		;;
+	"migrate:db")
+		vm_max_map_count="${var_migrate_es_vm_max_map_count:-262144}"
+		info "$command increasing vm max map count to $vm_max_map_count"
+		sudo sysctl -w vm.max_map_count="$vm_max_map_count"
+		;;
+	"sync:verify")
+		"$pod_env_run_file" "sync:verify:nginx"
+		;;
+	"sync:reload:nginx")
+		"$pod_env_run_file" exec-nontty nginx nginx -s reload
+		;;
 	*)
 		"$pod_env_run_file" "$command" "$@"
 		;;

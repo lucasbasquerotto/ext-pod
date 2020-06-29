@@ -126,6 +126,12 @@ case "$command" in
 			"$pod_script_env_file" "main:task:certbot"
 		fi
 		;;
+	"sync:verify")
+		"$pod_env_run_file" "sync:verify:nginx"
+		;;
+	"sync:reload:nginx")
+		"$pod_env_run_file" exec-nontty nginx nginx -s reload
+		;;
 	*)
 		"$pod_env_run_file" "$command" "$@"
 		;;

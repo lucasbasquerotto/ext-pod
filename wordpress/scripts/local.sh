@@ -52,31 +52,34 @@ esac
 
 case "$command" in
 	"prepare")
-		inner_dir="env"
+		if [ "${var_custom__use_composer:-}" = "true" ]; then
+			inner_dir="env"
 
-		if [ "${var_custom__dynamic:-}" = "true" ]; then
-			inner_dir="main"
+			if [ "${var_custom__dynamic:-}" = "true" ]; then
+				inner_dir="main"
+			fi
+
+			sudo chmod +x "$app_layer_dir/"
+			cp "$pod_full_dir/$inner_dir/wordpress/.env" "$app_layer_dir/.env"
+			chmod +r "$app_layer_dir/.env"
+			chmod 777 "$app_layer_dir/web/app/uploads/"
 		fi
-
-		sudo chmod +x "$app_layer_dir/"
-		cp "$pod_full_dir/$inner_dir/wordpress/.env" "$app_layer_dir/.env"
-		chmod +r "$app_layer_dir/.env"
-		chmod 777 "$app_layer_dir/web/app/uploads/"
 		;;
 	"setup")
-		"$pod_env_shared_file" stop wordpress composer
-		"$pod_env_shared_file" rm wordpress composer
-		"$pod_env_shared_file" stop mysql
-		"$pod_env_shared_file" up mysql composer
-		"$pod_env_shared_file" exec composer composer install --verbose
+		if [ "${var_custom__use_composer:-}" = "true" ]; then
+			"$pod_env_shared_file" up mysql composer
+			"$pod_env_shared_file" exec composer composer install --verbose
+		fi
+
 		"$pod_env_shared_file" "$command" "$@"
 		;;
 	"migrate")
-		"$pod_env_shared_file" rm wordpress composer
-		"$pod_env_shared_file" stop mysql
-		"$pod_env_shared_file" up mysql composer
-		# "$pod_env_shared_file" exec composer composer clear-cache
-		# "$pod_env_shared_file" exec composer composer update --verbose
+		if [ "${var_custom__use_composer:-}" = "true" ]; then
+			"$pod_env_shared_file" up mysql composer
+			# "$pod_env_shared_file" exec composer composer clear-cache
+			# "$pod_env_shared_file" exec composer composer update --verbose
+		fi
+
 		"$pod_env_shared_file" "$command" "$@"
 		;;
 	"stop"|"rm")

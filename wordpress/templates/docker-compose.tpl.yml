@@ -88,6 +88,7 @@ services:
     volumes:
     - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
+    - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
     logging: *mainlog
 
@@ -266,7 +267,9 @@ services:
     networks:
     - "shared"
     volumes:
-    - "$DATA_DIR:/home/project:cached"
+    - "$DATA_DIR/.git:/home/project/.git:ro"
+    - "$DATA_DIR:/home/project/data:ro"
+    - "$DATA_DIR/sync/nginx:/home/project/sync/nginx:cached"
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog
 
@@ -313,6 +316,8 @@ services:
 
 {% if params.local | bool %}
 
+{% if params.use_composer %}
+
   composer:
     container_name: "${CTX_PREFIX_MAIN}composer"
     hostname: "composer"
@@ -335,6 +340,8 @@ services:
     mem_limit: "{{ params.memory.composer }}"
 
     {% endif %}
+
+{% endif %}
 
 {% endif %}
 

@@ -121,6 +121,12 @@ case "$command" in
 			--db_connect_wait_secs="$var_run__migrate__db_connect_wait_secs" \
 			--connection_sleep="${var_run__migrate__connection_sleep:-}"
 		;;
+	"sync:verify")
+		"$pod_env_run_file" "sync:verify:nginx"
+		;;
+	"sync:reload:nginx")
+		"$pod_env_run_file" exec-nontty nginx nginx -s reload
+		;;
 	*)
 		"$pod_env_run_file" "$command" "$@"
 		;;
