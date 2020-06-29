@@ -222,12 +222,6 @@ templates:
 
     {% endif %}
 
-    {% if var_local %}
-
-    use_composer: "{{ params.main.use_composer }}"
-
-    {% endif %}
-
 {% endif %}
 
 {% set var_main_domain = params.main.custom_domain.main_domain %}

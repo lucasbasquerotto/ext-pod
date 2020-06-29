@@ -196,9 +196,25 @@ templates:
     main_port: "{{ var_main_domain_port }}"
     main_ssl: "{{ params.main.custom_domain.main_ssl }}"
     main: "{{ params.main.custom_args.nginx.main | default({}) }}"
+    use_theia: "{{ params.main.use_theia }}"
+
+    {% if params.main.use_theia | bool %}
+
+    theia_domain: "{{ params.main.custom_domain.theia_domain }}"
+    theia_port: "{{ var_theia_domain_port }}"
+    theia_ssl: "{{ params.main.custom_domain.theia_ssl }}"
+
+    {% endif %}
+
+    use_mongo_express: "{{ params.main.use_mongo_express }}"
+
+    {% if params.main.use_mongo_express | bool %}
+
     me_domain: "{{ params.main.custom_domain.me_domain }}"
     me_port: "{{ var_me_domain_port }}"
     me_ssl: "{{ params.main.custom_domain.me_ssl }}"
+
+    {% endif %}
 
 {% endif %}
 
