@@ -123,6 +123,26 @@ case "$command" in
 				wp --allow-root search-replace "$arg_old_domain_host" "$arg_new_domain_host"
 			fi
 		SHELL
+
+		if [ "${var_custom__use_nextcloud:-}" = "true" ]; then
+			list="$(
+				"$pod_script_env_file" exec -T -u www-data nextcloud php occ files_external:list --output=json
+			)"
+
+			count="$(
+				"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash \
+					<<-'SHELL' -s "$list"
+						echo "$1" | jq '[.[] | select(.authentication_type == "amazons3::accesskey")] | length'
+					SHELL
+			)"
+
+			if [[ $count -eq 0 ]]; then
+				"$pod_script_env_file" exec -T -u www-data nextcloud /bin/bash <<-'SHELL'
+					php occ files_external:create /tmp/main/nextcloud/data amazons3 amazons3::accesskey \
+						--config key="1" --config secret="2"
+				SHELL
+			fi
+		fi
 		;;
 	*)
 		error "$command: invalid command"
