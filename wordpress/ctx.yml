@@ -71,7 +71,6 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
-    use_theia: "{{ params.main.use_theia }}"
     external_volumes: "{{ params.main.external_volumes | default('false') }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
@@ -79,6 +78,7 @@ templates:
     {% if var_pod_type in ['app', 'web'] %}
 
     use_pma: "{{ params.main.use_pma }}"
+    use_theia: "{{ params.main.use_theia }}"
 
     {% if var_local %}
 

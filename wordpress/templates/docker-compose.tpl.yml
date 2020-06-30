@@ -191,6 +191,44 @@ services:
 
 {% endif %}
 
+{% if params.use_theia %}
+
+  theia:
+    container_name: "${CTX_PREFIX_MAIN}theia"
+    hostname: "theia"
+    build:
+      context: .
+      dockerfile: "main/theia/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.theia_image }}"
+        VERSION: "{{ params.images.theia_version }}"
+    restart: "unless-stopped"
+    user: root
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/.git:/home/project/.git:ro"
+    - "$DATA_DIR:/home/project/data:ro"
+    - "$DATA_DIR/sync/nginx:/home/project/sync/nginx:cached"
+    - "$DATA_DIR/tmp/theia:/tmp/main/theia"
+    logging: *mainlog
+
+    {% if (params.memory.theia | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.theia }}"
+
+    {% endif %}
+
+{% endif %}
+
 {% endif %}
 
 {% if params.pod_type in ['app', 'db'] %}
@@ -238,44 +276,6 @@ services:
     {% if (params.memory.mysql | default('')) != '' %}
 
     mem_limit: "{{ params.memory.mysql }}"
-
-    {% endif %}
-
-{% endif %}
-
-{% if params.use_theia %}
-
-  theia:
-    container_name: "${CTX_PREFIX_MAIN}theia"
-    hostname: "theia"
-    build:
-      context: .
-      dockerfile: "main/theia/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.theia_image }}"
-        VERSION: "{{ params.images.theia_version }}"
-    restart: "unless-stopped"
-    user: root
-
-    {% if params.use_fluentd | bool %}
-
-    depends_on:
-    - "fluentd"
-
-    {% endif %}
-
-    networks:
-    - "shared"
-    volumes:
-    - "$DATA_DIR/.git:/home/project/.git:ro"
-    - "$DATA_DIR:/home/project/data:ro"
-    - "$DATA_DIR/sync/nginx:/home/project/sync/nginx:cached"
-    - "$DATA_DIR/tmp/theia:/tmp/main/theia"
-    logging: *mainlog
-
-    {% if (params.memory.theia | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.theia }}"
 
     {% endif %}
 

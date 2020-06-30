@@ -31,6 +31,12 @@
   ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
 %}
 
+{% if params.main.use_theia | bool %}
+  {% set var_theia_domain_port = params.main.custom_domain.theia_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -62,10 +68,17 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
-    use_bot: "{{ params.main.use_bot }}"
     external_volumes: "{{ params.main.external_volumes | default('false') }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
+
+    {% if var_pod_type in ['app', 'web'] %}
+
+    use_mongo_express: "{{ params.main.use_mongo_express }}"
+    use_theia: "{{ params.main.use_theia }}"
+    use_bot: "{{ params.main.use_bot }}"
+
+    {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "{{ var_main_dir }}/docker-compose.run.yml"

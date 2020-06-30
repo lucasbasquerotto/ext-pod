@@ -67,6 +67,42 @@ case "$command" in
 				mkdir -p "\$dir"
 				chmod 777 "\$dir"
 			fi
+
+			dir_nginx="$data_dir/sync/nginx"
+
+			dir="\${dir_nginx}/auto"
+			file="\${dir}/ips-blacklist-auto.conf"
+
+			if [ ! -f "\$file" ]; then
+				mkdir -p "\$dir"
+				cat <<-EOF > "\$file"
+					# 127.0.0.1 1;
+					# 1.2.3.4/16 1;
+				EOF
+			fi
+
+			dir="\${dir_nginx}/manual"
+			file="\${dir}/ips-blacklist.conf"
+
+			if [ ! -f "\$file" ]; then
+				mkdir -p "\$dir"
+				cat <<-EOF > "\$file"
+					# 127.0.0.1 1;
+					# 0.0.0.0/0 1;
+				EOF
+			fi
+
+			dir="\${dir_nginx}/manual"
+			file="\${dir}/ua-blacklist.conf"
+
+			if [ ! -f "\$file" ]; then
+				mkdir -p "\$dir"
+				cat <<-EOF > "\$file"
+					# ~(Mozilla|Chrome) 1;
+					# "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36" 1;
+					# "python-requests/2.18.4" 1;
+				EOF
+			fi
 		SHELL
 
 		"$pod_env_run_file" "$command" "$@"
