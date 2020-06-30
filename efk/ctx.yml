@@ -85,7 +85,6 @@ templates:
     {% if var_pod_type in ['app', 'web'] %}
 
     use_nginx: "{{ params.main.use_nginx }}"
-    use_pma: "{{ params.main.use_pma }}"
     use_theia: "{{ params.main.use_theia }}"
 
     {% endif %}
@@ -105,6 +104,12 @@ templates:
     use_fluentd: "{{ params.main.use_fluentd }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
+
+    {% if var_pod_type in ['app', 'web'] %}
+
+    use_certbot: "{{ params.main.use_certbot }}"
+
+    {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
@@ -180,6 +185,7 @@ templates:
   root: true
   params:
     conf: {{ params.main.custom_args.nginx.conf | default({}) | to_json }}
+    main_domain: "{{ params.main.custom_domain.main_domain }}"
     kibana_domain: "{{ params.main.custom_domain.kibana_domain }}"
     kibana_port: "{{ var_kibana_domain_port }}"
     kibana_ssl: "{{ params.main.custom_domain.kibana_ssl }}"

@@ -91,6 +91,12 @@ templates:
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 
+    {% if var_pod_type in ['app', 'web'] %}
+
+    use_certbot: "{{ params.main.use_certbot }}"
+
+    {% endif %}
+
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true

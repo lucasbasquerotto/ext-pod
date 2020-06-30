@@ -72,6 +72,18 @@ services:
 
     {% endif %}
 
+    {% if params.use_filestash %}
+
+    - "filestash"
+
+    {% endif %}
+
+    {% if params.use_nextcloud %}
+
+    - "nextcloud"
+
+    {% endif %}
+
     {% if params.use_fluentd | bool %}
 
     - "fluentd"
@@ -229,6 +241,74 @@ services:
 
 {% endif %}
 
+{% if params.use_filestash %}
+
+  filestash:
+    container_name: "${CTX_PREFIX_MAIN}filestash"
+    hostname: "filestash"
+    build:
+      context: .
+      dockerfile: "main/filestash/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.filestash_image }}"
+        VERSION: "{{ params.images.filestash_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/filestash:/tmp/main/filestash"
+    logging: *mainlog
+
+    {% if (params.memory.filestash | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.filestash }}"
+
+    {% endif %}
+
+{% endif %}
+
+{% if params.use_nextcloud %}
+
+  nextcloud:
+    container_name: "${CTX_PREFIX_MAIN}nextcloud"
+    hostname: "nextcloud"
+    build:
+      context: .
+      dockerfile: "main/nextcloud/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.nextcloud_image }}"
+        VERSION: "{{ params.images.nextcloud_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/nextcloud:/tmp/main/nextcloud"
+    logging: *mainlog
+
+    {% if (params.memory.nextcloud | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.nextcloud }}"
+
+    {% endif %}
+
+{% endif %}
+
 {% endif %}
 
 {% if params.pod_type in ['app', 'db'] %}
@@ -328,6 +408,14 @@ services:
         IMAGE: "{{ params.images.composer_image }}"
         VERSION: "{{ params.images.composer_version }}"
     restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
     volumes:
     - "$WP_APP_REPO_DIR:/var/www/html"
     - "$DATA_DIR/tmp/composer:/tmp/main/composer"

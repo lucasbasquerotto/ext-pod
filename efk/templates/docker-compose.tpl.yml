@@ -180,6 +180,14 @@ services:
         IMAGE: "{{ params.images.elasticsearch_image }}"
         VERSION: "{{ params.images.elasticsearch_version }}"
     restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
     environment:
       cluster.initial_master_nodes: elasticsearch
       ES_JAVA_OPTS: "$ELASTICSEARCH_JAVA_OPTS"
@@ -193,6 +201,13 @@ services:
 
     networks:
     - "shared"
+
+    {% if params.use_fluentd | bool %}
+
+    - "log"
+
+    {% endif %}
+
     volumes:
 
     {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
@@ -244,13 +259,6 @@ services:
 
     networks:
     - "shared"
-
-    {% if params.use_fluentd | bool %}
-
-    - "log"
-
-    {% endif %}
-
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
@@ -277,14 +285,6 @@ services:
         VERSION: "{{ params.images.fluentd_version }}"
         OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
     restart: "unless-stopped"
-
-    {% if (params.pod_type in ['app', 'db']) and (params.fluentd_output_plugin == 'elasticsearch') %}
-
-    depends_on:
-    - "elasticsearch"
-
-    {% endif %}
-
     ports:
     - "$FLUENTD_PORT:24224"
     - "$FLUENTD_PORT:24224/udp"

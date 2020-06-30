@@ -40,6 +40,18 @@
   %}
 {% endif %}
 
+{% if params.main.use_filestash | bool %}
+  {% set var_filestash_domain_port = params.main.custom_domain.filestash_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
+{% if params.main.use_nextcloud | bool %}
+  {% set var_nextcloud_domain_port = params.main.custom_domain.nextcloud_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -79,6 +91,8 @@ templates:
 
     use_pma: "{{ params.main.use_pma }}"
     use_theia: "{{ params.main.use_theia }}"
+    use_filestash: "{{ params.main.use_filestash }}"
+    use_nextcloud: "{{ params.main.use_nextcloud }}"
 
     {% if var_local %}
 
@@ -98,6 +112,12 @@ templates:
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 
+    {% if var_pod_type in ['app', 'web'] %}
+
+    use_certbot: "{{ params.main.use_certbot }}"
+
+    {% endif %}
+
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: "{{ var_main_dir }}/.env"
   root: true
@@ -109,7 +129,6 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
-    use_theia: "{{ params.main.use_theia }}"
     db_host: "{{ params.main.custom_args.mysql.host }}"
     db_port: "{{ params.main.custom_args.mysql.port }}"
     db_name: "{{ params.credentials.wordpress.db.name }}"
@@ -209,6 +228,26 @@ templates:
     theia_domain: "{{ params.main.custom_domain.theia_domain }}"
     theia_port: "{{ var_theia_domain_port }}"
     theia_ssl: "{{ params.main.custom_domain.theia_ssl }}"
+
+    {% endif %}
+
+    use_filestash: "{{ params.main.use_filestash }}"
+
+    {% if params.main.use_filestash | bool %}
+
+    filestash_domain: "{{ params.main.custom_domain.filestash_domain }}"
+    filestash_port: "{{ var_filestash_domain_port }}"
+    filestash_ssl: "{{ params.main.custom_domain.filestash_ssl }}"
+
+    {% endif %}
+
+    use_nextcloud: "{{ params.main.use_nextcloud }}"
+
+    {% if params.main.use_nextcloud | bool %}
+
+    nextcloud_domain: "{{ params.main.custom_domain.nextcloud_domain }}"
+    nextcloud_port: "{{ var_nextcloud_domain_port }}"
+    nextcloud_ssl: "{{ params.main.custom_domain.nextcloud_ssl }}"
 
     {% endif %}
 
