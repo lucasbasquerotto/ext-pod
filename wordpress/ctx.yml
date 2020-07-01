@@ -313,7 +313,33 @@ children:
 
       {% if var_pod_type in ['app', 'web'] %}
 
+      var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+
+      {% if params.main.use_nextcloud | bool %}
+
+      var_custom__nextcloud_admin_user: "{{ params.credentials.nextcloud.admin_user }}"
+      var_custom__nextcloud_admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
+      var_custom__s3_backup_access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
+      var_custom__s3_backup_secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
+      var_custom__s3_backup_bucket: "{{ params.main.backup_bucket_name }}"
+      var_custom__s3_backup_hostname: "{{ params.main.backup_bucket_endpoint | default('') }}"
+      var_custom__s3_backup_port: "{{ params.main.backup_bucket_port | default('') }}"
+      var_custom__s3_backup_region: "{{ params.main.backup_bucket_region | default('') }}"
+      var_custom__s3_backup_use_ssl: "{{ params.main.backup_bucket_use_ssl | default('') }}"
+      var_custom__s3_backup_use_path_style: "{{ params.main.backup_bucket_use_path_style | default('') }}"
+      var_custom__s3_backup_legacy_auth: "{{ params.main.backup_bucket_legacy_auth | default('') }}"
+      var_custom__s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
+      var_custom__s3_uploads_secret_key: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
+      var_custom__s3_uploads_bucket: "{{ params.main.uploads_bucket_name }}"
+      var_custom__s3_uploads_hostname: "{{ params.main.uploads_bucket_endpoint | default('') }}"
+      var_custom__s3_uploads_port: "{{ params.main.uploads_bucket_port | default('') }}"
+      var_custom__s3_uploads_region: "{{ params.main.uploads_bucket_region | default('') }}"
+      var_custom__s3_uploads_use_ssl: "{{ params.main.uploads_bucket_use_ssl | default('') }}"
+      var_custom__s3_uploads_use_path_style: "{{ params.main.uploads_bucket_use_path_style | default('') }}"
+      var_custom__s3_uploads_legacy_auth: "{{ params.main.uploads_bucket_legacy_auth | default('') }}"
+
+      {% endif %}
 
       {% if var_local %}
 
