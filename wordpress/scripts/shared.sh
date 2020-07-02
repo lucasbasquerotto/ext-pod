@@ -137,7 +137,10 @@ case "$command" in
 			--toolbox_service="$var_run__general__toolbox_service" \
 			--nextcloud_service="nextcloud" \
 			--admin_user="$var_custom__nextcloud_admin_user" \
-			--admin_pass="$var_custom__nextcloud_admin_pass"
+			--admin_pass="$var_custom__nextcloud_admin_pass" \
+			--nextcloud_url="$var_custom__nextcloud_url" \
+			--nextcloud_domain="$var_custom__nextcloud_domain" \
+			--nextcloud_protocol="$var_custom__nextcloud_protocol"
 
 		"$nextcloud_run_file" "nextcloud:s3" \
 			--task_name="nextcloud_backup" \

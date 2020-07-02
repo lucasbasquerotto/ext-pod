@@ -36,10 +36,16 @@ networks:
     external: true
     name: "${CTX_NAME}-network"
 
-{% if params.local | bool %}
+{% if (params.local | bool) and (not (params.external_volumes | bool)) %}
 
 volumes:
   mysql: {}
+
+  {% if params.use_nextcloud %}
+
+  nextcloud: {}
+
+  {% endif %}
 
 {% endif %}
 
@@ -298,6 +304,17 @@ services:
     networks:
     - "shared"
     volumes:
+
+    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+    - "nextcloud:/var/www/html"
+
+    {% else %}
+
+    - "$DATA_DIR/nextcloud:/var/www/html"
+
+    {% endif %}
+
     - "$DATA_DIR/tmp/nextcloud:/tmp/main/nextcloud"
     logging: *mainlog
 

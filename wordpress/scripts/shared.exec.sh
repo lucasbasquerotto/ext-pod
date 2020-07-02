@@ -125,6 +125,7 @@ case "$command" in
 		SHELL
 
 		if [ "${var_custom__use_nextcloud:-}" = "true" ]; then
+			info "$command - prepare nextcloud..."
 			"$pod_script_env_file" "migrate:custom:nextcloud"
 		fi
 		;;
