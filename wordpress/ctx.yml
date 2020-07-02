@@ -319,14 +319,17 @@ children:
       {% if params.main.use_nextcloud | bool %}
 
       {% set var_nextcloud_protocol = (params.main.custom_domain.nextcloud_ssl | bool | ternary('https', 'http')) %}
+      {% set var_nextcloud_port_suffix = (var_nextcloud_domain_port in ['80', '443'])
+        | ternary('', ':' + var_nextcloud_domain_port)
+      %}
 
-      {% set var_nextcloud_url = var_nextcloud_protocol
-        + '://' + params.main.custom_domain.nextcloud_domain +
-        ((var_nextcloud_domain_port in ['80', '443']) | ternary('', ':' + var_nextcloud_domain_port))
+      {% set var_nextcloud_url = var_nextcloud_protocol + '://' +
+        params.main.custom_domain.nextcloud_domain + var_nextcloud_port_suffix
       %}
 
       var_custom__nextcloud_url: "{{ var_nextcloud_url }}"
       var_custom__nextcloud_domain: "{{ params.main.custom_domain.nextcloud_domain }}"
+      var_custom__nextcloud_host: "{{ params.main.custom_domain.nextcloud_domain }}{{ var_nextcloud_port_suffix }}"
       var_custom__nextcloud_protocol: "{{ var_nextcloud_protocol }}"
       var_custom__nextcloud_admin_user: "{{ params.credentials.nextcloud.admin_user }}"
       var_custom__nextcloud_admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"

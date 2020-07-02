@@ -140,6 +140,7 @@ case "$command" in
 			--admin_pass="$var_custom__nextcloud_admin_pass" \
 			--nextcloud_url="$var_custom__nextcloud_url" \
 			--nextcloud_domain="$var_custom__nextcloud_domain" \
+			--nextcloud_host="$var_custom__nextcloud_host" \
 			--nextcloud_protocol="$var_custom__nextcloud_protocol"
 
 		"$nextcloud_run_file" "nextcloud:s3" \
