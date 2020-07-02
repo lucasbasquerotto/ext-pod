@@ -235,7 +235,7 @@ services:
     volumes:
     - "$DATA_DIR/.git:/home/project/.git:ro"
     - "$DATA_DIR:/home/project/data:ro"
-    - "$DATA_DIR/sync/nginx:/home/project/sync/nginx:cached"
+    - "$DATA_DIR/sync:/home/project/sync:cached"
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog
 
@@ -315,6 +315,8 @@ services:
 
     {% endif %}
 
+    - "$DATA_DIR:/var/main/data:ro"
+    - "$DATA_DIR/sync:/var/main/data/sync"
     - "$DATA_DIR/tmp/nextcloud:/tmp/main/nextcloud"
     logging: *mainlog
 

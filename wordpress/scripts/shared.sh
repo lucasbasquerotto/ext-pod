@@ -143,12 +143,28 @@ case "$command" in
 			--nextcloud_host="$var_custom__nextcloud_host" \
 			--nextcloud_protocol="$var_custom__nextcloud_protocol"
 
+		"$nextcloud_run_file" "nextcloud:fs" \
+			--task_name="nextcloud_data" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nextcloud_service="nextcloud" \
+			--mount_point="/data" \
+			--datadir="/var/main/data"
+
+		"$nextcloud_run_file" "nextcloud:fs" \
+			--task_name="nextcloud_sync" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nextcloud_service="nextcloud" \
+			--mount_point="/sync" \
+			--datadir="/var/main/data/sync"
+
 		"$nextcloud_run_file" "nextcloud:s3" \
 			--task_name="nextcloud_backup" \
 			--subtask_cmd="$command" \
 			--toolbox_service="$var_run__general__toolbox_service" \
 			--nextcloud_service="nextcloud" \
-			--mount_point="/var/www/html/data/s3/backup" \
+			--mount_point="/backup" \
 			--bucket="$var_custom__s3_backup_bucket" \
 			--hostname="$var_custom__s3_backup_hostname" \
 			--port="$var_custom__s3_backup_port" \
@@ -164,7 +180,7 @@ case "$command" in
 			--subtask_cmd="$command" \
 			--toolbox_service="$var_run__general__toolbox_service" \
 			--nextcloud_service="nextcloud" \
-			--mount_point="/var/www/html/data/s3/uploads" \
+			--mount_point="/uploads" \
 			--bucket="$var_custom__s3_uploads_bucket" \
 			--hostname="$var_custom__s3_uploads_hostname" \
 			--port="$var_custom__s3_uploads_port" \
@@ -174,72 +190,6 @@ case "$command" in
 			--legacy_auth="$var_custom__s3_uploads_legacy_auth"  \
 			--key="$var_custom__s3_uploads_access_key" \
 			--secret="$var_custom__s3_uploads_secret_key"
-
-		# "$pod_script_env_file" up toolbox nextcloud
-
-		# installed="$(
-		# 	"$pod_script_env_file" exec -T -u www-data nextcloud /bin/bash 	<<-'SHELL'
-		# 		set -eou pipefail
-		# 		php occ list | grep '^ *maintenance:install ' | wc -l || :
-		# 	SHELL
-		# )" || error "migrate:custom:nextcloud"
-
-		# if [[ ${installed:-0} -ne 0 ]]; then
-		# 	info "$command: installing nextcloud..."
-		# 	"$pod_script_env_file" exec -T -u www-data nextcloud php occ maintenance:install \
-		# 		--admin-user="$var_custom__nextcloud_admin_user" \
-		# 		--admin-pass="$var_custom__nextcloud_admin_pass"
-		# else
-		# 	info "$command: nextcloud already installed"
-		# fi
-
-		# "$pod_script_env_file" exec -T -u www-data nextcloud php occ app:enable files_external
-
-		# list="$("$pod_script_env_file" exec -T -u www-data nextcloud php occ files_external:list --output=json)" \
-		# 	|| error "migrate:custom:nextcloud"
-
-		# count="$(
-		# 	"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash \
-		# 		<<-'SHELL' -s "$list"
-		# 			set -eou pipefail
-		# 			echo "$1" | jq '[.[] | select(.authentication_type == "amazons3::accesskey")] | length'
-		# 		SHELL
-		# )" || error "migrate:custom:nextcloud"
-
-		# if [[ $count -eq 0 ]]; then
-		# 	info "$command: defining s3 storages..."
-		# 	"$pod_script_env_file" exec -T -u www-data nextcloud /bin/bash 	<<-SHELL
-		# 		set -eou pipefail
-
-		# 		php occ files_external:create /var/www/html/data/s3/backup \
-		# 			amazons3 \
-		# 				--config bucket="$var_custom__s3_backup_bucket" \
-		# 				--config hostname="$var_custom__s3_backup_hostname" \
-		# 				--config port="$var_custom__s3_backup_port" \
-		# 				--config region="$var_custom__s3_backup_region" \
-		# 				--config use_ssl="$var_custom__s3_backup_use_ssl" \
-		# 				--config use_path_style="$var_custom__s3_backup_use_path_style" \
-		# 				--config legacy_auth="$var_custom__s3_backup_legacy_auth"  \
-		# 			amazons3::accesskey \
-		# 				--config key="$var_custom__s3_backup_access_key" \
-		# 				--config secret="$var_custom__s3_backup_secret_key"
-
-		# 		php occ files_external:create /var/www/html/data/s3/uploads \
-		# 			amazons3 \
-		# 				--config bucket="$var_custom__s3_uploads_bucket" \
-		# 				--config hostname="$var_custom__s3_uploads_hostname" \
-		# 				--config port="$var_custom__s3_uploads_port" \
-		# 				--config region="$var_custom__s3_uploads_region" \
-		# 				--config use_ssl="$var_custom__s3_uploads_use_ssl" \
-		# 				--config use_path_style="$var_custom__s3_uploads_use_path_style" \
-		# 				--config legacy_auth="$var_custom__s3_uploads_legacy_auth"  \
-		# 			amazons3::accesskey \
-		# 				--config key="$var_custom__s3_uploads_access_key" \
-		# 				--config secret="$var_custom__s3_uploads_secret_key"
-		# 	SHELL
-		# else
-		# 	info "$command: s3 storages already defined"
-		# fi
 		;;
 	"migrate:"*)
 		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}

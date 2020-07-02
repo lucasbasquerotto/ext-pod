@@ -339,7 +339,7 @@ children:
       var_custom__s3_backup_hostname: "{{ params.credentials.wp_backup_bucket.host | default('') }}"
       var_custom__s3_backup_port: "{{ params.credentials.wp_backup_bucket.port | default('') }}"
       var_custom__s3_backup_region: "{{ params.credentials.wp_backup_bucket.region | default('') }}"
-      var_custom__s3_backup_use_ssl: "{{ params.credentials.wp_backup_bucket.ssl | default('') }}"
+      var_custom__s3_backup_use_ssl: "{{ params.credentials.wp_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
       var_custom__s3_backup_use_path_style: "{{ params.credentials.wp_backup_bucket.path_style | default('') }}"
       var_custom__s3_backup_legacy_auth: "{{ params.credentials.wp_backup_bucket.legacy_auth | default('') }}"
       var_custom__s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
@@ -348,7 +348,7 @@ children:
       var_custom__s3_uploads_hostname: "{{ params.credentials.wp_uploads_bucket.host | default('') }}"
       var_custom__s3_uploads_port: "{{ params.credentials.wp_uploads_bucket.port | default('') }}"
       var_custom__s3_uploads_region: "{{ params.credentials.wp_uploads_bucket.region | default('') }}"
-      var_custom__s3_uploads_use_ssl: "{{ params.credentials.wp_uploads_bucket.ssl | default('') }}"
+      var_custom__s3_uploads_use_ssl: "{{ params.credentials.wp_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
       var_custom__s3_uploads_use_path_style: "{{ params.credentials.wp_uploads_bucket.path_style | default('') }}"
       var_custom__s3_uploads_legacy_auth: "{{ params.credentials.wp_uploads_bucket.legacy_auth | default('') }}"
 
