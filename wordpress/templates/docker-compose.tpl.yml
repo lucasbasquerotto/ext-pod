@@ -41,7 +41,7 @@ networks:
 volumes:
   mysql: {}
 
-  {% if params.use_nextcloud %}
+  {% if params.use_nextcloud | bool %}
 
   nextcloud: {}
 
@@ -66,25 +66,31 @@ services:
     depends_on:
     - "wordpress"
 
-    {% if params.use_pma %}
+    {% if params.use_pma | bool %}
 
     - "phpmyadmin"
 
     {% endif %}
 
-    {% if params.use_theia %}
+    {% if params.use_theia | bool %}
 
     - "theia"
 
     {% endif %}
 
-    {% if params.use_filestash %}
+    {% if params.use_minio_gateway | bool %}
+
+    - "minio_gateway"
+
+    {% endif %}
+
+    {% if params.use_filestash | bool %}
 
     - "filestash"
 
     {% endif %}
 
-    {% if params.use_nextcloud %}
+    {% if params.use_nextcloud | bool %}
 
     - "nextcloud"
 
@@ -170,7 +176,7 @@ services:
 
     {% endif %}
 
-{% if params.use_pma %}
+{% if params.use_pma | bool %}
 
   phpmyadmin:
     container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
@@ -209,7 +215,7 @@ services:
 
 {% endif %}
 
-{% if params.use_theia %}
+{% if params.use_theia | bool %}
 
   theia:
     container_name: "${CTX_PREFIX_MAIN}theia"
@@ -247,7 +253,45 @@ services:
 
 {% endif %}
 
-{% if params.use_filestash %}
+{% if params.use_minio_gateway | bool %}
+
+  minio_gateway:
+    container_name: "${CTX_PREFIX_MAIN}minio_gateway"
+    hostname: "minio_gateway"
+    build:
+      context: .
+      dockerfile: "main/minio-gateway/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.minio_gateway_image }}"
+        VERSION: "{{ params.images.minio_gateway_version }}"
+    restart: "unless-stopped"
+    environment:
+      MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
+      MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
+    logging: *mainlog
+    command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
+
+    {% if (params.memory.minio_gateway | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.minio_gateway }}"
+
+    {% endif %}
+
+{% endif %}
+
+{% if params.use_filestash | bool %}
 
   filestash:
     container_name: "${CTX_PREFIX_MAIN}filestash"
@@ -281,7 +325,7 @@ services:
 
 {% endif %}
 
-{% if params.use_nextcloud %}
+{% if params.use_nextcloud | bool %}
 
   nextcloud:
     container_name: "${CTX_PREFIX_MAIN}nextcloud"
@@ -415,7 +459,7 @@ services:
 
 {% if params.local | bool %}
 
-{% if params.use_composer %}
+{% if params.use_composer | bool %}
 
   composer:
     container_name: "${CTX_PREFIX_MAIN}composer"

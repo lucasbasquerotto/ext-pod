@@ -40,6 +40,12 @@
   %}
 {% endif %}
 
+{% if params.main.use_minio_gateway | bool %}
+  {% set var_minio_gateway_domain_port = params.main.custom_domain.minio_gateway_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
 {% if params.main.use_filestash | bool %}
   {% set var_filestash_domain_port = params.main.custom_domain.filestash_ssl | bool |
     ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
@@ -91,6 +97,7 @@ templates:
 
     use_pma: "{{ params.main.use_pma }}"
     use_theia: "{{ params.main.use_theia }}"
+    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
     use_filestash: "{{ params.main.use_filestash }}"
     use_nextcloud: "{{ params.main.use_nextcloud }}"
 
@@ -157,6 +164,16 @@ templates:
       }}
     wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_app_repo_dir, '') }}"
     use_certbot: "{{ params.main.use_certbot }}"
+    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+
+    {% if params.main.use_minio_gateway | bool %}
+
+    minio_gateway_endpoint: "{{ params.credentials.minio_gateway.endpoint }}"
+    minio_gateway_access_key: "{{ params.credentials.minio_gateway.access_key }}"
+    minio_gateway_secret_key: "{{ params.credentials.minio_gateway.secret_key }}"
+
+    {% endif %}
+
     use_pma: "{{ params.main.use_pma }}"
 
     {% if params.main.use_pma | bool %}
@@ -228,6 +245,16 @@ templates:
     theia_domain: "{{ params.main.custom_domain.theia_domain }}"
     theia_port: "{{ var_theia_domain_port }}"
     theia_ssl: "{{ params.main.custom_domain.theia_ssl }}"
+
+    {% endif %}
+
+    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+
+    {% if params.main.use_minio_gateway | bool %}
+
+    minio_gateway_domain: "{{ params.main.custom_domain.minio_gateway_domain }}"
+    minio_gateway_port: "{{ var_minio_gateway_domain_port }}"
+    minio_gateway_ssl: "{{ params.main.custom_domain.minio_gateway_ssl }}"
 
     {% endif %}
 
