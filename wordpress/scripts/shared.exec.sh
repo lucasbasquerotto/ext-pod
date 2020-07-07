@@ -123,11 +123,6 @@ case "$command" in
 				wp --allow-root search-replace "$arg_old_domain_host" "$arg_new_domain_host"
 			fi
 		SHELL
-
-		if [ "${var_custom__use_nextcloud:-}" = "true" ]; then
-			info "$command - prepare nextcloud..."
-			"$pod_script_env_file" "migrate:custom:nextcloud"
-		fi
 		;;
 	*)
 		error "$command: invalid command"

@@ -129,6 +129,11 @@ case "$command" in
 			info "$command - start certbot if needed..."
 			"$pod_script_env_file" "main:task:certbot"
 		fi
+
+		if [ "${var_custom__use_nextcloud:-}" = "true" ]; then
+			info "$command - prepare nextcloud..."
+			"$pod_script_env_file" "migrate:custom:nextcloud"
+		fi
 		;;
 	"migrate:custom:nextcloud")
 		"$nextcloud_run_file" "nextcloud:setup" \

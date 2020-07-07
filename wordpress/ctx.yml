@@ -340,8 +340,8 @@ children:
 
       {% if var_pod_type in ['app', 'web'] %}
 
-      var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+      var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
 
       {% if params.main.use_nextcloud | bool %}
 

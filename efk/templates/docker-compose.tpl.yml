@@ -128,7 +128,7 @@ services:
 
     {% endif %}
 
-{% if params.use_theia %}
+{% if params.use_theia | bool %}
 
   theia:
     container_name: "${CTX_PREFIX_MAIN}theia"
@@ -154,13 +154,132 @@ services:
     volumes:
     - "$DATA_DIR/.git:/home/project/.git:ro"
     - "$DATA_DIR:/home/project/data:ro"
-    - "$DATA_DIR/sync/nginx:/home/project/sync/nginx:cached"
+    - "$DATA_DIR/sync:/home/project/sync:cached"
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog
 
     {% if (params.memory.theia | default('')) != '' %}
 
     mem_limit: "{{ params.memory.theia }}"
+
+    {% endif %}
+
+{% endif %}
+
+{% if params.use_minio_gateway | bool %}
+
+  minio_gateway:
+    container_name: "${CTX_PREFIX_MAIN}minio_gateway"
+    hostname: "minio_gateway"
+    build:
+      context: .
+      dockerfile: "main/minio-gateway/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.minio_gateway_image }}"
+        VERSION: "{{ params.images.minio_gateway_version }}"
+    restart: "unless-stopped"
+    environment:
+      MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
+      MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
+    logging: *mainlog
+    command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
+
+    {% if (params.memory.minio_gateway | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.minio_gateway }}"
+
+    {% endif %}
+
+{% endif %}
+
+{% if params.use_filestash | bool %}
+
+  filestash:
+    container_name: "${CTX_PREFIX_MAIN}filestash"
+    hostname: "filestash"
+    build:
+      context: .
+      dockerfile: "main/filestash/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.filestash_image }}"
+        VERSION: "{{ params.images.filestash_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/filestash:/tmp/main/filestash"
+    logging: *mainlog
+
+    {% if (params.memory.filestash | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.filestash }}"
+
+    {% endif %}
+
+{% endif %}
+
+{% if params.use_nextcloud | bool %}
+
+  nextcloud:
+    container_name: "${CTX_PREFIX_MAIN}nextcloud"
+    hostname: "nextcloud"
+    build:
+      context: .
+      dockerfile: "main/nextcloud/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.nextcloud_image }}"
+        VERSION: "{{ params.images.nextcloud_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+
+    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+    - "nextcloud:/var/www/html"
+
+    {% else %}
+
+    - "$DATA_DIR/nextcloud:/var/www/html"
+
+    {% endif %}
+
+    - "$DATA_DIR:/var/main/data:ro"
+    - "$DATA_DIR/sync:/var/main/data/sync"
+    - "$DATA_DIR/tmp/nextcloud:/tmp/main/nextcloud"
+    logging: *mainlog
+
+    {% if (params.memory.nextcloud | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.nextcloud }}"
 
     {% endif %}
 

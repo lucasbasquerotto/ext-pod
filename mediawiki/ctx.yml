@@ -39,6 +39,24 @@
   %}
 {% endif %}
 
+{% if params.main.use_minio_gateway | bool %}
+  {% set var_minio_gateway_domain_port = params.main.custom_domain.minio_gateway_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
+{% if params.main.use_filestash | bool %}
+  {% set var_filestash_domain_port = params.main.custom_domain.filestash_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
+{% if params.main.use_nextcloud | bool %}
+  {% set var_nextcloud_domain_port = params.main.custom_domain.nextcloud_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -78,6 +96,9 @@ templates:
 
     use_pma: "{{ params.main.use_pma }}"
     use_theia: "{{ params.main.use_theia }}"
+    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+    use_filestash: "{{ params.main.use_filestash }}"
+    use_nextcloud: "{{ params.main.use_nextcloud }}"
 
     {% endif %}
 
@@ -145,6 +166,15 @@ templates:
     {% if var_pod_type in ['app', 'web'] %}
 
     use_certbot: "{{ params.main.use_certbot }}"
+    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+
+    {% if params.main.use_minio_gateway | bool %}
+
+    minio_gateway_endpoint: "{{ params.credentials.minio_gateway.endpoint }}"
+    minio_gateway_access_key: "{{ params.credentials.minio_gateway.access_key }}"
+    minio_gateway_secret_key: "{{ params.credentials.minio_gateway.secret_key }}"
+
+    {% endif %}
 
     {% endif %}
 
@@ -202,6 +232,36 @@ templates:
     theia_domain: "{{ params.main.custom_domain.theia_domain }}"
     theia_port: "{{ var_theia_domain_port }}"
     theia_ssl: "{{ params.main.custom_domain.theia_ssl }}"
+
+    {% endif %}
+
+    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+
+    {% if params.main.use_minio_gateway | bool %}
+
+    minio_gateway_domain: "{{ params.main.custom_domain.minio_gateway_domain }}"
+    minio_gateway_port: "{{ var_minio_gateway_domain_port }}"
+    minio_gateway_ssl: "{{ params.main.custom_domain.minio_gateway_ssl }}"
+
+    {% endif %}
+
+    use_filestash: "{{ params.main.use_filestash }}"
+
+    {% if params.main.use_filestash | bool %}
+
+    filestash_domain: "{{ params.main.custom_domain.filestash_domain }}"
+    filestash_port: "{{ var_filestash_domain_port }}"
+    filestash_ssl: "{{ params.main.custom_domain.filestash_ssl }}"
+
+    {% endif %}
+
+    use_nextcloud: "{{ params.main.use_nextcloud }}"
+
+    {% if params.main.use_nextcloud | bool %}
+
+    nextcloud_domain: "{{ params.main.custom_domain.nextcloud_domain }}"
+    nextcloud_port: "{{ var_nextcloud_domain_port }}"
+    nextcloud_ssl: "{{ params.main.custom_domain.nextcloud_ssl }}"
 
     {% endif %}
 
@@ -263,5 +323,44 @@ children:
       {% if var_pod_type in ['app', 'web'] %}
 
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+      var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
+
+      {% if params.main.use_nextcloud | bool %}
+
+      {% set var_nextcloud_protocol = (params.main.custom_domain.nextcloud_ssl | bool | ternary('https', 'http')) %}
+      {% set var_nextcloud_port_suffix = (var_nextcloud_domain_port in ['80', '443'])
+        | ternary('', ':' + var_nextcloud_domain_port)
+      %}
+
+      {% set var_nextcloud_url = var_nextcloud_protocol + '://' +
+        params.main.custom_domain.nextcloud_domain + var_nextcloud_port_suffix
+      %}
+
+      var_custom__nextcloud_url: "{{ var_nextcloud_url }}"
+      var_custom__nextcloud_domain: "{{ params.main.custom_domain.nextcloud_domain }}"
+      var_custom__nextcloud_host: "{{ params.main.custom_domain.nextcloud_domain }}{{ var_nextcloud_port_suffix }}"
+      var_custom__nextcloud_protocol: "{{ var_nextcloud_protocol }}"
+      var_custom__nextcloud_admin_user: "{{ params.credentials.nextcloud.admin_user }}"
+      var_custom__nextcloud_admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
+      var_custom__s3_backup_access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
+      var_custom__s3_backup_secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
+      var_custom__s3_backup_bucket: "{{ params.main.backup_bucket_name }}"
+      var_custom__s3_backup_hostname: "{{ params.credentials.wp_backup_bucket.host | default('') }}"
+      var_custom__s3_backup_port: "{{ params.credentials.wp_backup_bucket.port | default('') }}"
+      var_custom__s3_backup_region: "{{ params.credentials.wp_backup_bucket.region | default('') }}"
+      var_custom__s3_backup_use_ssl: "{{ params.credentials.wp_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_custom__s3_backup_use_path_style: "{{ params.credentials.wp_backup_bucket.path_style | default('') }}"
+      var_custom__s3_backup_legacy_auth: "{{ params.credentials.wp_backup_bucket.legacy_auth | default('') }}"
+      var_custom__s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
+      var_custom__s3_uploads_secret_key: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
+      var_custom__s3_uploads_bucket: "{{ params.main.uploads_bucket_name }}"
+      var_custom__s3_uploads_hostname: "{{ params.credentials.wp_uploads_bucket.host | default('') }}"
+      var_custom__s3_uploads_port: "{{ params.credentials.wp_uploads_bucket.port | default('') }}"
+      var_custom__s3_uploads_region: "{{ params.credentials.wp_uploads_bucket.region | default('') }}"
+      var_custom__s3_uploads_use_ssl: "{{ params.credentials.wp_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_custom__s3_uploads_use_path_style: "{{ params.credentials.wp_uploads_bucket.path_style | default('') }}"
+      var_custom__s3_uploads_legacy_auth: "{{ params.credentials.wp_uploads_bucket.legacy_auth | default('') }}"
+
+      {% endif %}
 
       {% endif %}

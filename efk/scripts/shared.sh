@@ -101,10 +101,15 @@ case "$command" in
 	"migrate")
 		"$pod_script_env_file" "migrate:$var_custom__pod_type" ${args[@]+"${args[@]}"}
 
-			if [ "${var_custom__use_certbot:-}" = "true" ]; then
-				info "$command - start certbot if needed..."
-				"$pod_script_env_file" "main:task:certbot"
-			fi
+		if [ "${var_custom__use_certbot:-}" = "true" ]; then
+			info "$command - start certbot if needed..."
+			"$pod_script_env_file" "main:task:certbot"
+		fi
+
+		if [ "${var_custom__use_nextcloud:-}" = "true" ]; then
+			info "$command - prepare nextcloud..."
+			"$pod_script_env_file" "migrate:custom:nextcloud"
+		fi
 		;;
 	"migrate:app")
 		"$pod_script_env_file" "migrate:web" ${args[@]+"${args[@]}"}
@@ -117,6 +122,51 @@ case "$command" in
 		vm_max_map_count="${var_migrate_es_vm_max_map_count:-262144}"
 		info "$command increasing vm max map count to $vm_max_map_count"
 		sudo sysctl -w vm.max_map_count="$vm_max_map_count"
+		;;
+	"migrate:custom:nextcloud")
+		"$nextcloud_run_file" "nextcloud:setup" \
+			--task_name="nextcloud" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nextcloud_service="nextcloud" \
+			--admin_user="$var_custom__nextcloud_admin_user" \
+			--admin_pass="$var_custom__nextcloud_admin_pass" \
+			--nextcloud_url="$var_custom__nextcloud_url" \
+			--nextcloud_domain="$var_custom__nextcloud_domain" \
+			--nextcloud_host="$var_custom__nextcloud_host" \
+			--nextcloud_protocol="$var_custom__nextcloud_protocol"
+
+		"$nextcloud_run_file" "nextcloud:fs" \
+			--task_name="nextcloud_data" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nextcloud_service="nextcloud" \
+			--mount_point="/data" \
+			--datadir="/var/main/data"
+
+		"$nextcloud_run_file" "nextcloud:fs" \
+			--task_name="nextcloud_sync" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nextcloud_service="nextcloud" \
+			--mount_point="/sync" \
+			--datadir="/var/main/data/sync"
+
+		"$nextcloud_run_file" "nextcloud:s3" \
+			--task_name="nextcloud_backup" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nextcloud_service="nextcloud" \
+			--mount_point="/backup" \
+			--bucket="$var_custom__s3_backup_bucket" \
+			--hostname="$var_custom__s3_backup_hostname" \
+			--port="$var_custom__s3_backup_port" \
+			--region="$var_custom__s3_backup_region" \
+			--use_ssl="$var_custom__s3_backup_use_ssl" \
+			--use_path_style="$var_custom__s3_backup_use_path_style" \
+			--legacy_auth="$var_custom__s3_backup_legacy_auth"  \
+			--key="$var_custom__s3_backup_access_key" \
+			--secret="$var_custom__s3_backup_secret_key"
 		;;
 	"sync:verify")
 		"$pod_env_run_file" "sync:verify:nginx"
