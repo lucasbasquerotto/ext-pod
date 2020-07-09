@@ -178,6 +178,8 @@ templates:
 
     {% if params.main.use_pma | bool %}
 
+    pma_user: "root"
+    pma_password: "{{ params.credentials.mysql.root_password }}"
     pma_login_cookie_validity: >-
       {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
 
@@ -234,6 +236,7 @@ templates:
   root: true
   params:
     conf: {{ params.main.custom_args.nginx.conf | default({}) | to_json }}
+    enable_validate_origin: "{{ params.main.custom_args.nginx.enable_validate_origin }}"
     main_domain: "{{ params.main.custom_domain.main_domain }}"
     main_port: "{{ var_main_domain_port }}"
     main_ssl: "{{ params.main.custom_domain.main_ssl }}"

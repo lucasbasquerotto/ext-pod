@@ -193,6 +193,8 @@ services:
     environment:
       PMA_HOST: $DB_HOST
       PMA_PORT: $DB_PORT
+      PMA_USER: $PMA_USER
+      PMA_PASSWORD: $PMA_PASSWORD
 
     {% if params.use_fluentd | bool %}
 

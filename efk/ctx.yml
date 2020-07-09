@@ -215,6 +215,7 @@ templates:
   root: true
   params:
     conf: {{ params.main.custom_args.nginx.conf | default({}) | to_json }}
+    enable_validate_origin: "{{ params.main.custom_args.nginx.enable_validate_origin }}"
     main_domain: "{{ params.main.custom_domain.main_domain }}"
     kibana_domain: "{{ params.main.custom_domain.kibana_domain }}"
     kibana_port: "{{ var_kibana_domain_port }}"
