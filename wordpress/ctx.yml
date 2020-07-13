@@ -34,6 +34,12 @@
   %}
 {% endif %}
 
+{% if params.main.use_adminer | bool %}
+  {% set var_adminer_domain_port = params.main.custom_domain.adminer_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
 {% if params.main.use_theia | bool %}
   {% set var_theia_domain_port = params.main.custom_domain.theia_ssl | bool |
     ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
@@ -96,6 +102,7 @@ templates:
     {% if var_pod_type in ['app', 'web'] %}
 
     use_pma: "{{ params.main.use_pma }}"
+    use_adminer: "{{ params.main.use_adminer }}"
     use_theia: "{{ params.main.use_theia }}"
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
     use_filestash: "{{ params.main.use_filestash }}"
@@ -182,6 +189,15 @@ templates:
     pma_password: "{{ params.credentials.mysql.root_password }}"
     pma_login_cookie_validity: >-
       {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
+
+    {% endif %}
+
+    use_adminer: "{{ params.main.use_adminer }}"
+
+    {% if params.main.use_adminer | bool %}
+
+    adminer_user: "root"
+    adminer_password: "{{ params.credentials.mysql.root_password }}"
 
     {% endif %}
 
@@ -288,6 +304,16 @@ templates:
     pma_domain: "{{ params.main.custom_domain.pma_domain }}"
     pma_port: "{{ var_pma_domain_port }}"
     pma_ssl: "{{ params.main.custom_domain.pma_ssl }}"
+
+    {% endif %}
+
+    use_adminer: "{{ params.main.use_adminer }}"
+
+    {% if params.main.use_adminer | bool %}
+
+    adminer_domain: "{{ params.main.custom_domain.adminer_domain }}"
+    adminer_port: "{{ var_adminer_domain_port }}"
+    adminer_ssl: "{{ params.main.custom_domain.adminer_ssl }}"
 
     {% endif %}
 
