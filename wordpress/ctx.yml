@@ -352,6 +352,19 @@ templates:
 
 {% endif %}
 
+{% if var_pod_type in ['app', 'db'] %}
+
+- src: "{{ var_main_dir }}/templates/mysql/init.sql"
+  dest: "{{ var_main_dir }}/env/mysql/init.sql"
+  root: true
+  params:
+    viewer_password: "{{ params.credentials.mysql.viewer_password }}"
+    db_name: "{{ params.credentials.wordpress.db.name }}"
+    db_user: "{{ params.credentials.wordpress.db.user }}"
+    db_password: "{{ params.credentials.wordpress.db.password }}"
+
+{% endif %}
+
 children:
 
 - name: "main/scripts/vars.run.yml"

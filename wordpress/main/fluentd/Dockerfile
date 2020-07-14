@@ -13,4 +13,3 @@ RUN mkdir -p /var/log/main \
  && chown fluent /var/log/main \
  && chmod +rx /fluentd/etc/fluent.conf
 
-USER fluent

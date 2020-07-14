@@ -46,6 +46,10 @@ case "$command" in
 	"prepare")
 		info "$command - do nothing..."
 		;;
+	"backup")
+		"$pod_env_run_file" run logrotator
+		"$pod_env_run_file" "$command" "$@"
+		;;
 	"setup")
 		data_dir="/var/main/data"
 

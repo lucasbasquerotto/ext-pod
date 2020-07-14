@@ -439,8 +439,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "$MYSQL_ROOT_PASSWORD"
       MYSQL_DATABASE: "$DB_NAME"
-      MYSQL_USER: "$DB_USER"
-      MYSQL_PASSWORD: "$DB_PASSWORD"
 
     {% if params.use_fluentd | bool %}
 
@@ -464,6 +462,7 @@ services:
     {% endif %}
 
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    - "$DATA_DIR/tmp/log/mysql:/tmp/main/log/mysql"
     logging: *mainlog
 
     {% if (params.memory.mysql | default('')) != '' %}
@@ -566,6 +565,8 @@ services:
     - "log"
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
+    - "$DATA_DIR/tmp/log:/rotate"
     logging: *jsonlog
 
     {% if (params.memory.fluentd | default('')) != '' %}

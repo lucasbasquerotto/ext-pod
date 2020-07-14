@@ -144,3 +144,27 @@ services:
     mem_limit: "{{ params.memory.s3_backup }}"
 
     {% endif %}
+
+  logrotator:
+    container_name: "${CTX_PREFIX_RUN}logrotator"
+    hostname: "logrotator"
+    build:
+      context: .
+      dockerfile: "main/logrotator/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.logrotator_image }}"
+        VERSION: "{{ params.images.logrotator_version }}"
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+
+    {% if (params.memory.logrotator | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.logrotator }}"
+
+    {% endif %}
