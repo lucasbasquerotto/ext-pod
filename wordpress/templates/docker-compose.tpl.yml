@@ -234,7 +234,6 @@ services:
         VERSION: "{{ params.images.adminer_version }}"
     restart: "unless-stopped"
     environment:
-      # ADMINER_DEFAULT_SERVER: $DB_HOST
       ADMINER_DRIVER: server
       ADMINER_SERVER: $DB_HOST
       ADMINER_DB: $DB_NAME
