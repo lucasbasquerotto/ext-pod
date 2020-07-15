@@ -125,6 +125,17 @@ case "$command" in
 					# "python-requests/2.18.4" 1;
 				EOF
 			fi
+
+			dir="\${dir_nginx}/manual"
+			file="\${dir}/allowed-hosts.conf"
+
+			if [ ! -f "\$file" ]; then
+				mkdir -p "\$dir"
+				cat <<-EOF > "\$file"
+					# *.googlebot.com
+					# *.google.com
+				EOF
+			fi
 		SHELL
 
 		"$pod_env_run_file" "$command" "$@"
@@ -282,14 +293,17 @@ case "$command" in
 			done
 		SHELL
 
+		nginx_sync_base_dir="/var/main/data/sync/nginx"
+
 		"$pod_env_run_file" "run:nginx:block_ips" \
 			--task_name="block_ips" \
 			--subtask_cmd="$command" \
 			--toolbox_service="$var_run__general__toolbox_service" \
 			--nginx_service="nginx" \
 			--max_ips="1000" \
-			--output_file="/var/main/data/sync/nginx/auto/ips-blacklist-auto.conf" \
-			--manual_file="/var/main/data/sync/nginx/manual/ips-blacklist.conf" \
+			--output_file="$nginx_sync_base_dir/auto/ips-blacklist-auto.conf" \
+			--manual_file="$nginx_sync_base_dir/manual/ips-blacklist.conf" \
+			--allowed_hosts_file="$nginx_sync_base_dir/manual/allowed-hosts.conf" \
 			--log_file_last_day="$tmp_last_day_file" \
 			--log_file_day="$tmp_day_file" \
 			--amount_day="5" \
