@@ -65,6 +65,20 @@ case "$command" in
 					mkdir -p "\$dir"
 					chmod 755 "\$dir"
 				fi
+
+				dir="$data_dir/tmp/mysql"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
+
+				dir="$data_dir/tmp/log/mysql"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
 			fi
 
 			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
@@ -74,12 +88,6 @@ case "$command" in
 					mkdir -p "\$dir"
 					chmod 777 "\$dir"
 				fi
-			fi
-
-			if [ "$var_custom__use_fluentd" = "true" ]; then
-				dir="$data_dir/log/fluentd"
-				mkdir -p "\$dir"
-				chmod 777 "\$dir"
 			fi
 
 			dir_nginx="$data_dir/sync/nginx"
@@ -234,6 +242,60 @@ case "$command" in
 		;;
 	"sync:reload:nginx")
 		"$pod_env_run_file" exec-nontty nginx nginx -s reload
+		;;
+	"block-ips")
+		case "$var_custom__pod_type" in
+			"app"|"web")
+				;;
+			*)
+				error "$command: $var_custom__pod_type not supported"
+				;;
+		esac
+
+		log_hour_path_prefix="/var/log/main/fluentd/main/docker.nginx/docker.nginx"
+		tmp_base_path="/tmp/main/run/block_ips"
+		tmp_last_day_file="${tmp_base_path}/last_day.log"
+		tmp_day_file="${tmp_base_path}/day.log"
+
+		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL
+			set -eou pipefail
+
+			log_last_day_src_path_prefix="$log_hour_path_prefix.$(date -d '1 day ago' '+%Y-%m-%d')"
+			log_day_src_path_prefix="$log_hour_path_prefix.$(date '+%Y-%m-%d')"
+
+			mkdir -p "$tmp_base_path"
+
+			echo "" > "$tmp_last_day_file"
+			echo "" > "$tmp_day_file"
+
+			for i in \$(seq -f "%02g" 1 24); do
+				log_last_day_src_path_aux="\$log_last_day_src_path_prefix.\$i.log"
+				log_day_src_path_aux="\$log_day_src_path_prefix.\$i.log"
+
+				if [ -f "\$log_last_day_src_path_aux" ]; then
+					cat "\$log_last_day_src_path_aux" >> "$tmp_last_day_file"
+				fi
+
+				if [ -f "\$log_day_src_path_aux" ]; then
+					cat "\$log_day_src_path_aux" >> "$tmp_day_file"
+				fi
+			done
+		SHELL
+
+		"$pod_env_run_file" "run:nginx:block_ips" \
+			--task_name="block_ips" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nginx_service="nginx" \
+			--max_ips="1000" \
+			--output_file="/var/main/data/sync/nginx/auto/ips-blacklist-auto.conf" \
+			--manual_file="/var/main/data/sync/nginx/manual/ips-blacklist.conf" \
+			--log_file_last_day="$tmp_last_day_file" \
+			--log_file_day="$tmp_day_file" \
+			--amount_day="5" \
+			--log_file_hour="$log_hour_path_prefix.$(date '+%Y-%m-%d.%H').log" \
+			--log_file_last_hour="$log_hour_path_prefix.$(date -d '1 hour ago' '+%Y-%m-%d.%H').log" \
+			--amount_hour="3"
 		;;
 	*)
 		"$pod_env_run_file" "$command" ${args[@]+"${args[@]}"}

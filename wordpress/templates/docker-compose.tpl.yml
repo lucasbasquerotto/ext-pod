@@ -495,7 +495,7 @@ services:
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
-    - "$DATA_DIR/log:/var/log/main/{{ params.pod_type }}"
+    - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
 
