@@ -251,17 +251,34 @@ case "$command" in
 	"sync:verify")
 		"$pod_env_run_file" "sync:verify:nginx"
 		;;
-	"sync:reload:nginx")
+	"action:subtask:"*)
+		task_name="${command#action:subtask:}"
+
+		opts=()
+
+		opts+=( "--task_name=$task_name" )
+		opts+=( "--subtask_cmd=$command" )
+
+		opts+=( "--toolbox_service=$var_run__general__toolbox_service" )
+		opts+=( "--action_dir=/var/main/data/action" )
+
+		"$pod_env_run_file" "action:subtask" "${opts[@]}"
+		;;
+	"action:exec:nginx_reload")
 		"$pod_env_run_file" exec-nontty nginx nginx -s reload
 		;;
-	"block-ips")
+	"action:exec:block_ips")
 		case "$var_custom__pod_type" in
 			"app"|"web")
 				;;
 			*)
-				error "$command: $var_custom__pod_type not supported"
+				error "$command: pod_type ($var_custom__pod_type) not supported"
 				;;
 		esac
+
+		if [ "$var_custom__use_fluentd" != "true" ]; then
+				error "$command: fluentd must be used"
+		fi
 
 		log_hour_path_prefix="/var/log/main/fluentd/main/docker.nginx/docker.nginx"
 		tmp_base_path="/tmp/main/run/block_ips"
@@ -300,16 +317,16 @@ case "$command" in
 			--subtask_cmd="$command" \
 			--toolbox_service="$var_run__general__toolbox_service" \
 			--nginx_service="nginx" \
-			--max_ips="1000" \
+			--max_ips="$var_task__block_ips__action_exec__max_ips" \
 			--output_file="$nginx_sync_base_dir/auto/ips-blacklist-auto.conf" \
 			--manual_file="$nginx_sync_base_dir/manual/ips-blacklist.conf" \
 			--allowed_hosts_file="$nginx_sync_base_dir/manual/allowed-hosts.conf" \
 			--log_file_last_day="$tmp_last_day_file" \
 			--log_file_day="$tmp_day_file" \
-			--amount_day="5" \
+			--amount_day="$var_task__block_ips__action_exec__amount_day" \
 			--log_file_hour="$log_hour_path_prefix.$(date '+%Y-%m-%d.%H').log" \
 			--log_file_last_hour="$log_hour_path_prefix.$(date -d '1 hour ago' '+%Y-%m-%d.%H').log" \
-			--amount_hour="3"
+			--amount_hour="$var_task__block_ips__action_exec__amount_hour"
 		;;
 	*)
 		"$pod_env_run_file" "$command" ${args[@]+"${args[@]}"}

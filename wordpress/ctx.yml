@@ -384,6 +384,15 @@ children:
 
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
       var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
+      var_custom__block_ips: "{{ params.main.block_ips | bool | ternary('true', 'false') }}"
+
+      {% if params.main.block_ips | bool %}
+
+      var_task__block_ips__action_exec__max_ips: "{{ params.main.block_ips.max_ips | default('10000') }}"
+      var_task__block_ips__action_exec__amount_day: "{{ params.main.block_ips.amount_day | default('20000') }}"
+      var_task__block_ips__action_exec__amount_hour: "{{ params.main.block_ips.amount_hour | default('3600') }}"
+
+      {% endif %}
 
       {% if params.main.use_nextcloud | bool %}
 
