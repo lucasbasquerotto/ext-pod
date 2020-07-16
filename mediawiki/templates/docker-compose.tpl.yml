@@ -2,7 +2,7 @@ version: '2.4'
 
 x-logging:
 
-{% if params.use_fluentd | bool %}
+  {% if params.use_fluentd | bool %}
 
   mainlog: &mainlog
     driver: "fluentd"
@@ -14,23 +14,23 @@ x-logging:
     options:
       max-size: "50m"
 
-{% else %}
+  {% else %}
 
   mainlog: &mainlog
     driver: "json-file"
     options:
       max-size: "50m"
 
-{% endif %}
+  {% endif %}
 
 networks:
 
-{% if params.use_fluentd | bool %}
+  {% if params.use_fluentd | bool %}
 
   log:
     driver: "bridge"
 
-{% endif %}
+  {% endif %}
 
   shared:
     external: true
@@ -45,7 +45,7 @@ volumes:
 
 services:
 
-{% if params.pod_type in ['app', 'web'] %}
+  {% if params.pod_type in ['app', 'web'] %}
 
   nginx:
     container_name: "${CTX_PREFIX_MAIN}nginx"
@@ -59,7 +59,42 @@ services:
     restart: "unless-stopped"
     depends_on:
     - "mediawiki"
+
+    {% if params.use_pma | bool %}
+
     - "phpmyadmin"
+
+    {% endif %}
+
+    {% if params.use_adminer | bool %}
+
+    - "adminer"
+
+    {% endif %}
+
+    {% if params.use_theia | bool %}
+
+    - "theia"
+
+    {% endif %}
+
+    {% if params.use_minio_gateway | bool %}
+
+    - "minio_gateway"
+
+    {% endif %}
+
+    {% if params.use_filestash | bool %}
+
+    - "filestash"
+
+    {% endif %}
+
+    {% if params.use_nextcloud | bool %}
+
+    - "nextcloud"
+
+    {% endif %}
 
     {% if params.use_fluentd | bool %}
 
@@ -128,7 +163,7 @@ services:
 
     {% endif %}
 
-{% if params.use_pma %}
+  {% if params.use_pma %}
 
   phpmyadmin:
     container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
@@ -165,9 +200,50 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_theia | bool %}
+  {% if params.use_adminer | bool %}
+
+  adminer:
+    container_name: "${CTX_PREFIX_MAIN}adminer"
+    hostname: "adminer"
+    build:
+      context: .
+      dockerfile: "main/adminer/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.adminer_image }}"
+        VERSION: "{{ params.images.adminer_version }}"
+    restart: "unless-stopped"
+    environment:
+      ADMINER_DRIVER: server
+      ADMINER_SERVER: $DB_HOST
+      ADMINER_DB: $DB_NAME
+      ADMINER_USERNAME: $ADMINER_USER
+      ADMINER_PASSWORD: $ADMINER_PASSWORD
+      ADMINER_AUTOLOGIN: 1
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/adminer:/tmp/main/adminer"
+    logging: *mainlog
+
+    {% if (params.memory.adminer | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.adminer }}"
+
+    {% endif %}
+
+  {% endif %}
+
+  {% if params.use_theia | bool %}
 
   theia:
     container_name: "${CTX_PREFIX_MAIN}theia"
@@ -194,6 +270,7 @@ services:
     - "$DATA_DIR/.git:/home/project/.git:ro"
     - "$DATA_DIR:/home/project/data:ro"
     - "$DATA_DIR/sync:/home/project/sync:cached"
+    - "$DATA_DIR/action:/home/project/action:cached"
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog
 
@@ -203,9 +280,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_minio_gateway | bool %}
+  {% if params.use_minio_gateway | bool %}
 
   minio_gateway:
     container_name: "${CTX_PREFIX_MAIN}minio_gateway"
@@ -241,9 +318,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_filestash | bool %}
+  {% if params.use_filestash | bool %}
 
   filestash:
     container_name: "${CTX_PREFIX_MAIN}filestash"
@@ -275,9 +352,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_nextcloud | bool %}
+  {% if params.use_nextcloud | bool %}
 
   nextcloud:
     container_name: "${CTX_PREFIX_MAIN}nextcloud"
@@ -322,11 +399,11 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.pod_type in ['app', 'db'] %}
+  {% if params.pod_type in ['app', 'db'] %}
 
   mysql:
     container_name: "${CTX_PREFIX_MAIN}mysql"
@@ -341,8 +418,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
       MYSQL_DATABASE: "$DB_NAME"
-      MYSQL_USER: "$DB_USER"
-      MYSQL_PASSWORD: "$DB_PASSWORD"
 
     {% if params.use_fluentd | bool %}
 
@@ -366,6 +441,7 @@ services:
     {% endif %}
 
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    - "$DATA_DIR/tmp/log/mysql:/tmp/main/log/mysql"
     logging: *mainlog
 
     {% if (params.memory.mysql | default('')) != '' %}
@@ -374,7 +450,7 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
   toolbox:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
@@ -399,7 +475,7 @@ services:
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
-    - "$DATA_DIR/log:/var/log/main/{{ params.pod_type }}"
+    - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
 
@@ -409,7 +485,7 @@ services:
 
     {% endif %}
 
-{% if params.use_fluentd | bool %}
+  {% if params.use_fluentd | bool %}
 
   fluentd:
     container_name: "${CTX_PREFIX_MAIN}fluentd"
@@ -429,6 +505,7 @@ services:
     - "log"
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
     logging: *jsonlog
 
     {% if (params.memory.fluentd | default('')) != '' %}
@@ -437,4 +514,4 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}

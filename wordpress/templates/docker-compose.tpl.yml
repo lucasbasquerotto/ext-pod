@@ -2,7 +2,7 @@ version: '2.4'
 
 x-logging:
 
-{% if params.use_fluentd | bool %}
+  {% if params.use_fluentd | bool %}
 
   mainlog: &mainlog
     driver: "fluentd"
@@ -14,23 +14,23 @@ x-logging:
     options:
       max-size: "50m"
 
-{% else %}
+  {% else %}
 
   mainlog: &mainlog
     driver: "json-file"
     options:
       max-size: "50m"
 
-{% endif %}
+  {% endif %}
 
 networks:
 
-{% if params.use_fluentd | bool %}
+  {% if params.use_fluentd | bool %}
 
   log:
     driver: "bridge"
 
-{% endif %}
+  {% endif %}
 
   shared:
     external: true
@@ -51,7 +51,7 @@ volumes:
 
 services:
 
-{% if params.pod_type in ['app', 'web'] %}
+  {% if params.pod_type in ['app', 'web'] %}
 
   nginx:
     container_name: "${CTX_PREFIX_MAIN}nginx"
@@ -182,7 +182,7 @@ services:
 
     {% endif %}
 
-{% if params.use_pma | bool %}
+  {% if params.use_pma | bool %}
 
   phpmyadmin:
     container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
@@ -221,7 +221,9 @@ services:
 
     {% endif %}
 
-{% if params.use_adminer | bool %}
+  {% endif %}
+
+  {% if params.use_adminer | bool %}
 
   adminer:
     container_name: "${CTX_PREFIX_MAIN}adminer"
@@ -260,11 +262,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% endif %}
-
-{% if params.use_theia | bool %}
+  {% if params.use_theia | bool %}
 
   theia:
     container_name: "${CTX_PREFIX_MAIN}theia"
@@ -301,9 +301,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_minio_gateway | bool %}
+  {% if params.use_minio_gateway | bool %}
 
   minio_gateway:
     container_name: "${CTX_PREFIX_MAIN}minio_gateway"
@@ -339,9 +339,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_filestash | bool %}
+  {% if params.use_filestash | bool %}
 
   filestash:
     container_name: "${CTX_PREFIX_MAIN}filestash"
@@ -373,9 +373,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_nextcloud | bool %}
+  {% if params.use_nextcloud | bool %}
 
   nextcloud:
     container_name: "${CTX_PREFIX_MAIN}nextcloud"
@@ -421,11 +421,11 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.pod_type in ['app', 'db'] %}
+  {% if params.pod_type in ['app', 'db'] %}
 
   mysql:
     container_name: "${CTX_PREFIX_MAIN}mysql"
@@ -472,7 +472,7 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
   toolbox:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
@@ -507,9 +507,9 @@ services:
 
     {% endif %}
 
-{% if params.local | bool %}
+  {% if params.local | bool %}
 
-{% if params.use_composer | bool %}
+  {% if params.use_composer | bool %}
 
   composer:
     container_name: "${CTX_PREFIX_MAIN}composer"
@@ -542,11 +542,11 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.use_fluentd | bool %}
+  {% if params.use_fluentd | bool %}
 
   fluentd:
     container_name: "${CTX_PREFIX_MAIN}fluentd"
@@ -567,7 +567,6 @@ services:
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
-    - "$DATA_DIR/tmp/log:/rotate"
     logging: *jsonlog
 
     {% if (params.memory.fluentd | default('')) != '' %}
@@ -576,4 +575,4 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}

@@ -60,48 +60,53 @@ case "$command" in
 					mkdir -p "\$dir"
 					chmod 777 "\$dir"
 				fi
-			fi
 
-			if [ "$var_custom__use_fluentd" = "true" ]; then
-				dir="$data_dir/log/fluentd"
-				mkdir -p "\$dir"
-				chmod 777 "\$dir"
-			fi
+				dir_nginx="$data_dir/sync/nginx"
 
-			dir_nginx="$data_dir/sync/nginx"
+				dir="\${dir_nginx}/auto"
+				file="\${dir}/ips-blacklist-auto.conf"
 
-			dir="\${dir_nginx}/auto"
-			file="\${dir}/ips-blacklist-auto.conf"
+				if [ ! -f "\$file" ]; then
+					mkdir -p "\$dir"
+					cat <<-EOF > "\$file"
+						# 127.0.0.1 1;
+						# 1.2.3.4/16 1;
+					EOF
+				fi
 
-			if [ ! -f "\$file" ]; then
-				mkdir -p "\$dir"
-				cat <<-EOF > "\$file"
-					# 127.0.0.1 1;
-					# 1.2.3.4/16 1;
-				EOF
-			fi
+				dir="\${dir_nginx}/manual"
+				file="\${dir}/ips-blacklist.conf"
 
-			dir="\${dir_nginx}/manual"
-			file="\${dir}/ips-blacklist.conf"
+				if [ ! -f "\$file" ]; then
+					mkdir -p "\$dir"
+					cat <<-EOF > "\$file"
+						# 127.0.0.1 1;
+						# 0.0.0.0/0 1;
+					EOF
+				fi
 
-			if [ ! -f "\$file" ]; then
-				mkdir -p "\$dir"
-				cat <<-EOF > "\$file"
-					# 127.0.0.1 1;
-					# 0.0.0.0/0 1;
-				EOF
-			fi
+				dir="\${dir_nginx}/manual"
+				file="\${dir}/ua-blacklist.conf"
 
-			dir="\${dir_nginx}/manual"
-			file="\${dir}/ua-blacklist.conf"
+				if [ ! -f "\$file" ]; then
+					mkdir -p "\$dir"
+					cat <<-EOF > "\$file"
+						# ~(Mozilla|Chrome) 1;
+						# "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36" 1;
+						# "python-requests/2.18.4" 1;
+					EOF
+				fi
 
-			if [ ! -f "\$file" ]; then
-				mkdir -p "\$dir"
-				cat <<-EOF > "\$file"
-					# ~(Mozilla|Chrome) 1;
-					# "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36" 1;
-					# "python-requests/2.18.4" 1;
-				EOF
+				dir="\${dir_nginx}/manual"
+				file="\${dir}/allowed-hosts.conf"
+
+				if [ ! -f "\$file" ]; then
+					mkdir -p "\$dir"
+					cat <<-EOF > "\$file"
+						# *.googlebot.com
+						# *.google.com
+					EOF
+				fi
 			fi
 		SHELL
 
@@ -176,6 +181,14 @@ case "$command" in
 			--nextcloud_protocol="$var_custom__nextcloud_protocol"
 
 		"$nextcloud_run_file" "nextcloud:fs" \
+			--task_name="nextcloud_action" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nextcloud_service="nextcloud" \
+			--mount_point="/action" \
+			--datadir="/var/main/data/action"
+
+		"$nextcloud_run_file" "nextcloud:fs" \
 			--task_name="nextcloud_data" \
 			--subtask_cmd="$command" \
 			--toolbox_service="$var_run__general__toolbox_service" \
@@ -223,11 +236,86 @@ case "$command" in
 			--key="$var_custom__s3_uploads_access_key" \
 			--secret="$var_custom__s3_uploads_secret_key"
 		;;
-	"sync:verify")
-		"$pod_env_run_file" "sync:verify:nginx"
+	"actions")
+		"$pod_script_env_file" "action:subtask:block_ips"
+		"$pod_script_env_file" "action:subtask:nginx_reload"
 		;;
-	"sync:reload:nginx")
+	"action:subtask:"*)
+		task_name="${command#action:subtask:}"
+
+		opts=()
+
+		opts+=( "--task_name=$task_name" )
+		opts+=( "--subtask_cmd=$command" )
+
+		opts+=( "--toolbox_service=$var_run__general__toolbox_service" )
+		opts+=( "--action_dir=/var/main/data/action" )
+
+		"$pod_env_run_file" "action:subtask" "${opts[@]}"
+		;;
+	"action:exec:nginx_reload")
 		"$pod_env_run_file" exec-nontty nginx nginx -s reload
+		;;
+	"action:exec:block_ips")
+		case "$var_custom__pod_type" in
+			"app"|"web")
+				;;
+			*)
+				error "$command: pod_type ($var_custom__pod_type) not supported"
+				;;
+		esac
+
+		if [ "$var_custom__use_fluentd" != "true" ]; then
+				error "$command: fluentd must be used"
+		fi
+
+		log_hour_path_prefix="/var/log/main/fluentd/main/docker.nginx/docker.nginx.stdout"
+		tmp_base_path="/tmp/main/run/block_ips"
+		tmp_last_day_file="${tmp_base_path}/last_day.log"
+		tmp_day_file="${tmp_base_path}/day.log"
+
+		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL
+			set -eou pipefail
+
+			log_last_day_src_path_prefix="$log_hour_path_prefix.$(date -u -d '1 day ago' '+%Y-%m-%d')"
+			log_day_src_path_prefix="$log_hour_path_prefix.$(date -u '+%Y-%m-%d')"
+
+			mkdir -p "$tmp_base_path"
+
+			echo "" > "$tmp_last_day_file"
+			echo "" > "$tmp_day_file"
+
+			for i in \$(seq -f "%02g" 1 24); do
+				log_last_day_src_path_aux="\$log_last_day_src_path_prefix.\$i.log"
+				log_day_src_path_aux="\$log_day_src_path_prefix.\$i.log"
+
+				if [ -f "\$log_last_day_src_path_aux" ]; then
+					cat "\$log_last_day_src_path_aux" >> "$tmp_last_day_file"
+				fi
+
+				if [ -f "\$log_day_src_path_aux" ]; then
+					cat "\$log_day_src_path_aux" >> "$tmp_day_file"
+				fi
+			done
+		SHELL
+
+		nginx_sync_base_dir="/var/main/data/sync/nginx"
+
+		"$pod_env_run_file" "run:nginx:block_ips" \
+			--task_name="block_ips" \
+			--subtask_cmd="$command" \
+			--toolbox_service="$var_run__general__toolbox_service" \
+			--nginx_service="nginx" \
+			--max_ips="$var_task__block_ips__action_exec__max_ips" \
+			--output_file="$nginx_sync_base_dir/auto/ips-blacklist-auto.conf" \
+			--manual_file="$nginx_sync_base_dir/manual/ips-blacklist.conf" \
+			--allowed_hosts_file="$nginx_sync_base_dir/manual/allowed-hosts.conf" \
+			--log_file_last_day="$tmp_last_day_file" \
+			--log_file_day="$tmp_day_file" \
+			--amount_day="$var_task__block_ips__action_exec__amount_day" \
+			--log_file_hour="$log_hour_path_prefix.$(date -u '+%Y-%m-%d.%H').log" \
+			--log_file_last_hour="$log_hour_path_prefix.$(date -u -d '1 hour ago' '+%Y-%m-%d.%H').log" \
+			--amount_hour="$var_task__block_ips__action_exec__amount_hour"
 		;;
 	*)
 		"$pod_env_run_file" "$command" "$@"

@@ -29,9 +29,18 @@
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
   ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
 %}
-{% set var_pma_domain_port = params.main.custom_domain.pma_ssl | bool |
-  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
-%}
+
+{% if params.main.use_pma | bool %}
+  {% set var_pma_domain_port = params.main.custom_domain.pma_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
+
+{% if params.main.use_adminer | bool %}
+  {% set var_adminer_domain_port = params.main.custom_domain.adminer_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
 
 {% if params.main.use_theia | bool %}
   {% set var_theia_domain_port = params.main.custom_domain.theia_ssl | bool |
@@ -95,6 +104,7 @@ templates:
     {% if var_pod_type in ['app', 'web'] %}
 
     use_pma: "{{ params.main.use_pma }}"
+    use_adminer: "{{ params.main.use_adminer }}"
     use_theia: "{{ params.main.use_theia }}"
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
     use_filestash: "{{ params.main.use_filestash }}"
@@ -136,8 +146,6 @@ templates:
     public_https_port: "{{ params.main.custom_domain.public_https_port }}"
     private_http_port: "{{ params.main.custom_domain.private_http_port }}"
     private_https_port: "{{ params.main.custom_domain.private_https_port }}"
-    pma_login_cookie_validity: >-
-      {{ params.main.custom_args.pma.login_cookie_validity | default('36000') }}
 
     {% endif %}
 
@@ -161,10 +169,6 @@ templates:
     s3_uploads_access_key: "{{ params.credentials.mediawiki_uploads_bucket.access_key }}"
     s3_uploads_secret_key: "{{ params.credentials.mediawiki_uploads_bucket.secret_key }}"
 
-    {% endif %}
-
-    {% if var_pod_type in ['app', 'web'] %}
-
     use_certbot: "{{ params.main.use_certbot }}"
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
 
@@ -173,6 +177,26 @@ templates:
     minio_gateway_endpoint: "{{ params.credentials.minio_gateway.endpoint }}"
     minio_gateway_access_key: "{{ params.credentials.minio_gateway.access_key }}"
     minio_gateway_secret_key: "{{ params.credentials.minio_gateway.secret_key }}"
+
+    {% endif %}
+
+    use_pma: "{{ params.main.use_pma }}"
+
+    {% if params.main.use_pma | bool %}
+
+    pma_user: "root"
+    pma_password: "{{ params.credentials.mediawiki.db.root_password }}"
+    pma_login_cookie_validity: >-
+      {{ params.main.custom_args.wordpress.pma.login_cookie_validity | default('36000') }}
+
+    {% endif %}
+
+    use_adminer: "{{ params.main.use_adminer }}"
+
+    {% if params.main.use_adminer | bool %}
+
+    adminer_user: "root"
+    adminer_password: "{{ params.credentials.mediawiki.db.root_password }}"
 
     {% endif %}
 
@@ -276,6 +300,16 @@ templates:
 
     {% endif %}
 
+    use_adminer: "{{ params.main.use_adminer }}"
+
+    {% if params.main.use_adminer | bool %}
+
+    adminer_domain: "{{ params.main.custom_domain.adminer_domain }}"
+    adminer_port: "{{ var_adminer_domain_port }}"
+    adminer_ssl: "{{ params.main.custom_domain.adminer_ssl }}"
+
+    {% endif %}
+
 {% endif %}
 
 {% set var_server = (params.main.custom_domain.main_ssl | bool) |
@@ -303,6 +337,19 @@ templates:
     lang: "{{ params.main.mediawiki.lang }}"
     secret_key: "{{ params.credentials.mediawiki.secret_key }}"
     authentication_token_version: "{{ params.main.mediawiki.authentication_token_version }}"
+
+{% endif %}
+
+{% if var_pod_type in ['app', 'db'] %}
+
+- src: "{{ var_main_dir }}/templates/mysql/init.sql"
+  dest: "{{ var_main_dir }}/env/mysql/init.sql"
+  root: true
+  params:
+    viewer_password: "{{ params.credentials.mediawiki.db.viewer_password }}"
+    db_name: "{{ params.credentials.mediawiki.db.name }}"
+    db_user: "{{ params.credentials.mediawiki.db.user }}"
+    db_password: "{{ params.credentials.mediawiki.db.password }}"
 
 {% endif %}
 
@@ -361,6 +408,16 @@ children:
       var_custom__s3_uploads_use_ssl: "{{ params.credentials.wp_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
       var_custom__s3_uploads_use_path_style: "{{ params.credentials.wp_uploads_bucket.path_style | default('') }}"
       var_custom__s3_uploads_legacy_auth: "{{ params.credentials.wp_uploads_bucket.legacy_auth | default('') }}"
+
+      {% endif %}
+
+      var_custom__block_ips: "{{ params.main.block_ips | bool | ternary('true', 'false') }}"
+
+      {% if params.main.block_ips | bool %}
+
+      var_task__block_ips__action_exec__max_ips: "{{ params.main.block_ips.max_ips | default('10000') }}"
+      var_task__block_ips__action_exec__amount_day: "{{ params.main.block_ips.amount_day | default('20000') }}"
+      var_task__block_ips__action_exec__amount_hour: "{{ params.main.block_ips.amount_hour | default('3600') }}"
 
       {% endif %}
 

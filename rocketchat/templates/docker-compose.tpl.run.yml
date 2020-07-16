@@ -2,7 +2,7 @@ version: "2.4"
 
 x-logging:
 
-{% if params.use_fluentd | bool %}
+  {% if params.use_fluentd | bool %}
 
   mainlog: &mainlog
     driver: "fluentd"
@@ -14,14 +14,14 @@ x-logging:
     options:
       max-size: "50m"
 
-{% else %}
+  {% else %}
 
   mainlog: &mainlog
     driver: "json-file"
     options:
       max-size: "50m"
 
-{% endif %}
+  {% endif %}
 
 networks:
   shared:
@@ -30,9 +30,9 @@ networks:
 
 services:
 
-{% if params.pod_type in ['app', 'web'] %}
+  {% if params.pod_type in ['app', 'web'] %}
 
-{% if params.use_certbot | bool %}
+  {% if params.use_certbot | bool %}
 
   certbot:
     container_name: "${CTX_PREFIX_RUN}certbot"
@@ -54,11 +54,11 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.pod_type in ['app', 'db'] %}
+  {% if params.pod_type in ['app', 'db'] %}
 
   mongo_init:
     container_name: "${CTX_PREFIX_RUN}mongo_init"
@@ -79,9 +79,9 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
-{% if params.pod_type in ['app', 'web'] %}
+  {% if params.pod_type in ['app', 'web'] %}
 
   s3_uploads:
     container_name: "${CTX_PREFIX_RUN}s3_uploads"
@@ -111,7 +111,7 @@ services:
 
     {% endif %}
 
-{% endif %}
+  {% endif %}
 
   s3_backup:
     container_name: "${CTX_PREFIX_RUN}s3_backup"
@@ -138,5 +138,29 @@ services:
     {% if (params.memory.s3_backup | default('')) != '' %}
 
     mem_limit: "{{ params.memory.s3_backup }}"
+
+    {% endif %}
+
+  logrotator:
+    container_name: "${CTX_PREFIX_RUN}logrotator"
+    hostname: "logrotator"
+    build:
+      context: .
+      dockerfile: "main/logrotator/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.logrotator_image }}"
+        VERSION: "{{ params.images.logrotator_version }}"
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+
+    {% if (params.memory.logrotator | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.logrotator }}"
 
     {% endif %}
