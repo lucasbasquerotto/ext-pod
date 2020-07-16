@@ -248,8 +248,9 @@ case "$command" in
 
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;
-	"sync:verify")
-		"$pod_env_run_file" "sync:verify:nginx"
+	"actions")
+		"$pod_script_env_file" "action:subtask:block_ips"
+		"$pod_script_env_file" "action:subtask:nginx_reload"
 		;;
 	"action:subtask:"*)
 		task_name="${command#action:subtask:}"
@@ -280,7 +281,7 @@ case "$command" in
 				error "$command: fluentd must be used"
 		fi
 
-		log_hour_path_prefix="/var/log/main/fluentd/main/docker.nginx/docker.nginx"
+		log_hour_path_prefix="/var/log/main/fluentd/main/docker.nginx/docker.nginx.stdout"
 		tmp_base_path="/tmp/main/run/block_ips"
 		tmp_last_day_file="${tmp_base_path}/last_day.log"
 		tmp_day_file="${tmp_base_path}/day.log"
