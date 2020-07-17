@@ -7,7 +7,7 @@ USER root
 
 ARG OUTPUT_PLUGIN
 
-COPY /main/fluentd/${OUTPUT_PLUGIN}.conf /fluentd/etc/fluent.conf
+COPY /shared/containers/fluentd/${OUTPUT_PLUGIN}.conf /fluentd/etc/fluent.conf
 
 RUN mkdir -p /var/log/main \
  && chown fluent /var/log/main \

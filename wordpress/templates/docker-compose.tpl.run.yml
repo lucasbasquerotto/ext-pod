@@ -39,7 +39,7 @@ services:
     hostname: "certbot"
     build:
       context: .
-      dockerfile: "main/certbot/Dockerfile"
+      dockerfile: "shared/containers/certbot/Dockerfile"
       args:
         IMAGE: "{{ params.images.certbot_image }}"
         VERSION: "{{ params.images.certbot_version }}"
@@ -65,7 +65,7 @@ services:
     hostname: "mysql_cli"
     build:
       context: .
-      dockerfile: "main/mysql/Dockerfile"
+      dockerfile: "shared/containers/mysql/Dockerfile"
       args:
         IMAGE: "{{ params.images.mysql_image }}"
         VERSION: "{{ params.images.mysql_version }}"
@@ -92,7 +92,7 @@ services:
     hostname: "s3_uploads"
     build:
       context: .
-      dockerfile: "main/awscli/Dockerfile"
+      dockerfile: "shared/containers/awscli/Dockerfile"
       args:
         IMAGE: "{{ params.images.awscli_image }}"
         VERSION: "{{ params.images.awscli_version }}"
@@ -122,7 +122,7 @@ services:
     hostname: "s3_backup"
     build:
       context: .
-      dockerfile: "main/awscli/Dockerfile"
+      dockerfile: "shared/containers/awscli/Dockerfile"
       args:
         IMAGE: "{{ params.images.awscli_image }}"
         VERSION: "{{ params.images.awscli_version }}"
@@ -150,7 +150,7 @@ services:
     hostname: "logrotator"
     build:
       context: .
-      dockerfile: "main/logrotator/Dockerfile"
+      dockerfile: "shared/containers/logrotator/Dockerfile"
       args:
         IMAGE: "{{ params.images.logrotator_image }}"
         VERSION: "{{ params.images.logrotator_version }}"

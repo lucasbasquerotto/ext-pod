@@ -5,7 +5,7 @@ ARG VERSION
 
 FROM perl:${PERL_VERSION} AS builder
 
-COPY /main/awscli/aws/ /tmp/tpl/
+COPY /shared/containers/awscli/aws/ /tmp/tpl/
 
 ARG S3_ACCESS_KEY
 ARG S3_SECRET_KEY

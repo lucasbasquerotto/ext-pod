@@ -5,7 +5,7 @@ ARG VERSION
 
 FROM perl:${PERL_VERSION} AS builder
 
-COPY /main/phpmyadmin/ /tmp/tpl/
+COPY /shared/containers/phpmyadmin/config.user.inc.php /tmp/tpl/
 
 ARG LOGIN_COOKIE_VALIDITY
 
