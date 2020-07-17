@@ -33,24 +33,24 @@ shift;
 
 args=("$@")
 
-pod_env_run_file="$pod_layer_dir/main/scripts/main.sh"
+pod_main_run_file="$pod_layer_dir/main/scripts/main.sh"
 nginx_run_file="$pod_layer_dir/$var_shared__script_dir/services/nginx.sh"
 nextcloud_run_file="$pod_layer_dir/$var_shared__script_dir/services/nextcloud.sh"
 
 case "$command" in
 	"upgrade")
 		if [ "${var_custom__use_main_network:-}" = "true" ]; then
-			"$pod_env_run_file" "setup:main:network"
+			"$pod_main_run_file" "setup:main:network"
 		fi
 
-		"$pod_env_run_file" "$command" "$@"
+		"$pod_main_run_file" "$command" "$@"
 		;;
 	"backup")
 		if [ "${var_custom__use_logrotator:-}" = "true" ]; then
-			"$pod_env_run_file" run logrotator
+			"$pod_main_run_file" run logrotator
 		fi
 
-		"$pod_env_run_file" "$command" "$@"
+		"$pod_main_run_file" "$command" "$@"
 		;;
 	"local:prepare")
 		"$arg_ctl_layer_dir/run" dev-cmd bash "/root/w/r/$arg_env_local_repo/run" ${arg_opts[@]+"${arg_opts[@]}"}
@@ -161,10 +161,10 @@ case "$command" in
 	"setup")
 		if [ "${var_custom__use_mongo:-}" = "true" ]; then
 			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
-				"$pod_shared_run_file" up mongo
+				"$pod_script_env_file" up mongo
 
 				info "$command - init the mongo database if needed"
-				"$pod_shared_run_file" run mongo_init /bin/bash <<-SHELL
+				"$pod_script_env_file" run mongo_init /bin/bash <<-SHELL
 					set -eou pipefail
 
 					for i in \$(seq 1 30); do
@@ -203,7 +203,7 @@ case "$command" in
 			fi
 		fi
 
-		"$pod_env_run_file" "$command" "$@"
+		"$pod_main_run_file" "$command" "$@"
 		;;
 	"migrate")
 		if [ "${var_custom__use_certbot:-}" = "true" ]; then
@@ -350,7 +350,7 @@ case "$command" in
 		opts+=( "--toolbox_service=toolbox" )
 		opts+=( "--action_dir=/var/main/data/action" )
 
-		"$pod_env_run_file" "action:subtask" "${opts[@]}"
+		"$pod_main_run_file" "action:subtask" "${opts[@]}"
 		;;
 	"service:nginx:"*)
 		"$nginx_run_file" "$command" \
@@ -365,6 +365,6 @@ case "$command" in
 			"${@}"
 		;;
 	*)
-		"$pod_env_run_file" "$command" ${args[@]+"${args[@]}"}
+		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 esac

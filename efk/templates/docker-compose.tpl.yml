@@ -54,7 +54,7 @@ services:
     hostname: "nginx"
     build:
       context: .
-      dockerfile: "main/nginx/Dockerfile"
+      dockerfile: "shared/containers/nginx/Dockerfile"
       args:
         IMAGE: "{{ params.images.nginx_image }}"
         VERSION: "{{ params.images.nginx_version }}"
@@ -119,7 +119,7 @@ services:
     hostname: "kibana"
     build:
       context: .
-      dockerfile: "main/kibana/Dockerfile"
+      dockerfile: "efk/containers/kibana/Dockerfile"
       args:
         IMAGE: "{{ params.images.kibana_image }}"
         VERSION: "{{ params.images.kibana_version }}"
@@ -159,7 +159,7 @@ services:
     hostname: "theia"
     build:
       context: .
-      dockerfile: "main/theia/Dockerfile"
+      dockerfile: "shared/containers/theia/Dockerfile"
       args:
         IMAGE: "{{ params.images.theia_image }}"
         VERSION: "{{ params.images.theia_version }}"
@@ -179,6 +179,7 @@ services:
     - "$DATA_DIR/.git:/home/project/.git:ro"
     - "$DATA_DIR:/home/project/data:ro"
     - "$DATA_DIR/sync:/home/project/sync:cached"
+    - "$DATA_DIR/action:/home/project/action:cached"
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog
 
@@ -197,7 +198,7 @@ services:
     hostname: "minio_gateway"
     build:
       context: .
-      dockerfile: "main/minio-gateway/Dockerfile"
+      dockerfile: "shared/containers/minio-gateway/Dockerfile"
       args:
         IMAGE: "{{ params.images.minio_gateway_image }}"
         VERSION: "{{ params.images.minio_gateway_version }}"
@@ -235,7 +236,7 @@ services:
     hostname: "filestash"
     build:
       context: .
-      dockerfile: "main/filestash/Dockerfile"
+      dockerfile: "shared/containers/filestash/Dockerfile"
       args:
         IMAGE: "{{ params.images.filestash_image }}"
         VERSION: "{{ params.images.filestash_version }}"
@@ -269,7 +270,7 @@ services:
     hostname: "nextcloud"
     build:
       context: .
-      dockerfile: "main/nextcloud/Dockerfile"
+      dockerfile: "shared/containers/nextcloud/Dockerfile"
       args:
         IMAGE: "{{ params.images.nextcloud_image }}"
         VERSION: "{{ params.images.nextcloud_version }}"
@@ -298,6 +299,7 @@ services:
 
     - "$DATA_DIR:/var/main/data:ro"
     - "$DATA_DIR/sync:/var/main/data/sync"
+    - "$DATA_DIR/action:/var/main/data/action"
     - "$DATA_DIR/tmp/nextcloud:/tmp/main/nextcloud"
     logging: *mainlog
 
@@ -318,7 +320,7 @@ services:
     hostname: "elasticsearch"
     build:
       context: .
-      dockerfile: "main/elasticsearch/Dockerfile"
+      dockerfile: "efk/containers/elasticsearch/Dockerfile"
       args:
         IMAGE: "{{ params.images.elasticsearch_image }}"
         VERSION: "{{ params.images.elasticsearch_version }}"
@@ -387,7 +389,7 @@ services:
     hostname: "toolbox"
     build:
       context: .
-      dockerfile: "main/toolbox/Dockerfile"
+      dockerfile: "shared/containers/toolbox/Dockerfile"
       args:
         IMAGE: "{{ params.images.toolbox_image }}"
         VERSION: "{{ params.images.toolbox_version }}"
@@ -422,7 +424,7 @@ services:
     hostname: "fluentd"
     build:
       context: .
-      dockerfile: "main/fluentd/Dockerfile"
+      dockerfile: "shared/containers/fluentd/Dockerfile"
       args:
         IMAGE: "{{ params.images.fluentd_image }}"
         VERSION: "{{ params.images.fluentd_version }}"
