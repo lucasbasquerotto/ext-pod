@@ -52,7 +52,7 @@ services:
     hostname: "nginx"
     build:
       context: .
-      dockerfile: "main/nginx/Dockerfile"
+      dockerfile: "shared/containers/nginx/Dockerfile"
       args:
         IMAGE: "{{ params.images.nginx_image }}"
         VERSION: "{{ params.images.nginx_version }}"
@@ -127,7 +127,7 @@ services:
     hostname: "mediawiki"
     build:
       context: .
-      dockerfile: "main/mediawiki/Dockerfile"
+      dockerfile: "mediawiki/containers/mediawiki/Dockerfile"
       args:
         IMAGE: "{{ params.images.mediawiki_image }}"
         VERSION: "{{ params.images.mediawiki_version }}"
@@ -170,7 +170,7 @@ services:
     hostname: "phpmyadmin"
     build:
       context: .
-      dockerfile: "main/phpmyadmin/Dockerfile"
+      dockerfile: "shared/containers/phpmyadmin/Dockerfile"
       args:
         IMAGE: "{{ params.images.pma_image }}"
         VERSION: "{{ params.images.pma_version }}"
@@ -180,6 +180,8 @@ services:
     environment:
       PMA_HOST: $DB_HOST
       PMA_PORT: $DB_PORT
+      PMA_USER: $PMA_USER
+      PMA_PASSWORD: $PMA_PASSWORD
 
     {% if params.use_fluentd | bool %}
 
@@ -209,7 +211,7 @@ services:
     hostname: "adminer"
     build:
       context: .
-      dockerfile: "main/adminer/Dockerfile"
+      dockerfile: "shared/containers/adminer/Dockerfile"
       args:
         IMAGE: "{{ params.images.adminer_image }}"
         VERSION: "{{ params.images.adminer_version }}"
@@ -250,7 +252,7 @@ services:
     hostname: "theia"
     build:
       context: .
-      dockerfile: "main/theia/Dockerfile"
+      dockerfile: "shared/containers/theia/Dockerfile"
       args:
         IMAGE: "{{ params.images.theia_image }}"
         VERSION: "{{ params.images.theia_version }}"
@@ -289,7 +291,7 @@ services:
     hostname: "minio_gateway"
     build:
       context: .
-      dockerfile: "main/minio-gateway/Dockerfile"
+      dockerfile: "shared/containers/minio-gateway/Dockerfile"
       args:
         IMAGE: "{{ params.images.minio_gateway_image }}"
         VERSION: "{{ params.images.minio_gateway_version }}"
@@ -327,7 +329,7 @@ services:
     hostname: "filestash"
     build:
       context: .
-      dockerfile: "main/filestash/Dockerfile"
+      dockerfile: "shared/containers/filestash/Dockerfile"
       args:
         IMAGE: "{{ params.images.filestash_image }}"
         VERSION: "{{ params.images.filestash_version }}"
@@ -361,7 +363,7 @@ services:
     hostname: "nextcloud"
     build:
       context: .
-      dockerfile: "main/nextcloud/Dockerfile"
+      dockerfile: "shared/containers/nextcloud/Dockerfile"
       args:
         IMAGE: "{{ params.images.nextcloud_image }}"
         VERSION: "{{ params.images.nextcloud_version }}"
@@ -410,7 +412,7 @@ services:
     hostname: "mysql"
     build:
       context: .
-      dockerfile: "main/mysql/Dockerfile"
+      dockerfile: "shared/containers/mysql/Dockerfile"
       args:
         IMAGE: "{{ params.images.mysql_image }}"
         VERSION: "{{ params.images.mysql_version }}"
@@ -457,7 +459,7 @@ services:
     hostname: "toolbox"
     build:
       context: .
-      dockerfile: "main/toolbox/Dockerfile"
+      dockerfile: "shared/containers/toolbox/Dockerfile"
       args:
         IMAGE: "{{ params.images.toolbox_image }}"
         VERSION: "{{ params.images.toolbox_version }}"
@@ -492,7 +494,7 @@ services:
     hostname: "fluentd"
     build:
       context: .
-      dockerfile: "main/fluentd/Dockerfile"
+      dockerfile: "shared/containers/fluentd/Dockerfile"
       args:
         IMAGE: "{{ params.images.fluentd_image }}"
         VERSION: "{{ params.images.fluentd_version }}"

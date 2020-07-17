@@ -52,7 +52,7 @@ services:
     hostname: "nginx"
     build:
       context: .
-      dockerfile: "main/nginx/Dockerfile"
+      dockerfile: "shared/containers/nginx/Dockerfile"
       args:
         IMAGE: "{{ params.images.nginx_image }}"
         VERSION: "{{ params.images.nginx_version }}"
@@ -121,7 +121,7 @@ services:
     hostname: "rocketchat"
     build:
       context: .
-      dockerfile: "main/rocketchat/Dockerfile"
+      dockerfile: "rocketchat/containers/rocketchat/Dockerfile"
       args:
         IMAGE: "{{ params.images.rocketchat_image }}"
         VERSION: "{{ params.images.rocketchat_version }}"
@@ -188,7 +188,7 @@ services:
     hostname: "hubot"
     build:
       context: .
-      dockerfile: "main/hubot/Dockerfile"
+      dockerfile: "rocketchat/containers/hubot/Dockerfile"
       args:
         IMAGE: "{{ params.images.hubot_image }}"
         VERSION: "{{ params.images.hubot_version }}"
@@ -231,7 +231,7 @@ services:
     hostname: "mongo_express"
     build:
       context: .
-      dockerfile: "main/mongo-express/Dockerfile"
+      dockerfile: "shared/containers/mongo-express/Dockerfile"
       args:
         IMAGE: "{{ params.images.mongo_express_image }}"
         VERSION: "{{ params.images.mongo_express_version }}"
@@ -275,7 +275,7 @@ services:
     hostname: "theia"
     build:
       context: .
-      dockerfile: "main/theia/Dockerfile"
+      dockerfile: "shared/containers/theia/Dockerfile"
       args:
         IMAGE: "{{ params.images.theia_image }}"
         VERSION: "{{ params.images.theia_version }}"
@@ -313,7 +313,7 @@ services:
     hostname: "minio_gateway"
     build:
       context: .
-      dockerfile: "main/minio-gateway/Dockerfile"
+      dockerfile: "shared/containers/minio-gateway/Dockerfile"
       args:
         IMAGE: "{{ params.images.minio_gateway_image }}"
         VERSION: "{{ params.images.minio_gateway_version }}"
@@ -351,7 +351,7 @@ services:
     hostname: "filestash"
     build:
       context: .
-      dockerfile: "main/filestash/Dockerfile"
+      dockerfile: "shared/containers/filestash/Dockerfile"
       args:
         IMAGE: "{{ params.images.filestash_image }}"
         VERSION: "{{ params.images.filestash_version }}"
@@ -385,7 +385,7 @@ services:
     hostname: "nextcloud"
     build:
       context: .
-      dockerfile: "main/nextcloud/Dockerfile"
+      dockerfile: "shared/containers/nextcloud/Dockerfile"
       args:
         IMAGE: "{{ params.images.nextcloud_image }}"
         VERSION: "{{ params.images.nextcloud_version }}"
@@ -434,7 +434,7 @@ services:
     hostname: "mongo"
     build:
       context: .
-      dockerfile: "main/mongo/Dockerfile"
+      dockerfile: "shared/containers/mongo/Dockerfile"
       args:
         IMAGE: "{{ params.images.mongo_image }}"
         VERSION: "{{ params.images.mongo_version }}"
@@ -481,7 +481,7 @@ services:
     hostname: "toolbox"
     build:
       context: .
-      dockerfile: "main/toolbox/Dockerfile"
+      dockerfile: "shared/containers/toolbox/Dockerfile"
       args:
         IMAGE: "{{ params.images.toolbox_image }}"
         VERSION: "{{ params.images.toolbox_version }}"
@@ -516,7 +516,7 @@ services:
     hostname: "fluentd"
     build:
       context: .
-      dockerfile: "main/fluentd/Dockerfile"
+      dockerfile: "shared/containers/fluentd/Dockerfile"
       args:
         IMAGE: "{{ params.images.fluentd_image }}"
         VERSION: "{{ params.images.fluentd_version }}"

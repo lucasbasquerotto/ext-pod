@@ -64,6 +64,8 @@ case "$command" in
 			chmod +r "$app_layer_dir/.env"
 			chmod 777 "$app_layer_dir/web/app/uploads/"
 		fi
+
+		"$pod_env_shared_file" "$command" "$@"
 		;;
 	"setup")
 		if [ "${var_custom__use_composer:-}" = "true" ]; then

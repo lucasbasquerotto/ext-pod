@@ -45,12 +45,6 @@ case "$command" in
 
 		"$pod_env_run_file" "$command" "$@"
 		;;
-	"prepare")
-		info "$command - do nothing..."
-		;;
-	"local:prepare")
-		"$arg_ctl_layer_dir/run" dev-cmd bash "/root/w/r/$arg_env_local_repo/run" ${arg_opts[@]+"${arg_opts[@]}"}
-		;;
 	"backup")
 		if [ "${var_custom__use_logrotator:-}" = "true" ]; then
 			"$pod_env_run_file" run logrotator
@@ -58,7 +52,10 @@ case "$command" in
 
 		"$pod_env_run_file" "$command" "$@"
 		;;
-	"setup")
+	"local:prepare")
+		"$arg_ctl_layer_dir/run" dev-cmd bash "/root/w/r/$arg_env_local_repo/run" ${arg_opts[@]+"${arg_opts[@]}"}
+		;;
+	"prepare")
 		data_dir="/var/main/data"
 
 		"$pod_script_env_file" up "toolbox"
@@ -141,7 +138,70 @@ case "$command" in
 					fi
 				fi
 			fi
+
+			if [ "${var_custom__use_mongo:-}" = "true" ]; then
+				if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+					dir="$data_dir/mongo/db"
+
+					if [ ! -d "\$dir" ]; then
+						mkdir -p "\$dir"
+						chmod 755 "\$dir"
+					fi
+
+					dir="$data_dir/mongo/dump"
+
+					if [ ! -d "\$dir" ]; then
+						mkdir -p "\$dir"
+						chmod 755 "\$dir"
+					fi
+				fi
+			fi
 		SHELL
+		;;
+	"setup")
+		if [ "${var_custom__use_mongo:-}" = "true" ]; then
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+				"$pod_shared_run_file" up mongo
+
+				info "$command - init the mongo database if needed"
+				"$pod_shared_run_file" run mongo_init /bin/bash <<-SHELL
+					set -eou pipefail
+
+					for i in \$(seq 1 30); do
+						mongo mongo/"$var_shared__mongo__setup__db_name" \
+							--authenticationDatabase admin \
+							--username "$var_shared__mongo__setup__user_name" \
+							--password "$var_shared__mongo__setup__user_pass" \
+							--eval "
+								rs.initiate({
+									_id: 'rs0',
+									members: [ { _id: 0, host: 'localhost:27017' } ]
+								})
+							" && s=\$? && break || s=\$?;
+						echo "Tried \$i times. Waiting 5 secs...";
+						sleep 5;
+					done;
+
+					if [ "\$s" != "0" ]; then
+						exit "\$s"
+					fi
+
+					for i in \$(seq 1 30); do
+						mongo mongo/admin \
+							--authenticationDatabase admin \
+							--username "$var_shared__mongo__setup__user_name" \
+							--password "$var_shared__mongo__setup__user_pass" \
+							/tmp/main/init.js && s=\$? && break || s=\$?;
+						echo "Tried \$i times. Waiting 5 secs...";
+						sleep 5;
+					done;
+
+					if [ "\$s" != "0" ]; then
+						exit "\$s"
+					fi
+				SHELL
+			fi
+		fi
 
 		"$pod_env_run_file" "$command" "$@"
 		;;

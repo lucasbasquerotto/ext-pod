@@ -37,7 +37,7 @@ pod_env_shared_exec_file="$pod_layer_dir/$var_run__general__script_dir/shared.ex
 pod_shared_run_file="$pod_layer_dir/$var_shared__script_dir/main.sh"
 
 case "$command" in
-	"setup")
+	"prepare")
 		data_dir="/var/main/data"
 
 		"$pod_script_env_file" up toolbox

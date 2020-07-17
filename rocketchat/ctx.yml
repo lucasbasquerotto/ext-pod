@@ -17,9 +17,11 @@
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
 
-{% set var_main_dir = params.main.custom_dir + '/rocketchat' %}
+{% set var_main_base_dir = params.main.custom_dir %}
+{% set var_main_dir = var_main_base_dir + '/rocketchat' %}
+{% set var_shared_dir = var_main_base_dir + '/shared' %}
 
-{% set var_pod_dir_rel = '../..' %}
+{% set var_pod_dir_rel = '..' %}
 {% set var_data_dir = var_local
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
 %}
@@ -64,7 +66,7 @@ env_files:
 {% if var_pod_type in ['app', 'web'] %}
 
 - src: "{{ params.main.auth_file }}"
-  dest: "{{ var_main_dir }}/env/nginx/conf/.htpasswd"
+  dest: "{{ var_main_base_dir }}/env/nginx/conf/.htpasswd"
   root: true
 
 {% endif %}
@@ -80,7 +82,7 @@ templates:
 %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
-  dest: "{{ var_main_dir }}/docker-compose.yml"
+  dest: "{{ var_main_base_dir }}/docker-compose.yml"
   root: true
   params:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -102,7 +104,7 @@ templates:
     {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
-  dest: "{{ var_main_dir }}/docker-compose.run.yml"
+  dest: "{{ var_main_base_dir }}/docker-compose.run.yml"
   root: true
   params:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
@@ -118,7 +120,7 @@ templates:
     {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
-  dest: "{{ var_main_dir }}/.env"
+  dest: "{{ var_main_base_dir }}/.env"
   root: true
   params:
     ctx_full_name: "{{ var_ctx_full_name }}"
@@ -237,7 +239,7 @@ templates:
 {% if not params.main.custom_args.nginx.custom | default(false) | bool %}
 
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
-  dest: "{{ var_main_dir }}/env/nginx/nginx.conf"
+  dest: "{{ var_main_base_dir }}/env/nginx/nginx.conf"
   root: true
   params:
     conf: {{ params.main.custom_args.nginx.conf | default({}) | to_json }}
@@ -302,8 +304,8 @@ templates:
 
 {% if var_pod_type in ['app', 'db'] %}
 
-- src: "{{ var_main_dir }}/templates/mongo/init.js"
-  dest: "{{ var_main_dir }}/env/mongo/init.js"
+- src: "{{ var_shared_dir }}/templates/mongo/init.js"
+  dest: "{{ var_main_base_dir }}/env/mongo/init.js"
   root: true
   params:
     db_name: "{{ params.credentials.rocketchat.db.name }}"
@@ -319,18 +321,23 @@ children:
 - name: "main/scripts/vars.run.yml"
   params:
     env_params: {{ params | to_json }}
-    pod_custom_dir: "{{ var_main_dir }}"
+    pod_custom_dir: "{{ var_main_base_dir }}"
     run: {{ var_run | to_json }}
     run_tasks: {{ var_run_tasks | to_json }}
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
+      var_shared__script_dir: "{{ var_shared_dir }}/scripts"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
+      var_custom__use_main_network: "true"
+      var_custom__use_logrotator: "true"
+      var_custom__use_nginx: "true"
+      var_custom__use_mongo: "true"
       var_custom__use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
-      var_custom__db_name: "{{ params.credentials.rocketchat.db.name }}"
-      var_custom__user_name: "{{ params.credentials.rocketchat.db.root_user }}"
-      var_custom__user_pass: "{{ params.credentials.rocketchat.db.root_password }}"
+      var_shared__mongo__setup__db_name: "{{ params.credentials.rocketchat.db.name }}"
+      var_shared__mongo__setup__user_name: "{{ params.credentials.rocketchat.db.root_user }}"
+      var_shared__mongo__setup__user_pass: "{{ params.credentials.rocketchat.db.root_password }}"
 
       {% if var_pod_type in ['app', 'web'] %}
 
@@ -348,30 +355,32 @@ children:
         params.main.custom_domain.nextcloud_domain + var_nextcloud_port_suffix
       %}
 
-      var_custom__nextcloud_url: "{{ var_nextcloud_url }}"
-      var_custom__nextcloud_domain: "{{ params.main.custom_domain.nextcloud_domain }}"
-      var_custom__nextcloud_host: "{{ params.main.custom_domain.nextcloud_domain }}{{ var_nextcloud_port_suffix }}"
-      var_custom__nextcloud_protocol: "{{ var_nextcloud_protocol }}"
-      var_custom__nextcloud_admin_user: "{{ params.credentials.nextcloud.admin_user }}"
-      var_custom__nextcloud_admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
-      var_custom__s3_backup_access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
-      var_custom__s3_backup_secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
-      var_custom__s3_backup_bucket: "{{ params.main.backup_bucket_name }}"
-      var_custom__s3_backup_hostname: "{{ params.credentials.wp_backup_bucket.host | default('') }}"
-      var_custom__s3_backup_port: "{{ params.credentials.wp_backup_bucket.port | default('') }}"
-      var_custom__s3_backup_region: "{{ params.credentials.wp_backup_bucket.region | default('') }}"
-      var_custom__s3_backup_use_ssl: "{{ params.credentials.wp_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
-      var_custom__s3_backup_use_path_style: "{{ params.credentials.wp_backup_bucket.path_style | default('') }}"
-      var_custom__s3_backup_legacy_auth: "{{ params.credentials.wp_backup_bucket.legacy_auth | default('') }}"
-      var_custom__s3_uploads_access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
-      var_custom__s3_uploads_secret_key: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
-      var_custom__s3_uploads_bucket: "{{ params.main.uploads_bucket_name }}"
-      var_custom__s3_uploads_hostname: "{{ params.credentials.wp_uploads_bucket.host | default('') }}"
-      var_custom__s3_uploads_port: "{{ params.credentials.wp_uploads_bucket.port | default('') }}"
-      var_custom__s3_uploads_region: "{{ params.credentials.wp_uploads_bucket.region | default('') }}"
-      var_custom__s3_uploads_use_ssl: "{{ params.credentials.wp_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
-      var_custom__s3_uploads_use_path_style: "{{ params.credentials.wp_uploads_bucket.path_style | default('') }}"
-      var_custom__s3_uploads_legacy_auth: "{{ params.credentials.wp_uploads_bucket.legacy_auth | default('') }}"
+      var_shared__nextcloud__setup__url: "{{ var_nextcloud_url }}"
+      var_shared__nextcloud__setup__domain: "{{ params.main.custom_domain.nextcloud_domain }}"
+      var_shared__nextcloud__setup__host: "{{ params.main.custom_domain.nextcloud_domain }}{{ var_nextcloud_port_suffix }}"
+      var_shared__nextcloud__setup__protocol: "{{ var_nextcloud_protocol }}"
+      var_shared__nextcloud__setup__admin_user: "{{ params.credentials.nextcloud.admin_user }}"
+      var_shared__nextcloud__setup__admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
+      var_shared__nextcloud__s3_backup__enable: "{{ params.credentials.wp_backup_bucket.access_key }}"
+      var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
+      var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
+      var_shared__nextcloud__s3_backup__bucket: "{{ params.main.backup_bucket_name }}"
+      var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.wp_backup_bucket.host | default('') }}"
+      var_shared__nextcloud__s3_backup__port: "{{ params.credentials.wp_backup_bucket.port | default('') }}"
+      var_shared__nextcloud__s3_backup__region: "{{ params.credentials.wp_backup_bucket.region | default('') }}"
+      var_shared__nextcloud__s3_backup__use_ssl: "{{ params.credentials.wp_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.wp_backup_bucket.path_style | default('') }}"
+      var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.wp_backup_bucket.legacy_auth | default('') }}"
+      var_shared__nextcloud__s3_uploads__enable: "{{ params.credentials.wp_uploads_bucket.access_key }}"
+      var_shared__nextcloud__s3_uploads__access_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
+      var_shared__nextcloud__s3_uploads__secret_key: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
+      var_shared__nextcloud__s3_uploads__bucket: "{{ params.main.uploads_bucket_name }}"
+      var_shared__nextcloud__s3_uploads__hostname: "{{ params.credentials.wp_uploads_bucket.host | default('') }}"
+      var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.wp_uploads_bucket.port | default('') }}"
+      var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.wp_uploads_bucket.region | default('') }}"
+      var_shared__nextcloud__s3_uploads__use_ssl: "{{ params.credentials.wp_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.wp_uploads_bucket.path_style | default('') }}"
+      var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.wp_uploads_bucket.legacy_auth | default('') }}"
 
       {% endif %}
 
@@ -379,9 +388,9 @@ children:
 
       {% if params.main.block_ips | bool %}
 
-      var_task__block_ips__action_exec__max_ips: "{{ params.main.block_ips.max_ips | default('10000') }}"
-      var_task__block_ips__action_exec__amount_day: "{{ params.main.block_ips.amount_day | default('20000') }}"
-      var_task__block_ips__action_exec__amount_hour: "{{ params.main.block_ips.amount_hour | default('3600') }}"
+      var_shared__block_ips__action_exec__max_ips: "{{ params.main.block_ips.max_ips | default('10000') }}"
+      var_shared__block_ips__action_exec__amount_day: "{{ params.main.block_ips.amount_day | default('20000') }}"
+      var_shared__block_ips__action_exec__amount_hour: "{{ params.main.block_ips.amount_hour | default('3600') }}"
 
       {% endif %}
 
