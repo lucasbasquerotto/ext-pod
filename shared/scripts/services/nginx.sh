@@ -297,7 +297,6 @@ case "$command" in
 				echo -e "\$users_most_request_duration"
 			fi
 
-
 			if [ -n "${arg_log_idx_status:-}" ]; then
 				echo -e "======================================================="
 				echo -e "Status with Most Requests"
@@ -308,26 +307,41 @@ case "$command" in
 					| sort | uniq -c | sort -nr ||:; } | head -n "$arg_max_amount")"
 				echo -e "\$status_most_requests"
 			fi
+
+			if [ -n "${arg_log_idx_status:-}" ]; then
+				echo -e "======================================================="
+				echo -e "Requests with Longest Duration (s)"
+				echo -e "-------------------------------------------------------"
+
+				grep_args=()
+
+				if [ -n "${arg_file_exclude_paths:-}" ]; then
+					grep_args="\$(awk '\$0="-e "\$0' "${arg_file_exclude_paths:-}" | tr '\n' ' ')"
+
+					if [ -n "\$grep_args" ]; then
+						grep_args="-v \$grep_args"
+					fi
+				fi
+
+				longest_request_durations="\$( \
+					grep \${grep_args[@]+"\${grep_args[@]}"} "$arg_log_file" \
+					| { awk \
+						-v idx_ip="${arg_log_idx_ip:-}" \
+						-v idx_user="${arg_log_idx_user:-}" \
+						-v idx_duration="${arg_log_idx_duration:-}" \
+						-v idx_time="${arg_log_idx_time:-}" \
+						-v idx_status="${arg_log_idx_status:-}" \
+						'{ printf "%10.1f %s %s %s %s\n", \
+							\$idx_duration, \
+							substr(\$idx_time, index(\$idx_time, ":") + 1), \
+							\$idx_status, \
+							\$idx_user, \
+							\$idx_ip }' \
+						| sort -nr ||:; } \
+					| head -n "$arg_max_amount")"
+				echo -e "\$longest_request_durations"
+			fi
 		SHELL
-
-
-			# echo -e "======================================================="
-			# echo -e "Requests with Longest Duration (s)"
-			# echo -e "-------------------------------------------------------"
-
-			# longest_request_durations=$( \
-			# 	cat "$NGINX_FILE_PATH" \
-			# 	| grep -v \
-			# 		-e "/services/user/alterarImagem" \
-			# 		-e "/services/user/messageFileUpload" \
-			# 		-e "/services/project/fileUpload" \
-			# 		-e "/services/user/jobImageUpload" \
-			# 		-e "/services/admin/intermediationFileUpload" \
-			# 		-e "/services/api/logged/user/profile/picture/upload" \
-			# 		-e "/services/api/logged/file/upload/" \
-			# 	| { awk '{ printf "%10.1f %s %s %s %s\n", $3, substr($6, index($6, ":") + 1), $4, $2, $1 }' | sort -nr ||:; } \
-			# 	| head -n "$AMOUNT")
-			# echo -e "$longest_request_durations"
 		;;
 	*)
 		error "$command: invalid command"
