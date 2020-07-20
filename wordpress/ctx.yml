@@ -436,7 +436,7 @@ children:
 
       {% if params.main.block_ips | bool %}
 
-      var_shared__block_ips__action_exec__max_ips: "{{ params.main.block_ips.max_ips | default('10000') }}"
+      var_shared__block_ips__action_exec__max_amount: "{{ params.main.block_ips.max_amount | default('10000') }}"
       var_shared__block_ips__action_exec__amount_day: "{{ params.main.block_ips.amount_day | default('20000') }}"
       var_shared__block_ips__action_exec__amount_hour: "{{ params.main.block_ips.amount_hour | default('3600') }}"
 

@@ -33,6 +33,22 @@ shift;
 
 args=("$@")
 
+while getopts ':-:' OPT; do
+	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+		OPT="${OPTARG%%=*}"       # extract long option name
+		OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+	fi
+	case "$OPT" in
+		days_ago ) arg_days_ago="${OPTARG:-}";;
+		force ) arg_force="${OPTARG:-}";;
+		max_amount ) arg_max_amount="${OPTARG:-}";;
+		??* ) ;; ## ignore
+		\? )  ;; ## ignore
+	esac
+done
+shift $((OPTIND-1))
+
 pod_main_run_file="$pod_layer_dir/main/scripts/main.sh"
 nginx_run_file="$pod_layer_dir/$var_shared__script_dir/services/nginx.sh"
 nextcloud_run_file="$pod_layer_dir/$var_shared__script_dir/services/nextcloud.sh"
@@ -43,14 +59,14 @@ case "$command" in
 			"$pod_main_run_file" "setup:main:network"
 		fi
 
-		"$pod_main_run_file" "$command" "$@"
+		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"backup")
 		if [ "${var_custom__use_logrotator:-}" = "true" ]; then
 			"$pod_main_run_file" run logrotator
 		fi
 
-		"$pod_main_run_file" "$command" "$@"
+		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"local:prepare")
 		"$arg_ctl_layer_dir/run" dev-cmd bash "/root/w/r/$arg_env_local_repo/run" ${arg_opts[@]+"${arg_opts[@]}"}
@@ -203,7 +219,7 @@ case "$command" in
 			fi
 		fi
 
-		"$pod_main_run_file" "$command" "$@"
+		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"migrate")
 		if [ "${var_custom__use_certbot:-}" = "true" ]; then
@@ -278,6 +294,95 @@ case "$command" in
 		fi
 		;;
 	"action:exec:block_ips")
+		"$pod_script_env_file" "shared:nginx:log:verify"
+
+		dest_last_day_file="$("$pod_script_env_file" "shared:log:nginx:day" \
+			--force="${arg_force:-}" \
+			--days_ago="1")"
+
+		dest_day_file=""
+
+		if [ "${var_shared__block_ips__action_exec__current_day:-}" = "true" ]; then
+			dest_day_file="$("$pod_script_env_file" "shared:log:nginx:day" --force="${arg_force:-}")"
+		fi
+
+		nginx_sync_base_dir="/var/main/data/sync/nginx"
+		log_hour_path_prefix="$("$pod_script_env_file" "shared:log:nginx:hour_path_prefix")"
+
+		"$pod_script_env_file" "service:nginx:block_ips" \
+			--task_name="block_ips" \
+			--subtask_cmd="$command" \
+			--max_amount="${var_shared__block_ips__action_exec__max_amount:-$arg_max_amount}" \
+			--output_file="$nginx_sync_base_dir/auto/ips-blacklist-auto.conf" \
+			--manual_file="$nginx_sync_base_dir/manual/ips-blacklist.conf" \
+			--allowed_hosts_file="$nginx_sync_base_dir/manual/allowed-hosts.conf" \
+			--log_file_last_day="$dest_last_day_file" \
+			--log_file_day="$dest_day_file" \
+			--amount_day="$var_shared__block_ips__action_exec__amount_day" \
+			--log_file_hour="$log_hour_path_prefix.$(date -u '+%Y-%m-%d.%H').log" \
+			--log_file_last_hour="$log_hour_path_prefix.$(date -u -d '1 hour ago' '+%Y-%m-%d.%H').log" \
+			--amount_hour="$var_shared__block_ips__action_exec__amount_hour"
+		;;
+	"shared:log:nginx:summary")
+		"$pod_script_env_file" "shared:nginx:log:verify"
+
+		dest_day_file="$("$pod_script_env_file" "shared:log:nginx:day" \
+			--force="${arg_force:-}" \
+			--days_ago="${arg_days_ago:-}")"
+
+		"$pod_script_env_file" "service:nginx:log:summary:total" \
+			--task_name="nginx_log" \
+			--subtask_cmd="$command" \
+			--log_file="$dest_day_file" \
+			--log_idx_ip="1" \
+			--log_idx_user="2" \
+			--log_idx_duration="3" \
+			--log_idx_status="4" \
+			--log_idx_http_user="5" \
+			--log_idx_time="6" \
+			--max_amount="${var_shared__block_ips__action_exec__max_amount:-$arg_max_amount}" \
+		;;
+	"shared:log:nginx:day")
+		"$pod_script_env_file" "shared:nginx:log:verify"
+
+		log_hour_path_prefix="$("$pod_script_env_file" "shared:log:nginx:hour_path_prefix")"
+		dest_base_path="/var/log/main/nginx"
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+			set -eou pipefail
+
+			[ -n "${arg_days_ago:-}" ] && date_arg="${arg_days_ago:-} day ago" || date_arg="today"
+			date="\$(date -u -d "\$date_arg" '+%Y-%m-%d')"
+			log_day_src_path_prefix="$log_hour_path_prefix.\$date"
+			dest_day_file="${dest_base_path}/nginx.\$date.log"
+
+			>&2 mkdir -p "$dest_base_path"
+
+			if [ -f "\$dest_day_file" ]; then
+				if [ ! "${arg_force:-}" = "true" ]; then
+					echo "\$dest_day_file"
+					exit 0
+				fi
+
+				>&2 rm -f "\$dest_day_file"
+			fi
+
+			for i in \$(seq -f "%02g" 1 24); do
+				log_day_src_path_aux="\$log_day_src_path_prefix.\$i.log"
+
+				if [ -f "\$log_day_src_path_aux" ]; then
+					cat "\$log_day_src_path_aux" >> "\$dest_day_file"
+				fi
+			done
+
+			if [ ! -f "\$dest_day_file" ]; then
+				>&2 touch "\$dest_day_file"
+			fi
+
+			echo "\$dest_day_file"
+		SHELL
+		;;
+	"shared:nginx:log:verify")
 		case "$var_custom__pod_type" in
 			"app"|"web")
 				;;
@@ -289,55 +394,13 @@ case "$command" in
 		if [ "${var_custom__use_fluentd:-}" != "true" ]; then
 				error "$command: fluentd must be used"
 		fi
-
+		;;
+	"shared:log:nginx:hour_path_prefix")
 		log_hour_path_prefix="/var/log/main/fluentd/main/docker.nginx/docker.nginx.stdout"
-		tmp_base_path="/tmp/main/run/block_ips"
-		tmp_last_day_file="${tmp_base_path}/last_day.log"
-		tmp_day_file="${tmp_base_path}/day.log"
-
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
-			set -eou pipefail
-
-			log_last_day_src_path_prefix="$log_hour_path_prefix.$(date -u -d '1 day ago' '+%Y-%m-%d')"
-			log_day_src_path_prefix="$log_hour_path_prefix.$(date -u '+%Y-%m-%d')"
-
-			mkdir -p "$tmp_base_path"
-
-			echo "" > "$tmp_last_day_file"
-			echo "" > "$tmp_day_file"
-
-			for i in \$(seq -f "%02g" 1 24); do
-				log_last_day_src_path_aux="\$log_last_day_src_path_prefix.\$i.log"
-				log_day_src_path_aux="\$log_day_src_path_prefix.\$i.log"
-
-				if [ -f "\$log_last_day_src_path_aux" ]; then
-					cat "\$log_last_day_src_path_aux" >> "$tmp_last_day_file"
-				fi
-
-				if [ -f "\$log_day_src_path_aux" ]; then
-					cat "\$log_day_src_path_aux" >> "$tmp_day_file"
-				fi
-			done
-		SHELL
-
-		nginx_sync_base_dir="/var/main/data/sync/nginx"
-
-		"$pod_script_env_file" "service:nginx:block_ips" \
-			--task_name="block_ips" \
-			--subtask_cmd="$command" \
-			--max_ips="$var_shared__block_ips__action_exec__max_ips" \
-			--output_file="$nginx_sync_base_dir/auto/ips-blacklist-auto.conf" \
-			--manual_file="$nginx_sync_base_dir/manual/ips-blacklist.conf" \
-			--allowed_hosts_file="$nginx_sync_base_dir/manual/allowed-hosts.conf" \
-			--log_file_last_day="$tmp_last_day_file" \
-			--log_file_day="$tmp_day_file" \
-			--amount_day="$var_shared__block_ips__action_exec__amount_day" \
-			--log_file_hour="$log_hour_path_prefix.$(date -u '+%Y-%m-%d.%H').log" \
-			--log_file_last_hour="$log_hour_path_prefix.$(date -u -d '1 hour ago' '+%Y-%m-%d.%H').log" \
-			--amount_hour="$var_shared__block_ips__action_exec__amount_hour"
+		echo "$log_hour_path_prefix"
 		;;
 	"action:exec:nginx_reload")
-		"$pod_script_env_file" "service:nginx:reload" "${@}"
+		"$pod_script_env_file" "service:nginx:reload" ${args[@]+"${args[@]}"}
 		;;
 	"action:subtask:"*)
 		task_name="${command#action:subtask:}"
@@ -356,13 +419,13 @@ case "$command" in
 		"$nginx_run_file" "$command" \
 			--toolbox_service="toolbox" \
 			--nginx_service="nginx" \
-			"${@}"
+			${args[@]+"${args[@]}"}
 		;;
 	"service:nextcloud:"*)
 		"$nextcloud_run_file" "$command" \
 			--toolbox_service="toolbox" \
 			--nextcloud_service="nextcloud" \
-			"${@}"
+			${args[@]+"${args[@]}"}
 		;;
 	*)
 		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
