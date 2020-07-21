@@ -129,7 +129,7 @@ case "$command" in
 					fi
 
 					dir="\${dir_nginx}/manual"
-					file="\${dir}/log_exclude_paths.conf"
+					file="\${dir}/log-exclude-paths.conf"
 
 					if [ ! -f "\$file" ]; then
 						mkdir -p "\$dir"
@@ -140,7 +140,7 @@ case "$command" in
 					fi
 
 					dir="\${dir_nginx}/manual"
-					file="\${dir}/log_exclude_paths_full.conf"
+					file="\${dir}/log-exclude-paths-full.conf"
 
 					if [ ! -f "\$file" ]; then
 						mkdir -p "\$dir"

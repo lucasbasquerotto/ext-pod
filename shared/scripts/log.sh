@@ -57,12 +57,13 @@ case "$command" in
 		nginx_sync_base_dir="/var/main/data/sync/nginx"
         max_amount="${var_shared__log__nginx_summary__max_amount:-}"
         max_amount="${arg_max_amount:-$max_amount}"
+        max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "service:nginx:log:summary:total" \
 			--task_name="nginx_log" \
 			--subtask_cmd="$command" \
 			--log_file="$dest_day_file" \
-            --file_exclude_paths="$nginx_sync_base_dir/manual/log_exclude_paths.conf" \
+            --file_exclude_paths="$nginx_sync_base_dir/manual/log-exclude-paths.conf" \
 			--log_idx_ip="1" \
 			--log_idx_user="2" \
 			--log_idx_duration="3" \
@@ -138,12 +139,13 @@ case "$command" in
 		nginx_sync_base_dir="/var/main/data/sync/nginx"
         max_amount="${var_shared__log__nginx_duration__max_amount:-}"
         max_amount="${arg_max_amount:-$max_amount}"
+        max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "service:nginx:log:duration" \
 			--task_name="nginx_duration" \
 			--subtask_cmd="$command" \
 			--log_file="$dest_day_file" \
-            --file_exclude_paths="$nginx_sync_base_dir/manual/log_exclude_paths_full.conf" \
+            --file_exclude_paths="$nginx_sync_base_dir/manual/log-exclude-paths-full.conf" \
 			--log_idx_duration="3" \
 			--max_amount="$max_amount"
         ;;

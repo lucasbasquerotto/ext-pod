@@ -360,10 +360,6 @@ case "$command" in
 			set -eou pipefail
 
 			if [ -n "${arg_log_idx_duration:-}" ]; then
-				echo -e "======================================================="
-				echo -e "Requests with Longest Duration (s) - Full"
-				echo -e "-------------------------------------------------------"
-
 				grep_args=()
 
 				if [ -n "${arg_file_exclude_paths:-}" ] && [ -f "${arg_file_exclude_paths:-}" ]; then
