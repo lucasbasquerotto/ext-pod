@@ -44,6 +44,7 @@ while getopts ':-:' OPT; do
 		output_file ) arg_output_file="${OPTARG:-}";;
 		manual_file ) arg_manual_file="${OPTARG:-}";;
 		allowed_hosts_file ) arg_allowed_hosts_file="${OPTARG:-}";;
+		file_exclude_paths ) arg_file_exclude_paths="${OPTARG:-}";;
 		log_file_day ) arg_log_file_day="${OPTARG:-}";;
 		log_file_last_day ) arg_log_file_last_day="${OPTARG:-}";;
 		amount_day ) arg_amount_day="${OPTARG:-}";;
@@ -308,19 +309,30 @@ case "$command" in
 				echo -e "\$status_most_requests"
 			fi
 
-			if [ -n "${arg_log_idx_status:-}" ]; then
+			if [ -n "${arg_log_idx_duration:-}" ]; then
 				echo -e "======================================================="
 				echo -e "Requests with Longest Duration (s)"
 				echo -e "-------------------------------------------------------"
 
 				grep_args=()
 
-				if [ -n "${arg_file_exclude_paths:-}" ]; then
-					grep_args="\$(awk '\$0="-e "\$0' "${arg_file_exclude_paths:-}" | tr '\n' ' ')"
+				if [ -n "${arg_file_exclude_paths:-}" ] && [ -f "${arg_file_exclude_paths:-}" ]; then
+					regex="^[ ]*[^#^ ].*$"
+					grep_lines="\$(grep -E "\$regex" "${arg_file_exclude_paths:-}" ||:)"
 
-					if [ -n "\$grep_args" ]; then
-						grep_args="-v \$grep_args"
+					if [ -n "\$grep_lines" ]; then
+						while read -r grep_line; do
+							if [ "\${#grep_args[@]}" -eq 0 ]; then
+								grep_args=( "-v" )
+							fi
+
+							grep_args+=( "-e" "\$grep_line" )
+						done <<< "\$(echo -e "\$grep_lines")"
 					fi
+				fi
+
+				if [ "\${#grep_args[@]}" -eq 0 ]; then
+					grep_args=( "." )
 				fi
 
 				longest_request_durations="\$( \
@@ -337,6 +349,47 @@ case "$command" in
 							\$idx_status, \
 							\$idx_user, \
 							\$idx_ip }' \
+						| sort -nr ||:; } \
+					| head -n "$arg_max_amount")"
+				echo -e "\$longest_request_durations"
+			fi
+		SHELL
+		;;
+	"service:nginx:log:duration")
+		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+			set -eou pipefail
+
+			if [ -n "${arg_log_idx_duration:-}" ]; then
+				echo -e "======================================================="
+				echo -e "Requests with Longest Duration (s) - Full"
+				echo -e "-------------------------------------------------------"
+
+				grep_args=()
+
+				if [ -n "${arg_file_exclude_paths:-}" ] && [ -f "${arg_file_exclude_paths:-}" ]; then
+					regex="^[ ]*[^#^ ].*$"
+					grep_lines="\$(grep -E "\$regex" "${arg_file_exclude_paths:-}" ||:)"
+
+					if [ -n "\$grep_lines" ]; then
+						while read -r grep_line; do
+							if [ "\${#grep_args[@]}" -eq 0 ]; then
+								grep_args=( "-v" )
+							fi
+
+							grep_args+=( "-e" "\$grep_line" )
+						done <<< "\$(echo -e "\$grep_lines")"
+					fi
+				fi
+
+				if [ "\${#grep_args[@]}" -eq 0 ]; then
+					grep_args=( "." )
+				fi
+
+				longest_request_durations="\$( \
+					grep \${grep_args[@]+"\${grep_args[@]}"} "$arg_log_file" \
+					| { awk \
+						-v idx_duration="${arg_log_idx_duration:-}" \
+						'{ printf "%10.1f %s\n", \$idx_duration, \$0 }' \
 						| sort -nr ||:; } \
 					| head -n "$arg_max_amount")"
 				echo -e "\$longest_request_durations"
