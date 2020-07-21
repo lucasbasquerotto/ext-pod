@@ -150,7 +150,7 @@ case "$command" in
 			--max_amount="$max_amount"
         ;;
 	"shared:log:nginx:basic_status")
-		"$pod_script_env_file" exec-nontty toolbox curl -sL "http://nginx:9080/nginx/basic_status"
+		"$pod_script_env_file" exec-nontty toolbox curl -sL "http://nginx:9081/nginx/basic_status"
 		;;
 	*)
 		error "$command: invalid command"
