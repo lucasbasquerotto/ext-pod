@@ -376,6 +376,10 @@ case "$command" in
 			--nextcloud_service="nextcloud" \
 			${args[@]+"${args[@]}"}
 		;;
+	"action:exec:log_register."*)
+		task_name="${command#action:exec:log_register.}"
+		"$pod_script_env_file" "shared:log:register:$task_name" ${args[@]+"${args[@]}"}
+		;;
 	"shared:log:"*)
 		"$log_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;

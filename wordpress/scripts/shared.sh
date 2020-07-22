@@ -97,8 +97,11 @@ case "$command" in
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;
 	"actions")
-		"$pod_script_env_file" "action:subtask:block_ips"
-		"$pod_script_env_file" "action:subtask:nginx_reload"
+		"$pod_script_env_file" "action:subtask:log_register.memory_overview" > /dev/null 2>&1
+		"$pod_script_env_file" "action:subtask:log_register.memory_details" > /dev/null 2>&1
+		"$pod_script_env_file" "action:subtask:log_register.nginx_basic_status" > /dev/null 2>&1
+		"$pod_script_env_file" "action:subtask:block_ips" > /dev/null 2>&1
+		"$pod_script_env_file" "action:subtask:nginx_reload" > /dev/null 2>&1
 		;;
 	*)
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}

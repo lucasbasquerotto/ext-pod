@@ -3,6 +3,7 @@
 set -eou pipefail
 
 pod_vars_dir="$POD_VARS_DIR"
+pod_layer_dir="$POD_LAYER_DIR"
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 . "${pod_vars_dir}/vars.sh"
@@ -30,6 +31,8 @@ fi
 
 shift;
 
+lib_dir="$pod_layer_dir/$var_shared__script_dir/lib"
+
 while getopts ':-:' OPT; do
 	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
@@ -40,6 +43,9 @@ while getopts ':-:' OPT; do
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		force ) arg_force="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
+		cmd ) arg_cmd="${OPTARG:-}";;
+		log_dir ) arg_log_dir="${OPTARG:-}";;
+		filename_prefix ) arg_filename_prefix="${OPTARG:-}";;
 		??* ) ;; ## ignore
 		\? )  ;; ## ignore
 	esac
@@ -76,7 +82,7 @@ case "$command" in
 		"$pod_script_env_file" "shared:log:nginx:verify"
 
 		log_hour_path_prefix="$("$pod_script_env_file" "shared:log:nginx:hour_path_prefix")"
-		dest_base_path="/var/log/main/nginx"
+		dest_base_path="/var/log/main/nginx/main"
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
 			set -eou pipefail
@@ -149,8 +155,41 @@ case "$command" in
 			--log_idx_duration="3" \
 			--max_amount="$max_amount"
         ;;
-	"shared:log:nginx:basic_status")
+	"shared:log:register:"*)
+		task_name="${command#shared:log:register:}"
+		"$pod_script_env_file" "shared:log:register" \
+			--cmd="shared:log:main:$task_name" \
+			--log_dir="/var/log/main/register/$task_name" \
+			--filename_prefix="$task_name"
+		;;
+	"shared:log:register")
+		log="$("$pod_script_env_file" "$arg_cmd")" || error "$command: $arg_cmd"
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+			set -eou pipefail
+			log_file_prefix="$arg_log_dir/$arg_filename_prefix.\$(date '+%Y-%m-%d')"
+			log_out_file="\${log_file_prefix}.out.log"
+			log_err_file="\${log_file_prefix}.err.log"
+			mkdir -p "$arg_log_dir"
+			echo -e "Time: \$(date '+%Y-%m-%d %T')\n$log\n" \
+				> >(tee --append "\$log_out_file") \
+				2> >(tee --append "\$log_err_file" >&2)
+			find "$arg_log_dir" -empty -type f -delete
+		SHELL
+		;;
+	"shared:log:main:nginx_basic_status")
 		"$pod_script_env_file" exec-nontty toolbox curl -sL "http://nginx:9081/nginx/basic_status"
+		;;
+	"shared:log:main:memory_overview")
+		free -m
+		;;
+	"shared:log:main:memory_details")
+		if result="$(python3 "$lib_dir/ps_mem.py" 2>&1 ||:)"; then
+			echo "$result"
+		else
+			echo "$result" >&2
+			exit 1
+		fi
 		;;
 	*)
 		error "$command: invalid command"
