@@ -33,6 +33,21 @@ shift;
 
 args=("$@")
 
+while getopts ':-:' OPT; do
+	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+		OPT="${OPTARG%%=*}"       # extract long option name
+		OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+	fi
+	case "$OPT" in
+		days_ago ) arg_days_ago="${OPTARG:-}";;
+		max_amount ) arg_max_amount="${OPTARG:-}";;
+		??* ) ;; ## ignore
+		\? )  ;; ## ignore
+	esac
+done
+shift $((OPTIND-1))
+
 pod_env_shared_exec_file="$pod_layer_dir/$var_run__general__script_dir/shared.exec.sh"
 pod_shared_run_file="$pod_layer_dir/$var_shared__script_dir/main.sh"
 
@@ -55,7 +70,7 @@ case "$command" in
 			fi
 		SHELL
 
-		"$pod_shared_run_file" "$command" "$@"
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"migrate")
 		opts=()
@@ -65,7 +80,7 @@ case "$command" in
 
 		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
 
-		"$pod_shared_run_file" "$command" "$@"
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"migrate:"*)
 		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
@@ -99,9 +114,29 @@ case "$command" in
 	"actions")
 		"$pod_script_env_file" "action:subtask:log_register.memory_overview" > /dev/null 2>&1
 		"$pod_script_env_file" "action:subtask:log_register.memory_details" > /dev/null 2>&1
-		"$pod_script_env_file" "action:subtask:log_register.nginx_basic_status" > /dev/null 2>&1
-		"$pod_script_env_file" "action:subtask:block_ips" > /dev/null 2>&1
-		"$pod_script_env_file" "action:subtask:nginx_reload" > /dev/null 2>&1
+
+		if [ "${var_custom__use_nginx:-}" = "true" ]; then
+			"$pod_script_env_file" "action:subtask:log_register.nginx_basic_status" > /dev/null 2>&1
+			"$pod_script_env_file" "action:subtask:nginx_reload" > /dev/null 2>&1
+			"$pod_script_env_file" "action:subtask:block_ips" > /dev/null 2>&1
+		fi
+
+		"$pod_script_env_file" "action:subtask:log_summary" > /dev/null 2>&1
+		;;
+	"action:exec:log_summary")
+        days_ago="${var_custom__log_summary__days_ago:-}"
+        days_ago="${arg_days_ago:-$days_ago}"
+
+        max_amount="${var_custom__log_summary__max_amount:-}"
+        max_amount="${arg_max_amount:-$max_amount}"
+        max_amount="${max_amount:-100}"
+
+		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+
+		if [ "${var_custom__use_nginx:-}" = "true" ]; then
+			"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+			"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
+		fi
 		;;
 	*)
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}

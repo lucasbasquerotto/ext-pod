@@ -40,11 +40,14 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		subtask_cmd ) arg_subtask_cmd="${OPTARG:-}";;
+		summary_name ) arg_summary_name="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
-		force ) arg_force="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
+		force ) arg_force="${OPTARG:-}";;
 		cmd ) arg_cmd="${OPTARG:-}";;
 		log_dir ) arg_log_dir="${OPTARG:-}";;
+		log_file ) arg_log_file="${OPTARG:-}";;
 		filename_prefix ) arg_filename_prefix="${OPTARG:-}";;
 		??* ) ;; ## ignore
 		\? )  ;; ## ignore
@@ -53,6 +56,56 @@ done
 shift $((OPTIND-1))
 
 case "$command" in
+	"shared:log:memory_overview:summary")
+		"$pod_script_env_file" "shared:log:summary" \
+			--summary_name="memory_overview" \
+			--cmd="shared:log:memory_overview:summary:log" \
+			--subtask_cmd="$command" \
+			--days_ago="${arg_days_ago:-}" \
+			--max_amount="${arg_max_amount:-}"
+        ;;
+	"shared:log:summary")
+		max_amount_var_name="var_shared__log__${arg_summary_name}__max_amount"
+        max_amount="${!max_amount_var_name:-}"
+        max_amount="${arg_max_amount:-$max_amount}"
+        max_amount="${max_amount:-100}"
+
+		path_prefix="/var/log/main/register/$arg_summary_name/$arg_summary_name"
+		[ -n "${arg_days_ago:-}" ] && date_arg="${arg_days_ago:-} day ago" || date_arg="today"
+		date="$(date -u -d "$date_arg" '+%Y-%m-%d')"
+		log_file="$path_prefix.$date.out.log"
+
+		"$pod_script_env_file" "$arg_cmd" \
+			--task_name="summary_$arg_summary_name" \
+			--subtask_cmd="$arg_subtask_cmd" \
+			--log_file="$log_file" \
+			--max_amount="$max_amount"
+        ;;
+	"shared:log:memory_overview:summary:log")
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+			set -eou pipefail
+
+			echo -e "##############################################################################################################"
+			echo -e "##############################################################################################################"
+			echo -e "Memory Overview Logs"
+			echo -e "--------------------------------------------------------------------------------------------------------------"
+			echo -e "Path: $arg_log_file"
+			echo -e "Limit: $arg_max_amount"
+
+			if [ -f "$arg_log_file" ]; then
+				echo -e "--------------------------------------------------------------------------------------------------------------"
+
+				memory_max_logs="\$( \
+					{ grep -E '^(Time: |Mem: )' "$arg_log_file" \
+					| awk '{
+						if(\$1 == "Time:") {time = \$2 " " \$3 " " \$4;}
+						else if(\$1 == "Mem:" && NF == 7) { printf "%10d %s\n", \$3, time }
+						}' \
+					| sort -nr ||:; } | head -n "$arg_max_amount")"
+				echo -e "\$memory_max_logs"
+			fi
+		SHELL
+		;;
 	"shared:log:nginx:summary")
 		"$pod_script_env_file" "shared:log:nginx:verify"
 
@@ -154,6 +207,16 @@ case "$command" in
             --file_exclude_paths="$nginx_sync_base_dir/manual/log-exclude-paths-full.conf" \
 			--log_idx_duration="3" \
 			--max_amount="$max_amount"
+        ;;
+	"shared:log:nginx:summary:connections")
+		"$pod_script_env_file" "shared:log:nginx:verify"
+
+		"$pod_script_env_file" "shared:log:summary" \
+			--summary_name="nginx_basic_status" \
+			--cmd="service:nginx:log:connections" \
+			--subtask_cmd="$command" \
+			--days_ago="${arg_days_ago:-}" \
+			--max_amount="${arg_max_amount:-}"
         ;;
 	"shared:log:register:"*)
 		task_name="${command#shared:log:register:}"

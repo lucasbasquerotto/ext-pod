@@ -232,6 +232,14 @@ case "$command" in
 		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
 			set -eou pipefail
 
+			echo -e "##############################################################################################################"
+			echo -e "##############################################################################################################"
+			echo -e "Nginx Logs"
+			echo -e "--------------------------------------------------------------------------------------------------------------"
+			echo -e "Path: $arg_log_file"
+			echo -e "Limit: $arg_max_amount"
+			echo -e "--------------------------------------------------------------------------------------------------------------"
+
 			request_count="\$(wc -l < "$arg_log_file")"
 			echo -e "Requests: \$request_count"
 
@@ -251,9 +259,9 @@ case "$command" in
 			fi
 
 			if [ -n "${arg_log_idx_ip:-}" ]; then
-				echo -e "#######################################################"
+				echo -e "##############################################################################################################"
 				echo -e "Ips with Most Requests"
-				echo -e "-------------------------------------------------------"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
 
 				ips_most_requests="\$( \
 					{ awk -v idx="${arg_log_idx_ip:-}" '{print \$idx}' "$arg_log_file" \
@@ -264,7 +272,7 @@ case "$command" in
 			if [ -n "${arg_log_idx_ip:-}" ] && [ -n "${arg_log_idx_duration:-}" ]; then
 				echo -e "======================================================="
 				echo -e "IPs with Most Request Duration (s)"
-				echo -e "-------------------------------------------------------"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
 
 				ips_most_request_duration="\$( \
 					{ awk -v idx_ip="${arg_log_idx_ip:-}" -v idx_duration="${arg_log_idx_duration:-}" \
@@ -277,7 +285,7 @@ case "$command" in
 			if [ -n "${arg_log_idx_user:-}" ]; then
 				echo -e "======================================================="
 				echo -e "Users with Most Requests"
-				echo -e "-------------------------------------------------------"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
 
 				users_most_requests="\$( { awk -v idx="${arg_log_idx_user:-}" \
 					'{print \$idx}' "$arg_log_file" \
@@ -288,7 +296,7 @@ case "$command" in
 			if [ -n "${arg_log_idx_user:-}" ] && [ -n "${arg_log_idx_duration:-}" ]; then
 				echo -e "======================================================="
 				echo -e "Users with Most Request Duration (s)"
-				echo -e "-------------------------------------------------------"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
 
 				users_most_request_duration="\$( \
 					{ awk -v idx_user="${arg_log_idx_user:-}" -v idx_duration="${arg_log_idx_duration:-}" \
@@ -301,7 +309,7 @@ case "$command" in
 			if [ -n "${arg_log_idx_status:-}" ]; then
 				echo -e "======================================================="
 				echo -e "Status with Most Requests"
-				echo -e "-------------------------------------------------------"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
 
 				status_most_requests="\$( \
 					{ awk -v idx="${arg_log_idx_status:-}" '{print \$idx}' "$arg_log_file" \
@@ -312,7 +320,7 @@ case "$command" in
 			if [ -n "${arg_log_idx_duration:-}" ]; then
 				echo -e "======================================================="
 				echo -e "Requests with Longest Duration (s)"
-				echo -e "-------------------------------------------------------"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
 
 				grep_args=()
 
@@ -389,6 +397,46 @@ case "$command" in
 						| sort -nr ||:; } \
 					| head -n "$arg_max_amount")"
 				echo -e "\$longest_request_durations"
+			fi
+		SHELL
+		;;
+	"service:nginx:log:connections")
+		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+			set -eou pipefail
+
+			echo -e "##############################################################################################################"
+			echo -e "##############################################################################################################"
+			echo -e "HTTP Connections"
+			echo -e "--------------------------------------------------------------------------------------------------------------"
+			echo -e "Path: $arg_log_file"
+			echo -e "Limit: $arg_max_amount"
+
+			if [ -f "$arg_log_file" ]; then
+				echo -e "##############################################################################################################"
+				echo -e "HTTP Active Connections"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
+
+				http_connections_max_logs="\$( \
+					{ grep -E '^(Time: |Active connections: )' "$arg_log_file" \
+					| awk '{
+						if(\$1 == "Time:") {time = \$2 " " \$3 " " \$4;}
+						else if(\$1 " " \$2 == "Active connections:") { printf "%10d %s\n", \$3, time }
+						}' \
+					| sort -nr ||:; } | head -n "$arg_max_amount")"
+				echo -e "\$http_connections_max_logs"
+
+				echo -e "##############################################################################################################"
+				echo -e "HTTP Writing Connections"
+				echo -e "--------------------------------------------------------------------------------------------------------------"
+
+				http_writing_max_logs="\$( \
+					{ grep -E '^(Time: |Reading: )' "$arg_log_file" \
+					| awk '{
+						if(\$1 == "Time:") {time = \$2 " " \$3 " " \$4;}
+						else if(\$3 == "Writing:") { printf "%10d %s\n", \$4, time }
+						}' \
+					| sort -nr ||:; } | head -n "$arg_max_amount")"
+				echo -e "\$http_writing_max_logs"
 			fi
 		SHELL
 		;;

@@ -180,6 +180,13 @@ services:
     - "$DATA_DIR:/home/project/data:ro"
     - "$DATA_DIR/sync:/home/project/sync:cached"
     - "$DATA_DIR/action:/home/project/action:cached"
+
+    {% if params.local | bool %}
+
+    - "$DATA_DIR/log:/home/project/log:cached"
+
+    {% else %}
+
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog
 
