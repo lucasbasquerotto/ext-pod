@@ -458,3 +458,10 @@ children:
       var_dev__repo_dir_wordpress: "{{ var_dev_repo_dir_wordpress }}"
 
       {% endif %}
+
+      var_custom__log_summary__days_ago: "{{ params.main.log_summary.days_ago | default('1') }}"
+      var_custom__log_summary__max_amount: "{{ params.main.log_summary.max_amount | default('100') }}"
+      var_custom__log_summary__verify_size_docker_dir: >-
+        {{ params.main.log_summary.verify_size_docker_dir | default(false) | bool | ternary('true', 'false') }}
+      var_custom__log_summary__verify_size_containers: >-
+        {{ params.main.log_summary.verify_size_containers | default(true) | bool | ternary('true', 'false') }}

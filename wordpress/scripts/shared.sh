@@ -137,6 +137,11 @@ case "$command" in
 			"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 			"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
 		fi
+
+		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"
+		"$pod_script_env_file" "shared:log:disk:summary" \
+			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
+			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
 		;;
 	*)
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}

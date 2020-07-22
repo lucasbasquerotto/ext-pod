@@ -49,6 +49,8 @@ while getopts ':-:' OPT; do
 		log_dir ) arg_log_dir="${OPTARG:-}";;
 		log_file ) arg_log_file="${OPTARG:-}";;
 		filename_prefix ) arg_filename_prefix="${OPTARG:-}";;
+		verify_size_docker_dir ) arg_verify_size_docker_dir="${OPTARG:-}";;
+		verify_size_containers ) arg_verify_size_containers="${OPTARG:-}";;
 		??* ) ;; ## ignore
 		\? )  ;; ## ignore
 	esac
@@ -230,6 +232,7 @@ case "$command" in
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
 			set -eou pipefail
+
 			log_file_prefix="$arg_log_dir/$arg_filename_prefix.\$(date '+%Y-%m-%d')"
 			log_out_file="\${log_file_prefix}.out.log"
 			log_err_file="\${log_file_prefix}.err.log"
@@ -252,6 +255,56 @@ case "$command" in
 		else
 			echo "$result" >&2
 			exit 1
+		fi
+		;;
+	"shared:log:file_descriptors:summary")
+		echo -e "======================================================="
+		echo -e "File Descriptors"
+		echo -e "-------------------------------------------------------"
+		cd /proc
+		for pid in [0-9]*; do
+			echo "PID = $pid with $(sudo ls "/proc/$pid/fd/" 2>/dev/null | wc -l) file descriptors";
+		done | sort -rn -k5 | head | while read -r _ _ pid _ fdcount _; do
+			cmd="$(ps -o cmd -p "$pid" hc)"
+			printf "%6d - %s - pid = %s\n" "$fdcount" "$cmd" "$pid"
+		done | head -n "$arg_max_amount" || :
+		;;
+	"shared:log:disk:summary")
+		echo -e "======================================================="
+		echo -e "Disk Usage"
+		echo -e "-------------------------------------------------------"
+		df -h | grep -E '(^Filesystem|/$)'
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+			set -eou pipefail
+
+			echo -e "-------------------------------------------------------"
+			du -sh /var/main/data/ 2> /dev/null || :
+			echo -e "-------------------------------------------------------"
+			du -sh /var/main/data/* 2> /dev/null || :
+			echo -e "-------------------------------------------------------"
+			du -sh /var/log/main/ 2> /dev/null || :
+			echo -e "-------------------------------------------------------"
+			du -sh /var/log/main/* 2> /dev/null || :
+			echo -e "-------------------------------------------------------"
+			du -sh /tmp/main/ 2> /dev/null || :
+			echo -e "-------------------------------------------------------"
+			du -sh /tmp/main/* 2> /dev/null || :
+		SHELL
+
+		if [ "${arg_verify_size_docker_dir:-}" = "true" ]; then
+			echo -e "-------------------------------------------------------"
+			du -sh /var/lib/docker/ 2> /dev/null || :
+			echo -e "-------------------------------------------------------"
+			docker system df \
+				| grep -E '^(TYPE|Images|Containers|Local Volumes)' \
+				| sed -e 's/Local Volumes/Volumes      /g' \
+				| awk '{ printf "%-12s %8s %10s    %-12s\n", $1, $2, $3, $4; }'
+		fi
+
+		if [ "${arg_verify_size_containers:-}" = "true" ]; then
+			echo -e "-------------------------------------------------------"
+			"$pod_script_env_file" "system:df"
 		fi
 		;;
 	*)
