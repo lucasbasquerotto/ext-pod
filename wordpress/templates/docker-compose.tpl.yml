@@ -297,7 +297,7 @@ services:
 
     - "$DATA_DIR/log:/home/project/log:cached"
 
-    {% else %}
+    {% endif %}
 
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog

@@ -378,6 +378,17 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
+      
+      {% if var_local | bool %}
+
+      var_data_dir_rel: "{{ params.pod.data_dir }}"
+
+      {% endif %}
+
+      var_data_dir: "{{ params.pod.data_dir }}"
+
+      {% endif %}
+      
       var_shared__script_dir: "{{ var_shared_dir }}/scripts"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
