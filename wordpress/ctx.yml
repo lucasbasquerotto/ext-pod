@@ -383,7 +383,7 @@ children:
 
       var_data_dir_rel: "{{ params.pod.data_dir }}"
 
-      {% endif %}
+      {% else %}
 
       var_data_dir: "{{ params.pod.data_dir }}"
 
