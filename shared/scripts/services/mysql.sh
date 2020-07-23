@@ -66,7 +66,10 @@ case "$command" in
 
 				mysql_qtd_slow_logs="\$( \
 					{ grep '^# User@Host' "$arg_log_file" \
-					| awk '{s[substr(\$3, 0, index(\$3, "[") - 1)]+=1} END { for (key in s) { printf "%10d %s\n", s[key], key } }' \
+					| awk ' \
+						{ s[substr(\$3, 0, index(\$3, "[") - 1)]+=1 } END \
+						{ for (key in s) { printf "%10d %s\n", s[key], key } } \
+						' \
 					| sort -nr ||:; } | head -n "$arg_max_amount")"
 				echo -e "\$mysql_qtd_slow_logs"
 
@@ -76,16 +79,18 @@ case "$command" in
 
 				mysql_slowest_logs_per_user="\$( \
 					{ grep -E '^(# Time: |# User@Host: |# Query_time: )' "$arg_log_file" \
-					| awk '
-						{
-							if(\$2 == "Time:") {time = \$3 " " \$4;}
-							else if(\$2 == "User@Host:") {user = substr(\$3, 0, index(\$3, "[") - 1);}
-							else if(\$2 == "Query_time:") {
-							if(s[user] < \$3) { s[user] = \$3; t[user] = time; }
-							}
-						} END
-						{ for (key in s) { printf "%10.1f %12s %s\n", s[key], key, t[key] } }
-						' \
+					| awk ' \
+						{ \
+							if (\$2 == "Time:") {time = \$3 " " \$4;} \
+							else if (\$2 == "User@Host:") { \
+								user = substr(\$3, 0, index(\$3, "[") - 1); \
+							} \
+							else if (\$2 == "Query_time:") { \
+								if (s[user] < \$3) { s[user] = \$3; t[user] = time; } \
+							} \
+						} END \
+						{ for (key in s) { printf "%10.1f %12s %s\n", s[key], key, t[key] } } \
+					' \
 					| sort -nr ||:; } | head -n "$arg_max_amount")"
 				echo -e "\$mysql_slowest_logs_per_user"
 
@@ -97,8 +102,13 @@ case "$command" in
 					{ grep -E '^(# Time: |# User@Host: |# Query_time: )' "$arg_log_file" \
 					| awk '{ \
 						if(\$2 == "Time:") {time = \$3 " " \$4;} \
-						else if(\$2 == "User@Host:") {user = substr(\$3, 0, index(\$3, "[") - 1);} \
-						else if(\$2 == "Query_time:") printf "%10.1f %12s %s\n", \$3, user, time }' \
+						else if (\$2 == "User@Host:") { \
+							user = substr(\$3, 0, index(\$3, "[") - 1); \
+						} \
+						else if (\$2 == "Query_time:") { \
+							printf "%10.1f %12s %s\n", \$3, user, time \
+						} \
+					}' \
 					| sort -nr ||:; } | head -n "$arg_max_amount")"
 				echo -e "\$mysql_slowest_logs"
 			fi

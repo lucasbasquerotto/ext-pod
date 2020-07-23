@@ -48,6 +48,8 @@ while getopts ':-:' OPT; do
 		cmd ) arg_cmd="${OPTARG:-}";;
 		log_dir ) arg_log_dir="${OPTARG:-}";;
 		log_file ) arg_log_file="${OPTARG:-}";;
+		log_rotated ) arg_log_rotated="${OPTARG:-}";;
+		log_tmp_file ) arg_log_tmp_file="${OPTARG:-}";;
 		filename_prefix ) arg_filename_prefix="${OPTARG:-}";;
 		verify_size_docker_dir ) arg_verify_size_docker_dir="${OPTARG:-}";;
 		verify_size_containers ) arg_verify_size_containers="${OPTARG:-}";;
@@ -64,10 +66,15 @@ case "$command" in
         max_amount="${arg_max_amount:-$max_amount}"
         max_amount="${max_amount:-100}"
 
-		path_prefix="/var/log/main/register/$arg_summary_name/$arg_summary_name"
 		[ -n "${arg_days_ago:-}" ] && date_arg="${arg_days_ago:-} day ago" || date_arg="today"
 		date="$(date -u -d "$date_arg" '+%Y-%m-%d')"
-		log_file="$path_prefix.$date.out.log"
+
+		if [ "${arg_log_rotated:-}" = "true" ]; then
+			log_file="/var/log/main/rotated/$date/$arg_log_tmp_file"
+		else
+			path_prefix="/var/log/main/register/$arg_summary_name/$arg_summary_name"
+			log_file="$path_prefix.$date.out.log"
+		fi
 
 		"$pod_script_env_file" "$arg_cmd" \
 			--task_name="summary_$arg_summary_name" \
@@ -275,6 +282,16 @@ case "$command" in
 			--subtask_cmd="$command" \
 			--days_ago="${arg_days_ago:-}" \
 			--max_amount="${arg_max_amount:-}"
+        ;;
+	"shared:log:mysql_slow:summary")
+		"$pod_script_env_file" "shared:log:summary" \
+			--summary_name="mysql_slow" \
+			--cmd="service:mysql:log:slow:summary" \
+			--subtask_cmd="$command" \
+			--days_ago="${arg_days_ago:-}" \
+			--max_amount="${arg_max_amount:-}" \
+			--log_rotated="true" \
+			--log_tmp_file="mysql/slow.log"
         ;;
 	"shared:log:file_descriptors:summary")
 		echo -e "======================================================="

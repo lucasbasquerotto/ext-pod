@@ -277,8 +277,9 @@ services:
     {% if params.local | bool %}
 
     - "$DATA_DIR/log:/home/project/log:cached"
+    - "$DATA_DIR/tmp:/home/project/tmp:cached"
 
-    {% else %}
+    {% endif %}
 
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     logging: *mainlog

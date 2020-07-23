@@ -110,7 +110,7 @@ templates:
     use_filestash: "{{ params.main.use_filestash }}"
     use_nextcloud: "{{ params.main.use_nextcloud }}"
 
-    {% if var_local %}
+    {% if var_local | bool %}
 
     use_composer: "{{ params.main.use_composer }}"
 
@@ -453,7 +453,7 @@ children:
 
       {% endif %}
 
-      {% if var_local %}
+      {% if var_local | bool %}
 
       var_custom__use_composer: "{{ params.main.use_composer | bool | ternary('true', 'false') }}"
 
@@ -470,9 +470,14 @@ children:
 
       {% endif %}
 
+      {% if not (params.main.log_summary.disabled | default(false) | bool) %}
+
       var_custom__log_summary__days_ago: "{{ params.main.log_summary.days_ago | default('1') }}"
       var_custom__log_summary__max_amount: "{{ params.main.log_summary.max_amount | default('100') }}"
       var_custom__log_summary__verify_size_docker_dir: >-
         {{ params.main.log_summary.verify_size_docker_dir | default(false) | bool | ternary('true', 'false') }}
       var_custom__log_summary__verify_size_containers: >-
         {{ params.main.log_summary.verify_size_containers | default(true) | bool | ternary('true', 'false') }}
+
+      {% endif %}
+

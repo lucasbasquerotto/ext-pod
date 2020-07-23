@@ -296,6 +296,7 @@ services:
     {% if params.local | bool %}
 
     - "$DATA_DIR/log:/home/project/log:cached"
+    - "$DATA_DIR/tmp:/home/project/tmp:cached"
 
     {% endif %}
 

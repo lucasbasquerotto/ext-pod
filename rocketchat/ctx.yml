@@ -327,6 +327,17 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
+      
+      {% if var_local | bool %}
+
+      var_data_dir_rel: "{{ params.pod.data_dir }}"
+
+      {% else %}
+
+      var_data_dir: "{{ params.pod.data_dir }}"
+
+      {% endif %}
+      
       var_shared__script_dir: "{{ var_shared_dir }}/scripts"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
@@ -388,10 +399,21 @@ children:
 
       {% if params.main.block_ips | bool %}
 
-      var_shared__block_ips__action_exec__max_ips: "{{ params.main.block_ips.max_ips | default('10000') }}"
+      var_shared__block_ips__action_exec__max_amount: "{{ params.main.block_ips.max_amount | default('10000') }}"
       var_shared__block_ips__action_exec__amount_day: "{{ params.main.block_ips.amount_day | default('20000') }}"
       var_shared__block_ips__action_exec__amount_hour: "{{ params.main.block_ips.amount_hour | default('3600') }}"
 
       {% endif %}
+
+      {% endif %}
+
+      {% if not (params.main.log_summary.disabled | default(false) | bool) %}
+
+      var_custom__log_summary__days_ago: "{{ params.main.log_summary.days_ago | default('1') }}"
+      var_custom__log_summary__max_amount: "{{ params.main.log_summary.max_amount | default('100') }}"
+      var_custom__log_summary__verify_size_docker_dir: >-
+        {{ params.main.log_summary.verify_size_docker_dir | default(false) | bool | ternary('true', 'false') }}
+      var_custom__log_summary__verify_size_containers: >-
+        {{ params.main.log_summary.verify_size_containers | default(true) | bool | ternary('true', 'false') }}
 
       {% endif %}

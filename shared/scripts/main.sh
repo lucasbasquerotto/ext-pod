@@ -51,6 +51,8 @@ shift $((OPTIND-1))
 pod_main_run_file="$pod_layer_dir/main/scripts/main.sh"
 nginx_run_file="$pod_layer_dir/$var_shared__script_dir/services/nginx.sh"
 nextcloud_run_file="$pod_layer_dir/$var_shared__script_dir/services/nextcloud.sh"
+mysql_run_file="$pod_layer_dir/$var_shared__script_dir/services/mysql.sh"
+redis_run_file="$pod_layer_dir/$var_shared__script_dir/services/redis.sh"
 log_run_file="$pod_layer_dir/$var_shared__script_dir/log.sh"
 
 case "$command" in
@@ -60,6 +62,9 @@ case "$command" in
 		fi
 
 		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
+	"action:exec:backup")
+		"$pod_script_env_file" "backup"
 		;;
 	"backup")
 		if [ "${var_custom__use_logrotator:-}" = "true" ]; then
@@ -364,6 +369,10 @@ case "$command" in
 
 		"$pod_main_run_file" "action:subtask" "${opts[@]}"
 		;;
+	"action:exec:log_register."*)
+		task_name="${command#action:exec:log_register.}"
+		"$pod_script_env_file" "shared:log:register:$task_name" ${args[@]+"${args[@]}"}
+		;;
 	"service:nginx:"*)
 		"$nginx_run_file" "$command" \
 			--toolbox_service="toolbox" \
@@ -376,9 +385,16 @@ case "$command" in
 			--nextcloud_service="nextcloud" \
 			${args[@]+"${args[@]}"}
 		;;
-	"action:exec:log_register."*)
-		task_name="${command#action:exec:log_register.}"
-		"$pod_script_env_file" "shared:log:register:$task_name" ${args[@]+"${args[@]}"}
+	"service:mysql:"*)
+		"$mysql_run_file" "$command" \
+			--toolbox_service="toolbox" \
+			${args[@]+"${args[@]}"}
+		;;
+	"service:redis:"*)
+		"$redis_run_file" "$command" \
+			--toolbox_service="toolbox" \
+			--redis_service="redis" \
+			${args[@]+"${args[@]}"}
 		;;
 	"shared:log:"*)
 		"$log_run_file" "$command" ${args[@]+"${args[@]}"}

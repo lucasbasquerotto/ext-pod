@@ -146,7 +146,7 @@ services:
     hostname: "logrotator"
     build:
       context: .
-      dockerfile: "shared/containers/logrotator/Dockerfile"
+      dockerfile: "shared/containers/python3/Dockerfile"
       args:
         IMAGE: "{{ params.images.logrotator_image }}"
         VERSION: "{{ params.images.logrotator_version }}"
@@ -158,6 +158,7 @@ services:
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
+    command: python3 /bin/logrotate.py /tmp/main/log /var/log/main/rotated
 
     {% if (params.memory.logrotator | default('')) != '' %}
 

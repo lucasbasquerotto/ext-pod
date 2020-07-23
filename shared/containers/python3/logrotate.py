@@ -1,4 +1,4 @@
-import os, glob
+import sys, os, glob
 from datetime import datetime
 from distutils.dir_util import copy_tree
 
@@ -8,8 +8,9 @@ def clear(src):
         with open(filename, 'w') as f:
             f.write('')
 
-src_dir = '/tmp/main/log'
-dest_dir = '/var/log/main/rotated/' + datetime.today().strftime('%Y%m%d')
+src_dir = sys.argv[1]
+dest_dir_base = sys.argv[2]
+dest_dir = dest_dir_base + '/' + datetime.today().strftime('%Y-%m-%d')
 
 execute = 0
 

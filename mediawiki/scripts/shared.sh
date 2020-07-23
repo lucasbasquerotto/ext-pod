@@ -99,9 +99,45 @@ case "$command" in
 			--db_connect_wait_secs="$var_run__migrate__db_connect_wait_secs" \
 			--connection_sleep="${var_run__migrate__connection_sleep:-}"
 		;;
-	"actions")
-		"$pod_script_env_file" "action:subtask:block_ips"
-		"$pod_script_env_file" "action:subtask:nginx_reload"
+	"action:exec:actions")
+		"$pod_script_env_file" "action:subtask:log_register.memory_overview" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "action:subtask:log_register.memory_details" > /dev/null 2>&1 ||:
+
+		if [ "${var_custom__use_nginx:-}" = "true" ]; then
+			"$pod_script_env_file" "action:subtask:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "action:subtask:nginx_reload" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "action:subtask:block_ips" > /dev/null 2>&1 ||:
+		fi
+
+		"$pod_script_env_file" "action:subtask:logrotate" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "action:subtask:log_summary" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "action:subtask:backup" > /dev/null 2>&1 ||:
+		;;
+	"action:exec:log_summary")
+        days_ago="${var_custom__log_summary__days_ago:-}"
+        days_ago="${arg_days_ago:-$days_ago}"
+
+        max_amount="${var_custom__log_summary__max_amount:-}"
+        max_amount="${arg_max_amount:-$max_amount}"
+        max_amount="${max_amount:-100}"
+
+		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+			if [ "${var_custom__use_nginx:-}" = "true" ]; then
+				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
+			fi
+		fi
+
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+			"$pod_script_env_file" "shared:log:mysql_slow:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+		fi
+
+		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"
+		"$pod_script_env_file" "shared:log:disk:summary" \
+			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
+			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
 		;;
 	*)
 		"$pod_shared_run_file" "$command" "$@"
