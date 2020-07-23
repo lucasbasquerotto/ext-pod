@@ -58,14 +58,6 @@ done
 shift $((OPTIND-1))
 
 case "$command" in
-	"shared:log:memory_overview:summary")
-		"$pod_script_env_file" "shared:log:summary" \
-			--summary_name="memory_overview" \
-			--cmd="shared:log:memory_overview:summary:log" \
-			--subtask_cmd="$command" \
-			--days_ago="${arg_days_ago:-}" \
-			--max_amount="${arg_max_amount:-}"
-        ;;
 	"shared:log:summary")
 		max_amount_var_name="var_shared__log__${arg_summary_name}__max_amount"
         max_amount="${!max_amount_var_name:-}"
@@ -80,8 +72,17 @@ case "$command" in
 		"$pod_script_env_file" "$arg_cmd" \
 			--task_name="summary_$arg_summary_name" \
 			--subtask_cmd="$arg_subtask_cmd" \
+			--toolbox_service="toolbox" \
 			--log_file="$log_file" \
 			--max_amount="$max_amount"
+        ;;
+	"shared:log:memory_overview:summary")
+		"$pod_script_env_file" "shared:log:summary" \
+			--summary_name="memory_overview" \
+			--cmd="shared:log:memory_overview:summary:log" \
+			--subtask_cmd="$command" \
+			--days_ago="${arg_days_ago:-}" \
+			--max_amount="${arg_max_amount:-}"
         ;;
 	"shared:log:memory_overview:summary:log")
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
@@ -107,6 +108,17 @@ case "$command" in
 				echo -e "\$memory_max_logs"
 			fi
 		SHELL
+		;;
+	"shared:log:main:memory_overview")
+		free -m
+		;;
+	"shared:log:main:memory_details")
+		if result="$(python3 "$lib_dir/ps_mem.py" 2>&1 ||:)"; then
+			echo "$result"
+		else
+			echo "$result" >&2
+			exit 1
+		fi
 		;;
 	"shared:log:nginx:summary")
 		"$pod_script_env_file" "shared:log:nginx:verify"
@@ -220,6 +232,9 @@ case "$command" in
 			--days_ago="${arg_days_ago:-}" \
 			--max_amount="${arg_max_amount:-}"
         ;;
+	"shared:log:main:nginx_basic_status")
+		"$pod_script_env_file" exec-nontty toolbox curl -sL "http://nginx:9081/nginx/basic_status"
+		;;
 	"shared:log:register:"*)
 		task_name="${command#shared:log:register:}"
 		"$pod_script_env_file" "shared:log:register" \
@@ -243,20 +258,24 @@ case "$command" in
 			find "$arg_log_dir" -empty -type f -delete
 		SHELL
 		;;
-	"shared:log:main:nginx_basic_status")
-		"$pod_script_env_file" exec-nontty toolbox curl -sL "http://nginx:9081/nginx/basic_status"
+	"shared:log:main:redis_slow")
+		max_amount_var_name="var_shared__log__register_redis_slow__max_amount"
+        max_amount="${!max_amount_var_name:-}"
+        max_amount="${arg_max_amount:-$max_amount}"
+        max_amount="${max_amount:-120}"
+
+		"$pod_script_env_file" "service:redis:log:slow" \
+			--redis_service="redis" \
+			--max_amount="$max_amount"
 		;;
-	"shared:log:main:memory_overview")
-		free -m
-		;;
-	"shared:log:main:memory_details")
-		if result="$(python3 "$lib_dir/ps_mem.py" 2>&1 ||:)"; then
-			echo "$result"
-		else
-			echo "$result" >&2
-			exit 1
-		fi
-		;;
+	"shared:log:redis_slow:summary")
+		"$pod_script_env_file" "shared:log:summary" \
+			--summary_name="redis_slow" \
+			--cmd="service:redis:log:slow:summary" \
+			--subtask_cmd="$command" \
+			--days_ago="${arg_days_ago:-}" \
+			--max_amount="${arg_max_amount:-}"
+        ;;
 	"shared:log:file_descriptors:summary")
 		echo -e "======================================================="
 		echo -e "File Descriptors"
@@ -283,13 +302,11 @@ case "$command" in
 			echo -e "-------------------------------------------------------"
 			du -sh /var/main/data/* 2> /dev/null || :
 			echo -e "-------------------------------------------------------"
-			du -sh /var/log/main/ 2> /dev/null || :
+			du -sh /var/main/data/log/* 2> /dev/null || :
 			echo -e "-------------------------------------------------------"
-			du -sh /var/log/main/* 2> /dev/null || :
+			du -sh /var/main/data/sync/* 2> /dev/null || :
 			echo -e "-------------------------------------------------------"
-			du -sh /tmp/main/ 2> /dev/null || :
-			echo -e "-------------------------------------------------------"
-			du -sh /tmp/main/* 2> /dev/null || :
+			du -sh /var/main/data/tmp/* 2> /dev/null || :
 		SHELL
 
 		if [ "${arg_verify_size_docker_dir:-}" = "true" ]; then
