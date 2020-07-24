@@ -378,7 +378,7 @@ children:
     run_dict: {{ var_run_dict | to_json }}
     run_tasks_dict: {{ var_run_tasks_dict | to_json }}
     run_custom:
-      
+
       {% if var_local | bool %}
 
       var_data_dir_rel: "{{ params.pod.data_dir }}"
@@ -388,7 +388,7 @@ children:
       var_data_dir: "{{ params.pod.data_dir }}"
 
       {% endif %}
-      
+
       var_shared__script_dir: "{{ var_shared_dir }}/scripts"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
@@ -400,7 +400,6 @@ children:
 
       {% if var_pod_type in ['app', 'web'] %}
 
-      var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
       var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
 
       {% if params.main.use_nextcloud | bool %}
@@ -453,8 +452,6 @@ children:
 
       {% endif %}
 
-      {% if var_local | bool %}
-
       var_custom__use_composer: "{{ params.main.use_composer | bool | ternary('true', 'false') }}"
 
       {% endif %}
@@ -481,3 +478,343 @@ children:
 
       {% endif %}
 
+      # General
+
+      var_run__general__backup_delete_old_days: "{{ params.main.backup_delete_old_days | default('3') }}"
+      var_run__general__backup_local_base_dir: "/tmp/main/backup"
+      var_run__general__orchestration: "compose"
+      var_run__general__script_dir: "{{ var_main_base_dir }}/scripts"
+      var_run__general__script_env_file: "{{ var_local | bool | ternary('local.sh', 'remote.sh') }}"
+      var_run__general__toolbox_service: "toolbox"
+      var_run__migrate__new_domain_host: "{{ params.main.migrate.new_domain_host | default('') }}"
+      var_run__migrate__old_domain_host: "{{ params.main.migrate.old_domain_host | default('') }}"
+      var_run__tasks__backup: "group_backup"
+      var_run__tasks__setup: "group_setup"
+
+      # Tasks (Group)
+
+      {% set var_group_backup = [] %}
+
+      {% if var_pod_type in ['app', 'db'] %}
+
+        {% if params.main.enable_db_backup | bool %}
+
+          {% set var_group_backup = var_group_backup + ['db_backup'] %}
+
+        {% endif %}
+
+      {% endif %}
+
+      {% if var_pod_type in ['app', 'web'] %}
+
+        {% if params.main.enable_uploads_backup | bool %}
+
+          {% set var_group_backup = var_group_backup + ['uploads_backup'] %}
+
+        {% endif %}
+
+      {% endif %}
+
+      var_task__group_backup__group_task__task_names: "{{ var_group_backup | join(',') }}"
+      var_task__group_backup__task__type: "group"
+
+      {% set var_group_setup = [] %}
+
+      {% if params.main.restore_db | bool %}
+
+        {% if var_pod_type in ['app', 'web'] %}
+
+          {% if params.main.enable_db_setup_new | bool %}
+
+            {% set var_group_setup = var_group_setup + ['db_setup_new'] %}
+
+          {% endif %}
+
+        {% endif %}
+
+      {% else %}
+
+        {% if var_pod_type in ['app', 'web'] %}
+
+          {% if params.main.enable_uploads_setup | bool %}
+
+            {% set var_group_setup = var_group_setup + ['uploads_setup'] %}
+
+          {% endif %}
+
+        {% endif %}
+
+        {% if var_pod_type in ['app', 'db'] %}
+
+          {% if params.main.enable_db_setup | bool %}
+
+            {% set var_group_setup = var_group_setup + ['db_setup'] %}
+
+          {% endif %}
+
+        {% endif %}
+
+      {% endif %}
+
+      var_task__group_setup__group_task__task_names: "{{ var_group_setup | join(',') }}"
+      var_task__group_setup_new_db__task__type: "group"
+
+      # Tasks (Specific)
+
+      {% if var_pod_type in ['app', 'web'] %}
+
+      var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+
+      {% if params.main.use_certbot | bool %}
+
+      var_task__certbot__certbot_subtask__certbot_service: "certbot"
+      var_task__certbot__certbot_subtask__data_base_path: "/var/main/data/sync/certbot"
+      var_task__certbot__certbot_subtask__dev: "{{ params.main.certbot.dev | default(var_local) | bool | ternary('true', 'false') }}"
+      var_task__certbot__certbot_subtask__domains: "{{ params.main.certbot.domains }}"
+      var_task__certbot__certbot_subtask__email: "{{ params.main.certbot.email }}"
+      var_task__certbot__certbot_subtask__force: "{{ params.main.certbot.force | bool | ternary('true', 'false') }}"
+      var_task__certbot__certbot_subtask__main_domain: "{{ params.main.certbot.main_domain }}"
+      var_task__certbot__certbot_subtask__rsa_key_size: "{{ params.main.certbot.rsa_key_size | default('4096') }}"
+      var_task__certbot__certbot_subtask__staging: "{{ params.main.certbot.staging | default(var_local) | bool | ternary('true', 'false') }}"
+      var_task__certbot__certbot_subtask__toolbox_service: "toolbox"
+      var_task__certbot__certbot_subtask__webservice_type: "nginx"
+      var_task__certbot__certbot_task__certbot_cmd: "setup"
+      var_task__certbot__task__type: "certbot"
+
+      {% endif %}
+
+      {% endif %}
+
+      {% if var_pod_type in ['app', 'db'] %}
+
+      {% if params.main.enable_db_backup | bool %}
+
+      var_task__db_backup__backup_local__db_file_name: "wordpress.sql"
+      var_task__db_backup__backup_local__db_subtask_cmd: "db:backup:file:mysql"
+      var_task__db_backup__backup_local__task_name: "db_main"
+      var_task__db_backup__backup_remote__backup_bucket_sync: >-
+        {{ params.main.db_backup.backup_bucket_sync | default(false) | ternary('true', 'false') }}
+      var_task__db_backup__backup_remote__backup_src_file: "wordpress.sql"
+      var_task__db_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+      var_task__db_backup__backup_remote__task_kind: "file"
+      var_task__db_backup__backup_task__backup_local_static_dir: "/tmp/main/backup/static"
+      var_task__db_backup__backup_task__backup_src_base_dir: "/tmp/main/mysql/backup"
+      var_task__db_backup__backup_task__subtask_cmd_local: "backup:local:db"
+      var_task__db_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
+      var_task__db_backup__task__type: "backup"
+
+      {% if params.main.db_backup.backup_bucket_sync | default(false) | bool %}
+
+      var_task__db_backup__backup_remote__backup_bucket_sync_dir: "{{ params.main.db_backup.backup_bucket_sync_dir }}"
+
+      {% else %}
+
+      var_task__db_backup__backup_remote__backup_bucket_static_dir: "files"
+      var_task__db_backup__backup_remote__backup_zip_file: "wordpress-db.zip"
+
+      {% endif %}
+
+      {% endif %}
+
+      {% endif %}
+
+      var_task__db_main__db_subtask__db_connect_wait_secs: "{{ params.main.db_main.db_connect_wait_secs | default('300') }}"
+      var_task__db_main__db_subtask__db_name: "{{ params.credentials.wordpress.db.name }}"
+      var_task__db_main__db_subtask__db_pass: "{{ params.credentials.wordpress.db.password }}"
+      var_task__db_main__db_subtask__db_service: "mysql"
+      var_task__db_main__db_subtask__db_user: "{{ params.credentials.wordpress.db.user }}"
+
+      {% if var_pod_type in ['app', 'db'] %}
+
+      {% if (params.main.restore_db | bool) and (params.main.enable_db_setup | bool) %}
+
+      var_task__db_setup__setup_local__db_file_name: "wordpress.sql"
+      var_task__db_setup__setup_local__db_subtask_cmd: "db:restore:file:mysql"
+      var_task__db_setup__setup_local__task_name: "db_main"
+      var_task__db_setup__setup_remote__restore_tmp_dir: "/tmp/main/restore/mysql"
+      var_task__db_setup__setup_remote__task_kind: "file"
+      var_task__db_setup__setup_task__setup_dest_base_dir: "/tmp/main/mysql/restore"
+      var_task__db_setup__setup_task__subtask_cmd_local: "setup:local:db"
+      var_task__db_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
+      var_task__db_setup__setup_task__subtask_cmd_verify: "setup:verify:db"
+      var_task__db_setup__setup_verify__db_subtask_cmd: "db:restore:verify:mysql"
+      var_task__db_setup__setup_verify__task_name: "db_main"
+      var_task__db_setup__task__type: "setup"
+
+      {% if params.main.db_setup.restore_file | default(false) | bool %}
+
+      var_task__db_setup__setup_remote__restore_dest_file: "wordpress.sql"
+      var_task__db_setup__setup_remote__restore_remote_file: "{{ params.main.db_setup.restore_remote_file }}"
+      var_task__db_setup__setup_remote__restore_is_zip_file: >-
+        {{ params.main.db_setup.restore_is_zip_file | bool | default('true', 'false') }}
+
+      {% if params.main.db_setup.restore_is_zip_file | bool %}
+
+      var_task__db_setup__setup_remote__restore_zip_inner_file: "wordpress.sql"
+      var_task__db_setup__setup_remote__restore_zip_pass: "{{ params.credentials.wp_db.restore_zip_pass | default('') }}"
+
+      {% endif %}
+
+      {% else %}
+
+      var_task__db_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+      var_task__db_setup__setup_remote__restore_recursive_mode_dir: "777"
+      var_task__db_setup__setup_remote__restore_recursive_mode_file: "666"
+      var_task__db_setup__setup_remote__restore_remote_bucket_path_dir: >-
+        {{ params.main.db_setup.restore_remote_bucket_path_dir | default('') }}
+
+      {% endif %}
+
+      {% endif %}
+
+      {% endif %}
+
+      {% if var_pod_type in ['app', 'web'] %}
+
+      {% if (not (params.main.restore_db | bool)) and (params.main.enable_db_setup_new | bool) %}
+
+      var_task__db_setup_new__setup_new__admin_email: "{{ params.credentials.wordpress.setup.admin_email }}"
+      var_task__db_setup_new__setup_new__admin_password: "{{ params.credentials.wordpress.setup.admin_password }}"
+      var_task__db_setup_new__setup_new__admin_user: "{{ params.credentials.wordpress.setup.admin_user }}"
+      var_task__db_setup_new__setup_new__remote_seed_data: "{{ params.main.db_setup_new.remote_seed_data }}"
+      var_task__db_setup_new__setup_new__restore_seed: "{{ params.main.db_setup_new.restore_seed }}"
+      var_task__db_setup_new__setup_new__title: "{{ params.main.db_setup_new.title }}"
+      var_task__db_setup_new__setup_new__url: "{{ params.main.db_setup_new.url }}"
+      var_task__db_setup_new__setup_task__setup_run_new_task: "true"
+      var_task__db_setup_new__setup_task__subtask_cmd_new: "setup:new"
+      var_task__db_setup_new__setup_task__subtask_cmd_verify: "setup:verify:db"
+      var_task__db_setup_new__setup_verify__db_subtask_cmd: "db:restore:verify:mysql"
+      var_task__db_setup_new__setup_verify__task_name: "db_main"
+      var_task__db_setup_new__task__type: "setup"
+
+      {% endif %}
+
+      {% endif %}
+
+      {% if params.main.enable_logs_backup | bool %}
+
+      var_task__logs_backup__backup_remote__backup_bucket_sync: "true"
+      var_task__logs_backup__backup_remote__backup_bucket_sync_dir: "log/{{ var_pod_type }}"
+      var_task__logs_backup__backup_remote__backup_src_dir: "main"
+      var_task__logs_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+      var_task__logs_backup__backup_remote__task_kind: "dir"
+      var_task__logs_backup__backup_task__backup_local_static_dir: "/tmp/main/backup/static"
+      var_task__logs_backup__backup_task__backup_src_base_dir: "/var/log"
+      var_task__logs_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
+      var_task__logs_backup__task__type: "backup"
+
+      {% endif %}
+
+      {% if params.main.enable_logs_setup | bool %}
+
+      var_task__logs_setup__setup_remote__restore_recursive_mode_dir: "777"
+      var_task__logs_setup__setup_remote__restore_recursive_mode_file: "666"
+      var_task__logs_setup__setup_remote__restore_remote_bucket_path_dir: "logs"
+      var_task__logs_setup__setup_remote__restore_tmp_dir: "/tmp/main/restore/log"
+      var_task__logs_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+      var_task__logs_setup__setup_remote__task_kind: "dir"
+      var_task__logs_setup__setup_task__setup_dest_base_dir: "/var/log/main"
+      var_task__logs_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
+      var_task__logs_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
+      var_task__logs_setup__setup_verify__setup_dest_dir_to_verify: "/var/log/main"
+      var_task__logs_setup__task__type: "setup"
+
+      {% endif %}
+
+      var_task__s3_backup__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
+      var_task__s3_backup__s3_subtask__cli: "awscli"
+      var_task__s3_backup__s3_subtask__cli_cmd: "run"
+      var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.wp_backup_bucket.endpoint }}"
+      var_task__s3_backup__s3_subtask__service: "s3_backup"
+
+      {% if var_pod_type in ['app', 'web'] %}
+
+      var_task__s3_uploads__s3_subtask__bucket_name: "{{ params.main.uploads_bucket_name }}"
+      var_task__s3_uploads__s3_subtask__cli: "awscli"
+      var_task__s3_uploads__s3_subtask__cli_cmd: "run"
+      var_task__s3_uploads__s3_subtask__endpoint: "{{ params.credentials.wp_uploads_bucket.endpoint }}"
+      var_task__s3_uploads__s3_subtask__service: "s3_uploads"
+
+      {% endif %}
+
+      {% if params.main.enable_sync_backup | bool %}
+
+      var_task__sync_backup__backup_remote__backup_bucket_sync: "true"
+      var_task__sync_backup__backup_remote__backup_bucket_sync_dir: "sync"
+      var_task__sync_backup__backup_remote__backup_src_dir: "main"
+      var_task__sync_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+      var_task__sync_backup__backup_remote__task_kind: "dir"
+      var_task__sync_backup__backup_task__backup_local_static_dir: "/tmp/main/backup/static"
+      var_task__sync_backup__backup_task__backup_src_base_dir: "/var/sync"
+      var_task__sync_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
+      var_task__sync_backup__task__type: "backup"
+
+      {% endif %}
+
+      {% if params.main.enable_sync_setup | bool %}
+
+      var_task__sync_setup__setup_remote__restore_recursive_mode_dir: "777"
+      var_task__sync_setup__setup_remote__restore_recursive_mode_file: "666"
+      var_task__sync_setup__setup_remote__restore_remote_bucket_path_dir: "sync"
+      var_task__sync_setup__setup_remote__restore_tmp_dir: "/tmp/main/restore/sync"
+      var_task__sync_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+      var_task__sync_setup__setup_remote__task_kind: "dir"
+      var_task__sync_setup__setup_task__setup_dest_base_dir: "/var/sync/main"
+      var_task__sync_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
+      var_task__sync_setup__setup_verify__setup_dest_dir_to_verify: "/var/sync/main"
+      var_task__sync_setup__task__type: "setup"
+
+      {% endif %}
+
+      {% if var_pod_type in ['app', 'web'] %}
+
+      {% if params.main.enable_uploads_backup | bool %}
+
+      var_task__uploads_backup__backup_remote__backup_bucket_static_dir: "files"
+      var_task__uploads_backup__backup_remote__backup_src_dir: "uploads"
+      var_task__uploads_backup__backup_remote__backup_zip_file: "wordpress-uploads.zip"
+      var_task__uploads_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_uploads"
+      var_task__uploads_backup__backup_remote__task_kind: "dir"
+      var_task__uploads_backup__backup_task__backup_local_static_dir: "/tmp/main/backup/static"
+      var_task__uploads_backup__backup_task__backup_src_base_dir: "/var/main/data/wordpress"
+      var_task__uploads_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
+      var_task__uploads_backup__task__type: "backup"
+
+      {% endif %}
+
+      {% if (params.main.restore_db | bool) and (params.main.enable_uploads_setup | bool) %}
+
+      var_task__uploads_setup__setup_remote__restore_recursive_mode_dir: "777"
+      var_task__uploads_setup__setup_remote__restore_recursive_mode_file: "666"
+      var_task__uploads_setup__setup_remote__restore_tmp_dir: "/tmp/main/restore/wordpress/uploads"
+      var_task__uploads_setup__setup_remote__task_kind: "dir"
+      var_task__uploads_setup__setup_task__setup_dest_base_dir: "/var/main/data/wordpress/uploads"
+      var_task__uploads_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
+      var_task__uploads_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
+      var_task__uploads_setup__setup_verify__setup_dest_dir_to_verify: "/var/main/data/wordpress/uploads"
+      var_task__uploads_setup__task__type: "setup"
+
+      {% if params.main.uploads_setup.restore_file | default(false) | bool %}
+
+      var_task__uploads_setup__setup_remote__restore_remote_file: "{{ params.main.uploads_setup.restore_remote_file }}"
+      var_task__uploads_setup__setup_remote__restore_is_zip_file: >-
+        {{ params.main.uploads_setup.restore_is_zip_file | bool | default('true', 'false') }}
+
+      {% if params.main.uploads_setup.restore_is_zip_file | bool %}
+
+      var_task__uploads_setup__setup_remote__restore_zip_inner_dir: "uploads"
+      var_task__uploads_setup__setup_remote__restore_zip_pass: "{{ params.credentials.wp_uploads.restore_zip_pass | default('') }}"
+
+      {% endif %}
+
+      {% else %}
+
+      var_task__uploads_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_uploads"
+      var_task__uploads_setup__setup_remote__restore_remote_bucket_path_dir: >-
+        {{ params.main.uploads_setup.restore_remote_bucket_path_dir | default('') }}
+
+      {% endif %}
+
+      {% endif %}
+
+      {% endif %}
