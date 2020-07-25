@@ -456,8 +456,6 @@ children:
 
       {% endif %}
 
-      {% endif %}
-
       {% if var_local and (var_pod_type in ['app', 'web']) %}
 
       {% set var_wp_app_name = params.main.custom_args.wordpress.app_name | default('') %}
@@ -779,6 +777,17 @@ children:
       var_task__uploads_backup__backup_task__backup_src_base_dir: "/var/main/data/wordpress"
       var_task__uploads_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
       var_task__uploads_backup__task__type: "backup"
+
+      {% if params.main.uploads_backup.backup_bucket_sync | default(false) | bool %}
+
+      var_task__uploads_backup__backup_remote__backup_bucket_sync_dir: "{{ params.main.uploads_backup.backup_bucket_sync_dir }}"
+
+      {% else %}
+
+      var_task__uploads_backup__backup_remote__backup_bucket_static_dir: "files"
+      var_task__uploads_backup__backup_remote__backup_zip_file: "wordpress-uploads.zip"
+
+      {% endif %}
 
       {% endif %}
 
