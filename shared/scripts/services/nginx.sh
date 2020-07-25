@@ -232,6 +232,12 @@ case "$command" in
 		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
 			set -eou pipefail
 
+			function error {
+				msg="\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${1:-}"
+				>&2 echo -e "${RED}\${msg}${NC}"
+				exit 2
+			}
+
 			echo -e "##############################################################################################################"
 			echo -e "##############################################################################################################"
 			echo -e "Nginx Logs"
@@ -265,7 +271,8 @@ case "$command" in
 
 				ips_most_requests="\$( \
 					{ awk -v idx="${arg_log_idx_ip:-}" '{print \$idx}' "$arg_log_file" \
-					| sort | uniq -c | sort -nr ||:; } | head -n "$arg_max_amount")"
+					| sort | uniq -c | sort -nr ||:; } | head -n "$arg_max_amount")" \
+          || error "$command: ips_most_requests"
 				echo -e "\$ips_most_requests"
 			fi
 
@@ -275,10 +282,14 @@ case "$command" in
 				echo -e "--------------------------------------------------------------------------------------------------------------"
 
 				ips_most_request_duration="\$( \
-					{ awk -v idx_ip="${arg_log_idx_ip:-}" -v idx_duration="${arg_log_idx_duration:-}" \
-						'{s[\$idx_ip]+=\$idx_duration} END { for (key in s) { printf "%10.1f %s\n", s[key], key } }' \
+					{ awk \
+            -v idx_ip="${arg_log_idx_ip:-}" \
+            -v idx_duration="${arg_log_idx_duration:-}" \
+						'{s[\$idx_ip]+=\$idx_duration} END \
+            { for (key in s) { printf "%10.1f %s\n", s[key], key } }' \
 						"$arg_log_file" \
-					| sort -nr ||:; } | head -n "$arg_max_amount")"
+					| sort -nr ||:; } | head -n "$arg_max_amount")" \
+          || error "$command: ips_most_request_duration"
 				echo -e "\$ips_most_request_duration"
 			fi
 
@@ -287,9 +298,10 @@ case "$command" in
 				echo -e "Users with Most Requests"
 				echo -e "--------------------------------------------------------------------------------------------------------------"
 
-				users_most_requests="\$( { awk -v idx="${arg_log_idx_user:-}" \
-					'{print \$idx}' "$arg_log_file" \
-					| sort | uniq -c | sort -nr ||:; } | head -n "$arg_max_amount")"
+				users_most_requests="\$( \
+          { awk -v idx="${arg_log_idx_user:-}" '{print \$idx}' "$arg_log_file" \
+					| sort | uniq -c | sort -nr ||:; } | head -n "$arg_max_amount")" \
+          || error "$command: users_most_requests"
 				echo -e "\$users_most_requests"
 			fi
 
@@ -302,7 +314,8 @@ case "$command" in
 					{ awk -v idx_user="${arg_log_idx_user:-}" -v idx_duration="${arg_log_idx_duration:-}" \
 						'{s[\$idx_user]+=\$idx_duration} END { for (key in s) { printf "%10.1f %s\n", s[key], key } }' \
 						"$arg_log_file" \
-					| sort -nr ||:; } | head -n "$arg_max_amount")"
+					| sort -nr ||:; } | head -n "$arg_max_amount")" \
+          || error "$command: users_most_request_duration"
 				echo -e "\$users_most_request_duration"
 			fi
 
@@ -313,7 +326,8 @@ case "$command" in
 
 				status_most_requests="\$( \
 					{ awk -v idx="${arg_log_idx_status:-}" '{print \$idx}' "$arg_log_file" \
-					| sort | uniq -c | sort -nr ||:; } | head -n "$arg_max_amount")"
+					| sort | uniq -c | sort -nr ||:; } | head -n "$arg_max_amount")" \
+          || error "$command: status_most_requests"
 				echo -e "\$status_most_requests"
 			fi
 
@@ -337,15 +351,15 @@ case "$command" in
 							grep_args+=( "-e" "\$grep_line" )
 						done <<< "\$(echo -e "\$grep_lines")"
 					fi
-				fi
+				fi      
 
 				if [ "\${#grep_args[@]}" -eq 0 ]; then
 					grep_args=( "." )
 				fi
 
 				longest_request_durations="\$( \
-					grep \${grep_args[@]+"\${grep_args[@]}"} "$arg_log_file" \
-					| { awk \
+					{ grep \${grep_args[@]+"\${grep_args[@]}"} "$arg_log_file" \
+					| awk \
 						-v idx_ip="${arg_log_idx_ip:-}" \
 						-v idx_user="${arg_log_idx_user:-}" \
 						-v idx_duration="${arg_log_idx_duration:-}" \
@@ -358,7 +372,7 @@ case "$command" in
 							\$idx_user, \
 							\$idx_ip }' \
 						| sort -nr ||:; } \
-					| head -n "$arg_max_amount")"
+					| head -n "$arg_max_amount")" || error "$command: longest_request_durations"
 				echo -e "\$longest_request_durations"
 			fi
 		SHELL
@@ -366,6 +380,12 @@ case "$command" in
 	"service:nginx:log:duration")
 		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
 			set -eou pipefail
+
+			function error {
+				msg="\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${1:-}"
+				>&2 echo -e "${RED}\${msg}${NC}"
+				exit 2
+			}
 
 			if [ -n "${arg_log_idx_duration:-}" ]; then
 				grep_args=()
@@ -388,14 +408,14 @@ case "$command" in
 				if [ "\${#grep_args[@]}" -eq 0 ]; then
 					grep_args=( "." )
 				fi
-
+        
 				longest_request_durations="\$( \
-					grep \${grep_args[@]+"\${grep_args[@]}"} "$arg_log_file" \
-					| { awk \
+					{ grep \${grep_args[@]+"\${grep_args[@]}"} "$arg_log_file" \
+					| awk \
 						-v idx_duration="${arg_log_idx_duration:-}" \
 						'{ printf "%10.1f %s\n", \$idx_duration, \$0 }' \
 						| sort -nr ||:; } \
-					| head -n "$arg_max_amount")"
+					| head -n "$arg_max_amount")" || error "$command: longest_request_durations"
 				echo -e "\$longest_request_durations"
 			fi
 		SHELL
@@ -403,6 +423,12 @@ case "$command" in
 	"service:nginx:log:connections")
 		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
 			set -eou pipefail
+
+			function error {
+				msg="\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${1:-}"
+				>&2 echo -e "${RED}\${msg}${NC}"
+				exit 2
+			}
 
 			echo -e "##############################################################################################################"
 			echo -e "##############################################################################################################"
@@ -422,7 +448,8 @@ case "$command" in
 						if(\$1 == "Time:") {time = \$2 " " \$3 " " \$4;}
 						else if(\$1 " " \$2 == "Active connections:") { printf "%10d %s\n", \$3, time }
 						}' \
-					| sort -nr ||:; } | head -n "$arg_max_amount")"
+					| sort -nr ||:; } | head -n "$arg_max_amount")" \
+          || error "$command: http_connections_max_logs"
 				echo -e "\$http_connections_max_logs"
 
 				echo -e "##############################################################################################################"
@@ -435,7 +462,8 @@ case "$command" in
 						if(\$1 == "Time:") {time = \$2 " " \$3 " " \$4;}
 						else if(\$3 == "Writing:") { printf "%10d %s\n", \$4, time }
 						}' \
-					| sort -nr ||:; } | head -n "$arg_max_amount")"
+					| sort -nr ||:; } | head -n "$arg_max_amount")" \
+          || error "$command: http_writing_max_logs"
 				echo -e "\$http_writing_max_logs"
 			fi
 		SHELL

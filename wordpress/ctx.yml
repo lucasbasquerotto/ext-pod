@@ -481,7 +481,7 @@ children:
       var_run__general__backup_delete_old_days: "{{ params.main.backup_delete_old_days | default('3') }}"
       var_run__general__backup_local_base_dir: "/tmp/main/backup"
       var_run__general__orchestration: "compose"
-      var_run__general__script_dir: "{{ var_main_base_dir }}/scripts"
+      var_run__general__script_dir: "{{ var_main_dir }}/scripts"
       var_run__general__script_env_file: "{{ var_local | bool | ternary('local.sh', 'remote.sh') }}"
       var_run__general__toolbox_service: "toolbox"
       var_run__migrate__new_domain_host: "{{ params.main.migrate.new_domain_host | default('') }}"
@@ -522,18 +522,6 @@ children:
 
         {% if var_pod_type in ['app', 'web'] %}
 
-          {% if params.main.enable_db_setup_new | bool %}
-
-            {% set var_group_setup = var_group_setup + ['db_setup_new'] %}
-
-          {% endif %}
-
-        {% endif %}
-
-      {% else %}
-
-        {% if var_pod_type in ['app', 'web'] %}
-
           {% if params.main.enable_uploads_setup | bool %}
 
             {% set var_group_setup = var_group_setup + ['uploads_setup'] %}
@@ -552,10 +540,22 @@ children:
 
         {% endif %}
 
+      {% else %}
+
+        {% if var_pod_type in ['app', 'web'] %}
+
+          {% if params.main.enable_db_setup_new | bool %}
+
+            {% set var_group_setup = var_group_setup + ['db_setup_new'] %}
+
+          {% endif %}
+
+        {% endif %}
+
       {% endif %}
 
       var_task__group_setup__group_task__task_names: "{{ var_group_setup | join(',') }}"
-      var_task__group_setup_new_db__task__type: "group"
+      var_task__group_setup__task__type: "group"
 
       # Tasks (Specific)
 
