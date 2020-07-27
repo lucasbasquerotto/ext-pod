@@ -112,18 +112,18 @@ case "$command" in
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;
 	"action:exec:actions")
-		"$pod_script_env_file" "action:subtask:log_register.memory_overview" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "action:subtask:log_register.memory_details" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
 
 		if [ "${var_custom__use_nginx:-}" = "true" ]; then
-			"$pod_script_env_file" "action:subtask:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "action:subtask:nginx_reload" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "action:subtask:block_ips" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:nginx_reload" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:block_ips" > /dev/null 2>&1 ||:
 		fi
 
-		"$pod_script_env_file" "action:subtask:logrotate" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "action:subtask:log_summary" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "action:subtask:backup" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:logrotate" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_summary" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
 		;;
 	"action:exec:log_summary")
         days_ago="${var_custom__log_summary__days_ago:-}"

@@ -356,8 +356,8 @@ case "$command" in
 	"action:exec:nginx_reload")
 		"$pod_script_env_file" "service:nginx:reload" ${args[@]+"${args[@]}"}
 		;;
-	"action:subtask:"*)
-		task_name="${command#action:subtask:}"
+	"shared:action:"*)
+		task_name="${command#shared:action:}"
 
 		opts=()
 
