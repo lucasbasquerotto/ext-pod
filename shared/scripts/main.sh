@@ -5,6 +5,7 @@ set -eou pipefail
 pod_vars_dir="$POD_VARS_DIR"
 pod_layer_dir="$POD_LAYER_DIR"
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
+pod_data_dir="$POD_DATA_DIR"
 
 . "${pod_vars_dir}/vars.sh"
 
@@ -83,6 +84,13 @@ case "$command" in
 
 		"$pod_script_env_file" exec-nontty "toolbox" /bin/bash <<-SHELL
 			set -eou pipefail
+
+			dir="$data_dir/log/bg"
+
+			if [ ! -d "\$dir" ]; then
+				mkdir -p "\$dir"
+				chmod 777 "\$dir"
+			fi
 
 			if [ "${var_custom__use_nginx:-}" = "true" ]; then
 				if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
@@ -202,6 +210,13 @@ case "$command" in
 		SHELL
 		;;
 	"setup")
+		"$pod_script_env_file" "bg:subtask" \
+			--task_name="setup" \
+			--subtask_cmd="$command" \
+			--bg_dir="$pod_data_dir/log/bg" \
+			--action_dir="/var/main/data/action"
+		;;
+	"unique:exec:setup")
 		if [ "${var_custom__use_mongo:-}" = "true" ]; then
 			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
 				"$pod_script_env_file" up mongo
@@ -246,7 +261,7 @@ case "$command" in
 			fi
 		fi
 
-		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
+		"$pod_main_run_file" setup
 		;;
 	"migrate")
 		if [ "${var_custom__use_certbot:-}" = "true" ]; then
