@@ -65,14 +65,17 @@ case "$command" in
 		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"action:exec:backup")
-		"$pod_script_env_file" "backup"
+		"$pod_script_env_file" backup
 		;;
 	"backup")
+		"$pod_script_env_file" "shared:bg:backup"
+		;;
+	"unique:exec:backup")
 		if [ "${var_custom__use_logrotator:-}" = "true" ]; then
 			"$pod_main_run_file" run logrotator
 		fi
 
-		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
+		"$pod_main_run_file" backup
 		;;
 	"local:prepare")
 		"$arg_ctl_layer_dir/run" dev-cmd bash "/root/w/r/$arg_env_local_repo/run" ${arg_opts[@]+"${arg_opts[@]}"}
@@ -210,11 +213,7 @@ case "$command" in
 		SHELL
 		;;
 	"setup")
-		"$pod_script_env_file" "bg:subtask" \
-			--task_name="setup" \
-			--subtask_cmd="$command" \
-			--bg_dir="$pod_data_dir/log/bg" \
-			--action_dir="/var/main/data/action"
+		"$pod_script_env_file" "shared:bg:setup"
 		;;
 	"unique:exec:setup")
 		if [ "${var_custom__use_mongo:-}" = "true" ]; then
@@ -370,6 +369,28 @@ case "$command" in
 		;;
 	"action:exec:nginx_reload")
 		"$pod_script_env_file" "service:nginx:reload" ${args[@]+"${args[@]}"}
+		;;
+	"shared:bg:"*)
+		task_name="${command#shared:bg:}"
+
+		"$pod_script_env_file" "bg:subtask" \
+			--task_name="$task_name" \
+			--subtask_cmd="$command" \
+			--bg_file="$pod_data_dir/log/bg/$task_name.$(date -u '+%Y%m%d.%H%M%S').$$.log" \
+			--action_dir="/var/main/data/action"
+		;;
+	"shared:unique:"*)
+		task_name="${command#shared:action:}"
+
+		opts=()
+
+		opts+=( "--task_name=$task_name" )
+		opts+=( "--subtask_cmd=$command" )
+
+		opts+=( "--toolbox_service=toolbox" )
+		opts+=( "--action_dir=/var/main/data/action" )
+
+		"$pod_main_run_file" "unique:subtask" "${opts[@]}"
 		;;
 	"shared:action:"*)
 		task_name="${command#shared:action:}"
