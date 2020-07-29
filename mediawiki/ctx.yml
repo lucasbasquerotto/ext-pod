@@ -68,6 +68,16 @@
   %}
 {% endif %}
 
+{% if var_pod_type in ['app', 'web'] %}
+  {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool | 
+    ternary('root', 'viewer')
+  %}
+  {% set var_db_gui_password = params.main.db_gui_root_user | default(false) | bool | 
+    ternary(params.credentials.mediawiki.db.root_password, 
+      params.credentials.mediawiki.db.viewer_password)
+  %}
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -186,8 +196,8 @@ templates:
 
     {% if params.main.use_pma | bool %}
 
-    pma_user: "root"
-    pma_password: "{{ params.credentials.mediawiki.db.root_password }}"
+    pma_user: "{{ var_db_gui_user }}"
+    pma_password: "{{ var_db_gui_password }}"
     pma_login_cookie_validity: >-
       {{ params.main.custom_args.pma.login_cookie_validity | default('36000') }}
 
@@ -197,8 +207,8 @@ templates:
 
     {% if params.main.use_adminer | bool %}
 
-    adminer_user: "root"
-    adminer_password: "{{ params.credentials.mediawiki.db.root_password }}"
+    adminer_user: "{{ var_db_gui_user }}"
+    adminer_password: "{{ var_db_gui_password }}"
 
     {% endif %}
 

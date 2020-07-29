@@ -373,32 +373,12 @@ children:
 
       {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
-
-        {% if params.main.enable_uploads_backup | bool %}
-
-          {% set var_group_backup = var_group_backup + ['uploads_backup'] %}
-
-        {% endif %}
-
-      {% endif %}
-
       var_task__group_backup__group_task__task_names: "{{ var_group_backup | join(',') }}"
       var_task__group_backup__task__type: "group"
 
       {% set var_group_setup = [] %}
 
       {% if params.main.restore_db | bool %}
-
-        {% if var_pod_type in ['app', 'web'] %}
-
-          {% if params.main.enable_uploads_setup | bool %}
-
-            {% set var_group_setup = var_group_setup + ['uploads_setup'] %}
-
-          {% endif %}
-
-        {% endif %}
 
         {% if var_pod_type in ['app', 'db'] %}
 
@@ -498,7 +478,7 @@ children:
       var_task__db_setup__setup_verify__task_name: "db_main"
       var_task__db_setup__task__type: "setup"
 
-      {% if not (params.main.uploads_setup.restore_use_s3 | bool) %}
+      {% if not (params.main.db_setup.restore_use_s3 | bool) %}
 
       var_task__db_setup__setup_remote__restore_dest_file: "es.snapshot"
       var_task__db_setup__setup_remote__restore_remote_file: "{{ params.main.db_setup.restore_remote_file }}"
