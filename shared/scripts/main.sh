@@ -64,18 +64,18 @@ case "$command" in
 
 		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"action:exec:backup")
-		"$pod_script_env_file" backup
-		;;
 	"backup")
 		"$pod_script_env_file" "shared:bg:backup"
 		;;
-	"unique:exec:backup")
+	"action:exec:backup")
 		if [ "${var_custom__use_logrotator:-}" = "true" ]; then
-			"$pod_main_run_file" run logrotator
+			"$pod_script_env_file" "shared:unique:rotate" ||:
 		fi
 
 		"$pod_main_run_file" backup
+		;;
+	"action:exec:rotate")
+		"$pod_script_env_file" run logrotator
 		;;
 	"local:prepare")
 		"$arg_ctl_layer_dir/run" dev-cmd bash "/root/w/r/$arg_env_local_repo/run" ${arg_opts[@]+"${arg_opts[@]}"}
@@ -215,7 +215,7 @@ case "$command" in
 	"setup")
 		"$pod_script_env_file" "shared:bg:setup"
 		;;
-	"unique:exec:setup")
+	"action:exec:setup")
 		if [ "${var_custom__use_mongo:-}" = "true" ]; then
 			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
 				"$pod_script_env_file" up mongo
@@ -380,7 +380,7 @@ case "$command" in
 			--action_dir="/var/main/data/action"
 		;;
 	"shared:unique:"*)
-		task_name="${command#shared:action:}"
+		task_name="${command#shared:unique:}"
 
 		opts=()
 

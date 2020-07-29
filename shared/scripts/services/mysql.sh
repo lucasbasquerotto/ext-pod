@@ -67,7 +67,7 @@ case "$command" in
 				mysql_qtd_slow_logs="\$( \
 					{ grep '^# User@Host' "$arg_log_file" \
 					| awk ' \
-						{ s[substr(\$3, 0, index(\$3, "[") - 1)]+=1 } END \
+						{ s[substr(\$3, 0, index(\$3, "["))]+=1 } END \
 						{ for (key in s) { printf "%10d %s\n", s[key], key } } \
 						' \
 					| sort -nr ||:; } | head -n "$arg_max_amount")"
@@ -83,7 +83,7 @@ case "$command" in
 						{ \
 							if (\$2 == "Time:") {time = \$3 " " \$4;} \
 							else if (\$2 == "User@Host:") { \
-								user = substr(\$3, 0, index(\$3, "[") - 1); \
+								user = substr(\$3, 0, index(\$3, "[")); \
 							} \
 							else if (\$2 == "Query_time:") { \
 								if (s[user] < \$3) { s[user] = \$3; t[user] = time; } \
@@ -103,7 +103,7 @@ case "$command" in
 					| awk '{ \
 						if(\$2 == "Time:") {time = \$3 " " \$4;} \
 						else if (\$2 == "User@Host:") { \
-							user = substr(\$3, 0, index(\$3, "[") - 1); \
+							user = substr(\$3, 0, index(\$3, "[")); \
 						} \
 						else if (\$2 == "Query_time:") { \
 							printf "%10.1f %12s %s\n", \$3, user, time \

@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC2153
+# shellcheck disable=SC1090,SC2154,SC2153,SC2214
 set -eou pipefail
 
 pod_vars_dir="$POD_VARS_DIR"
@@ -31,6 +31,23 @@ fi
 
 shift;
 
+args=("$@")
+
+while getopts ':-:' OPT; do
+	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+		OPT="${OPTARG%%=*}"       # extract long option name
+		OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+	fi
+	case "$OPT" in
+		days_ago ) arg_days_ago="${OPTARG:-}";;
+		max_amount ) arg_max_amount="${OPTARG:-}";;
+		??* ) ;; ## ignore
+		\? )  ;; ## ignore
+	esac
+done
+shift $((OPTIND-1))
+
 pod_shared_run_file="$pod_layer_dir/$var_shared__script_dir/main.sh"
 
 case "$command" in
@@ -50,21 +67,21 @@ case "$command" in
 			fi
 		SHELL
 
-		"$pod_shared_run_file" "$command" "$@"
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"action:exec:actions")
-		"$pod_script_env_file" "action:subtask:log_register.memory_overview" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "action:subtask:log_register.memory_details" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
 
 		if [ "${var_custom__use_nginx:-}" = "true" ]; then
-			"$pod_script_env_file" "action:subtask:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "action:subtask:nginx_reload" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "action:subtask:block_ips" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:nginx_reload" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:block_ips" > /dev/null 2>&1 ||:
 		fi
 
-		"$pod_script_env_file" "action:subtask:logrotate" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "action:subtask:log_summary" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "action:subtask:backup" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:logrotate" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_summary" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
 		;;
 	"action:exec:log_summary")
         days_ago="${var_custom__log_summary__days_ago:-}"
@@ -89,6 +106,6 @@ case "$command" in
 			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
 		;;
 	*)
-		"$pod_shared_run_file" "$command" "$@"
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 esac

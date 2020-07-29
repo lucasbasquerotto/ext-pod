@@ -27,10 +27,6 @@ shift;
 pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 
 case "$command" in
-	"setup")
-		"$pod_env_shared_file" up fluentd
-		"$pod_env_shared_file" "$command" "$@"
-		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"
 		;;
