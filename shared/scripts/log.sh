@@ -108,7 +108,7 @@ case "$command" in
 				memory_max_logs="\$( \
 					{ grep -E '^(Time: |Mem: )' "$arg_log_file" \
 					| awk '{
-						if(\$1 == "Time:") {time = \$2 " " \$3 " " \$4;}
+						if(\$1 == "Time:") {time = \$2 " " \$3;}
 						else if(\$1 == "Mem:" && NF == 7) { printf "%10d %s\n", \$3, time }
 						}' \
 					| sort -nr ||:; } | head -n "$arg_max_amount")"
@@ -126,6 +126,43 @@ case "$command" in
 			echo "$result" >&2
 			exit 1
 		fi
+		;;
+	"shared:log:entropy:summary")
+		"$pod_script_env_file" "shared:log:summary" \
+			--summary_name="entropy" \
+			--cmd="shared:log:entropy:summary:log" \
+			--subtask_cmd="$command" \
+			--days_ago="${arg_days_ago:-}" \
+			--max_amount="${arg_max_amount:-}"
+        ;;
+	"shared:log:entropy:summary:log")
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+			set -eou pipefail
+
+			echo -e "##############################################################################################################"
+			echo -e "##############################################################################################################"
+			echo -e "Entropy Logs"
+			echo -e "--------------------------------------------------------------------------------------------------------------"
+			echo -e "Path: $arg_log_file"
+			echo -e "Limit: $arg_max_amount"
+
+			if [ -f "$arg_log_file" ]; then
+				echo -e "--------------------------------------------------------------------------------------------------------------"
+
+				regex="^[ ]*[^#^ ].*$"
+				entropy_min_logs="\$( \
+					{ grep -E "\$regex" "$arg_log_file" \
+					| awk '{
+						if(\$1 == "Time:") {time = \$2 " " \$3;}
+						else { printf "%10d %s\n", \$1, time }
+						}' \
+					| sort -n ||:; } | head -n "$arg_max_amount")"
+				echo -e "\$entropy_min_logs"
+			fi
+		SHELL
+		;;
+	"shared:log:main:entropy")
+		cat /proc/sys/kernel/random/entropy_avail
 		;;
 	"shared:log:nginx:summary")
 		"$pod_script_env_file" "shared:log:nginx:verify"

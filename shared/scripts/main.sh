@@ -64,15 +64,17 @@ case "$command" in
 
 		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"backup")
-		"$pod_script_env_file" "shared:bg:backup"
+	"backup"|"local.backup")
+		"$pod_script_env_file" "shared:bg:$command"
 		;;
-	"action:exec:backup")
+	"action:exec:backup"|"action:exec:local.backup")
+		task_name="${command#action:exec:}"
+
 		if [ "${var_custom__use_logrotator:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:unique:rotate" ||:
 		fi
 
-		"$pod_main_run_file" backup
+		"$pod_main_run_file" "$task_name"
 		;;
 	"action:exec:rotate")
 		"$pod_script_env_file" run logrotator
@@ -407,7 +409,7 @@ case "$command" in
 		;;
 	"action:exec:log_register."*)
 		task_name="${command#action:exec:log_register.}"
-		"$pod_script_env_file" "shared:log:register:$task_name" ${args[@]+"${args[@]}"}
+		"$pod_script_env_file" "shared:log:register:$task_name"
 		;;
 	"service:nginx:"*)
 		"$nginx_run_file" "$command" \

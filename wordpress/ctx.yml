@@ -342,7 +342,7 @@ templates:
   root: true
   params:
     env: "{{ params.main.custom_args.wordpress.env }}"
-    db_host: "{{ params.main.custom_args.mysql.host }}"
+    db_host: "mysql"
     db_port: "{{ params.main.custom_args.mysql.port }}"
     db_name: "{{ params.credentials.wordpress.db.name }}"
     db_user: "{{ params.credentials.wordpress.db.user }}"

@@ -88,6 +88,7 @@ case "$command" in
 	"action:exec:actions")
 		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.entropy" > /dev/null 2>&1 ||:
 
 		if [ "${var_custom__use_nginx:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
@@ -108,6 +109,7 @@ case "$command" in
         max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
 			if [ "${var_custom__use_nginx:-}" = "true" ]; then
