@@ -615,8 +615,9 @@ children:
 
       {% else %}
 
-      var_task__db_backup__backup_remote__backup_bucket_static_dir: "files"
-      var_task__db_backup__backup_remote__backup_zip_file: "wordpress-db.zip"
+      var_task__db_backup__backup_remote__backup_bucket_static_dir: "{{ params.main.db_backup.backup_bucket_static_dir }}"
+      var_task__db_backup__backup_remote__backup_compressed_type: "{{ params.main.db_backup.backup_compressed_type }}"
+      var_task__db_backup__backup_remote__backup_compressed_file: "{{ params.main.db_backup.backup_compressed_file }}"
 
       {% endif %}
 
@@ -634,15 +635,27 @@ children:
 
       {% if (params.main.restore_db | bool) and (params.main.enable_db_setup | bool) %}
 
-      var_task__db_setup__setup_local__db_file_name: "{{ params.credentials.wordpress.db.name }}.sql"
-      var_task__db_setup__setup_local__db_subtask_cmd: "db:restore:file:mysql"
-      var_task__db_setup__setup_local__task_name: "db_main"
+      var_task__db_setup__setup_local__is_compressed_file: >-
+        {{ params.main.db_setup.is_compressed_file | bool | ternary('true', 'false') }}
+      var_task__db_setup__setup_local__is_db_setup: "true"
+
+      {% if params.main.db_setup.restore_is_compressed_file | bool %}
+
+      var_task__db_setup__setup_local_uncompress__compress_type: "{{ params.main.db_setup.compress_type }}"
+      var_task__db_setup__setup_local_uncompress__src_file: "{{ params.credentials.wordpress.db.name }}.sql"
+      var_task__db_setup__setup_local_uncompress__compress_pass: "{{ params.credentials.wp_db.compress_pass | default('') }}"
+
+      {% endif %}
+
+      var_task__db_setup__setup_local_db__db_file_name: "{{ params.credentials.wordpress.db.name }}.sql"
+      var_task__db_setup__setup_local_db__db_subtask_cmd: "db:restore:file:mysql"
+      var_task__db_setup__setup_local_db__task_name: "db_main"
       var_task__db_setup__setup_remote__restore_use_s3: >-
         {{ params.main.db_setup.restore_use_s3 | bool | ternary('true', 'false') }}
       var_task__db_setup__setup_remote__restore_tmp_dir: "/tmp/main/restore/mysql"
       var_task__db_setup__setup_remote__task_kind: "file"
       var_task__db_setup__setup_task__setup_dest_base_dir: "/tmp/main/mysql/restore"
-      var_task__db_setup__setup_task__subtask_cmd_local: "setup:local:db"
+      var_task__db_setup__setup_task__subtask_cmd_local: "setup:local:default"
       var_task__db_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
       var_task__db_setup__setup_task__subtask_cmd_verify: "setup:verify:db"
       var_task__db_setup__setup_verify__db_subtask_cmd: "db:restore:verify:mysql"
@@ -653,15 +666,6 @@ children:
 
       var_task__db_setup__setup_remote__restore_dest_file: "{{ params.credentials.wordpress.db.name }}.sql"
       var_task__db_setup__setup_remote__restore_remote_file: "{{ params.main.db_setup.restore_remote_file }}"
-      var_task__db_setup__setup_remote__restore_is_zip_file: >-
-        {{ params.main.db_setup.restore_is_zip_file | bool | ternary('true', 'false') }}
-
-      {% if params.main.db_setup.restore_is_zip_file | bool %}
-
-      var_task__db_setup__setup_remote__restore_zip_inner_file: "{{ params.credentials.wordpress.db.name }}.sql"
-      var_task__db_setup__setup_remote__restore_zip_pass: "{{ params.credentials.wp_db.restore_zip_pass | default('') }}"
-
-      {% endif %}
 
       {% else %}
 
@@ -780,9 +784,7 @@ children:
 
       {% if params.main.enable_uploads_backup | bool %}
 
-      var_task__uploads_backup__backup_remote__backup_bucket_static_dir: "files"
       var_task__uploads_backup__backup_remote__backup_src_dir: "uploads"
-      var_task__uploads_backup__backup_remote__backup_zip_file: "wordpress-uploads.zip"
       var_task__uploads_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_uploads"
       var_task__uploads_backup__backup_remote__task_kind: "dir"
       var_task__uploads_backup__backup_task__backup_local_static_dir: "/tmp/main/backup/static"
@@ -796,8 +798,9 @@ children:
 
       {% else %}
 
-      var_task__uploads_backup__backup_remote__backup_bucket_static_dir: "files"
-      var_task__uploads_backup__backup_remote__backup_zip_file: "wordpress-uploads.zip"
+      var_task__uploads_backup__backup_remote__backup_bucket_static_dir: "{{ params.main.uploads_backup.backup_bucket_static_dir }}"
+      var_task__uploads_backup__backup_remote__backup_compressed_type: "{{ params.main.uploads_backup.backup_compressed_type }}"
+      var_task__uploads_backup__backup_remote__backup_compressed_file: "{{ params.main.uploads_backup.backup_compressed_file }}"
 
       {% endif %}
 
@@ -820,13 +823,14 @@ children:
       {% if not (params.main.uploads_setup.restore_use_s3 | bool) %}
 
       var_task__uploads_setup__setup_remote__restore_remote_file: "{{ params.main.uploads_setup.restore_remote_file }}"
-      var_task__uploads_setup__setup_remote__restore_is_zip_file: >-
-        {{ params.main.uploads_setup.restore_is_zip_file | bool | ternary('true', 'false') }}
+      var_task__uploads_setup__setup_remote__restore_is_compressed_file: >-
+        {{ params.main.uploads_setup.restore_is_compressed_file | bool | ternary('true', 'false') }}
 
-      {% if params.main.uploads_setup.restore_is_zip_file | bool %}
+      {% if params.main.uploads_setup.restore_is_compressed_file | bool %}
 
-      var_task__uploads_setup__setup_remote__restore_zip_inner_dir: "uploads"
-      var_task__uploads_setup__setup_remote__restore_zip_pass: "{{ params.credentials.wp_uploads.restore_zip_pass | default('') }}"
+      var_task__uploads_setup__setup_remote__restore_compressed_type: "{{ params.main.uploads_setup.restore_compressed_type }}"
+      var_task__uploads_setup__setup_remote__restore_compressed_inner_dir: "{{ params.main.uploads_setup.restore_compressed_inner_dir }}"
+      var_task__uploads_setup__setup_remote__restore_compressed_pass: "{{ params.credentials.wp_uploads.restore_compressed_pass | default('') }}"
 
       {% endif %}
 
