@@ -55,6 +55,7 @@ nextcloud_run_file="$pod_layer_dir/$var_shared__script_dir/services/nextcloud.sh
 mysql_run_file="$pod_layer_dir/$var_shared__script_dir/services/mysql.sh"
 redis_run_file="$pod_layer_dir/$var_shared__script_dir/services/redis.sh"
 log_run_file="$pod_layer_dir/$var_shared__script_dir/log.sh"
+test_run_file="$pod_layer_dir/$var_shared__script_dir/test.sh"
 
 case "$command" in
 	"upgrade")
@@ -436,6 +437,9 @@ case "$command" in
 		;;
 	"shared:log:"*)
 		"$log_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
+	"shared:test:"*)
+		"$test_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	*)
 		"$pod_main_run_file" "$command" ${args[@]+"${args[@]}"}
