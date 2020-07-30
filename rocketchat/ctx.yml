@@ -29,9 +29,12 @@
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
   ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
 %}
-{% set var_me_domain_port = params.main.custom_domain.me_ssl | bool |
-  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
-%}
+
+{% if params.main.use_mongo_express | bool %}
+  {% set var_me_domain_port = params.main.custom_domain.me_ssl | bool |
+    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+  %}
+{% endif %}
 
 {% if params.main.use_theia | bool %}
   {% set var_theia_domain_port = params.main.custom_domain.theia_ssl | bool |
@@ -58,11 +61,11 @@
 {% endif %}
 
 {% if var_pod_type in ['app', 'web'] %}
-  {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool | 
+  {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool |
     ternary(params.credentials.rocketchat.db.root_user, 'viewer')
   %}
-  {% set var_db_gui_password = params.main.db_gui_root_user | default(false) | bool | 
-    ternary(params.credentials.rocketchat.db.root_password, 
+  {% set var_db_gui_password = params.main.db_gui_root_user | default(false) | bool |
+    ternary(params.credentials.rocketchat.db.root_password,
       params.credentials.rocketchat.db.viewer_password)
   %}
 {% endif %}
@@ -143,8 +146,8 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    {% set var_storage_type = params.main.custom_args.rocketchat.storage_type 
-      | default('FileSystem') 
+    {% set var_storage_type = params.main.custom_args.rocketchat.storage_type
+      | default('FileSystem')
     %}
 
     public_http_port: "{{ params.main.custom_domain.public_http_port }}"
@@ -218,8 +221,8 @@ templates:
 
     {% if params.main.use_mongo_express | bool %}
 
-    db_me_user: "{{ var_db_gui_user }}"
-    db_me_pass: "{{ var_db_gui_password }}"
+    mongo_express_user: "{{ var_db_gui_user }}"
+    mongo_express_pass: "{{ var_db_gui_password }}"
 
     {% endif %}
 

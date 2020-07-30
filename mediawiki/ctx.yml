@@ -69,11 +69,11 @@
 {% endif %}
 
 {% if var_pod_type in ['app', 'web'] %}
-  {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool | 
+  {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool |
     ternary('root', 'viewer')
   %}
-  {% set var_db_gui_password = params.main.db_gui_root_user | default(false) | bool | 
-    ternary(params.credentials.mediawiki.db.root_password, 
+  {% set var_db_gui_password = params.main.db_gui_root_user | default(false) | bool |
+    ternary(params.credentials.mediawiki.db.root_password,
       params.credentials.mediawiki.db.viewer_password)
   %}
 {% endif %}
@@ -161,8 +161,7 @@ templates:
 
     {% endif %}
 
-    db_host: "{{ params.main.custom_args.mysql.host }}"
-    db_port: "{{ params.main.custom_args.mysql.port }}"
+    db_port: "{{ params.main.custom_args.mysql.port | default('3306', true) }}"
     db_name: "{{ params.credentials.mediawiki.db.name }}"
     db_user: "{{ params.credentials.mediawiki.db.user }}"
     db_password: "{{ params.credentials.mediawiki.db.password }}"

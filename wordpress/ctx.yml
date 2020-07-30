@@ -67,10 +67,10 @@
 {% endif %}
 
 {% if var_pod_type in ['app', 'web'] %}
-  {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool | 
+  {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool |
     ternary('root', 'viewer')
   %}
-  {% set var_db_gui_password = params.main.db_gui_root_user | default(false) | bool | 
+  {% set var_db_gui_password = params.main.db_gui_root_user | default(false) | bool |
     ternary(params.credentials.mysql.root_password, params.credentials.mysql.viewer_password)
   %}
 {% endif %}
@@ -154,8 +154,7 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
-    db_host: "{{ params.main.custom_args.mysql.host }}"
-    db_port: "{{ params.main.custom_args.mysql.port }}"
+    db_port: "{{ params.main.custom_args.mysql.port | default('3306', true) }}"
     db_name: "{{ params.credentials.wordpress.db.name }}"
     db_user: "{{ params.credentials.wordpress.db.user }}"
     db_password: "{{ params.credentials.wordpress.db.password }}"

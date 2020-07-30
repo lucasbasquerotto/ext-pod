@@ -178,7 +178,7 @@ services:
         LOGIN_COOKIE_VALIDITY: $PMA_LOGIN_COOKIE_VALIDITY
     restart: "unless-stopped"
     environment:
-      PMA_HOST: $DB_HOST
+      PMA_HOST: mysql
       PMA_PORT: $DB_PORT
       PMA_USER: $PMA_USER
       PMA_PASSWORD: $PMA_PASSWORD
@@ -218,7 +218,7 @@ services:
     restart: "unless-stopped"
     environment:
       ADMINER_DRIVER: server
-      ADMINER_SERVER: $DB_HOST
+      ADMINER_SERVER: mysql
       ADMINER_DB: $DB_NAME
       ADMINER_USERNAME: $ADMINER_USER
       ADMINER_PASSWORD: $ADMINER_PASSWORD
