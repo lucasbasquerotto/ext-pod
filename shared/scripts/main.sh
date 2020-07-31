@@ -436,8 +436,8 @@ case "$command" in
 			${args[@]+"${args[@]}"}
 		;;
 	"delete:old")
-		info "$title - clear old files"
-		>&2 "$pod_script_env_file" up "$arg_toolbox_service"
+		info "$command - clear old files"
+		>&2 "$pod_script_env_file" up toolbox
 
 		dirs=( "/var/log/main/" "/tmp/main/tmp/" )
 
@@ -450,16 +450,17 @@ case "$command" in
 		fi
 
 		info "$command - create the backup base directory and clear old files"
-		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
 			set -eou pipefail
-			mkdir -p "$arg_backup_local_base_dir"
 
 			for dir in "${dirs[@]}"; do
-				# remove old files and directories
-				find "\$dir" -mindepth 1 -ctime +$delete_old_days -delete -print;
+				if [ -d "\$dir" ]; then
+					# remove old files and directories
+					find "\$dir" -mindepth 1 -ctime +$delete_old_days -delete -print;
 
-				# remove old and empty directories
-				find "\$dir" -mindepth 1 -type d -ctime +$delete_old_days -empty -delete -print;
+					# remove old and empty directories
+					find "\$dir" -mindepth 1 -type d -ctime +$delete_old_days -empty -delete -print;
+				fi
 			done
 		SHELL
 		;;

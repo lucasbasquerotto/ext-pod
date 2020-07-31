@@ -615,9 +615,9 @@ children:
       var_task__db_backup__backup_task__subtask_cmd_local: "{{ var_default_db_subtask_cmd_local }}"
       var_task__db_backup__backup_task__subtask_cmd_remote: "{{ var_default_db_subtask_cmd_remote }}"
       var_task__db_backup__backup_task__is_compressed_file: >-
-        {{ params.main.db_backup.is_compressed_file | bool | ternary('true', 'false') }}
+        {{ params.main.db_backup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
 
-      {% if params.main.db_backup.is_compressed_file | bool %}
+      {% if params.main.db_backup.is_compressed_file | default(false) | bool %}
 
       var_task__db_backup__backup_task__recursive_dir: "{{ var_default_db_src_dir }}"
       var_task__db_backup__backup_task__compress_type: "{{ var_default_db_compress_type }}"
@@ -644,10 +644,11 @@ children:
       var_task__db_backup__backup_local__db_task_base_dir: "{{ var_default_db_src_dir }}"
       var_task__db_backup__backup_local__db_subtask_cmd: "{{ var_default_db_subtask_cmd_db }}"
       var_task__db_backup__backup_local__task_name: "db_main"
-      var_task__db_backup__backup_remote__backup_bucket_sync_dir: "{{ params.main.db_backup.backup_bucket_sync_dir }}"
+      var_task__db_backup__backup_remote__backup_bucket_sync_dir: >-
+        {{ params.main.db_backup.backup_bucket_sync_dir | default('') }}
       var_task__db_backup__backup_remote__subtask_cmd_s3: "{{ var_default_db_subtask_cmd_s3 }}"
 
-      {% if params.main.db_backup.is_compressed_file | bool %}
+      {% if params.main.db_backup.is_compressed_file | default(false) | bool %}
 
       var_task__db_backup__backup_remote__backup_src_file: "{{ var_default_db_compress_dest_file }}"
 
@@ -691,9 +692,9 @@ children:
       var_task__db_setup__setup_task__subtask_cmd_remote: "{{ var_default_db_subtask_cmd_remote }}"
       var_task__db_setup__setup_task__subtask_cmd_local: "{{ var_default_db_subtask_cmd_local }}"
       var_task__db_setup__setup_task__is_compressed_file: >-
-        {{ params.main.db_setup.is_compressed_file | bool | ternary('true', 'false') }}
+        {{ params.main.db_setup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
 
-      {% if params.main.db_setup.is_compressed_file | bool %}
+      {% if params.main.db_setup.is_compressed_file | default(false) | bool %}
 
       var_task__db_setup__setup_task__compress_type: "{{ var_default_db_compress_type }}"
       var_task__db_setup__setup_task__compress_src_file: "{{ var_default_db_compress_file }}"
@@ -872,9 +873,9 @@ children:
       var_task__uploads_backup__task__type: "backup"
       var_task__uploads_backup__backup_task__subtask_cmd_remote: "{{ var_default_uploads_subtask_cmd_remote }}"
       var_task__uploads_backup__backup_task__is_compressed_file: >-
-        {{ params.main.uploads_backup.is_compressed_file | bool | ternary('true', 'false') }}
+        {{ params.main.uploads_backup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
 
-      {% if params.main.uploads_backup.is_compressed_file | bool %}
+      {% if params.main.uploads_backup.is_compressed_file | default(false) | bool %}
 
       var_task__uploads_backup__backup_task__compress_type: "{{ var_default_uploads_compress_type }}"
       var_task__uploads_backup__backup_task__compress_src_dir: "{{ var_default_uploads_src_dir }}"
@@ -890,10 +891,11 @@ children:
       var_task__uploads_backup__backup_task__recursive_mode_file: "{{ params.main.uploads_backup.recursive_mode_file | default('') }}"
       var_task__uploads_backup__backup_task__file_to_clear: "{{ params.main.uploads_backup.file_to_clear | default('') }}"
       var_task__uploads_backup__backup_task__dir_to_clear: "{{ params.main.uploads_backup.dir_to_clear | default('') }}"
-      var_task__uploads_backup__backup_remote__backup_bucket_sync_dir: "{{ params.main.uploads_backup.backup_bucket_sync_dir }}"
+      var_task__uploads_backup__backup_remote__backup_bucket_sync_dir:  >-
+        {{ params.main.uploads_backup.backup_bucket_sync_dir | default('') }}
       var_task__uploads_backup__backup_remote__subtask_cmd_s3: "{{ var_default_uploads_subtask_cmd_s3 }}"
 
-      {% if params.main.uploads_backup.is_compressed_file | bool %}
+      {% if params.main.uploads_backup.is_compressed_file | default(false) | bool %}
 
       var_task__uploads_backup__backup_remote__backup_src_file: "{{ var_default_uploads_compress_dest_file }}"
 
@@ -920,9 +922,9 @@ children:
       var_task__uploads_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
       var_task__uploads_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
       var_task__uploads_setup__setup_task__is_compressed_file: >-
-        {{ params.main.uploads_setup.is_compressed_file | bool | ternary('true', 'false') }}
+        {{ params.main.uploads_setup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
 
-      {% if params.main.uploads_setup.is_compressed_file | bool %}
+      {% if params.main.uploads_setup.is_compressed_file | default(false) | bool %}
 
       var_task__uploads_setup__setup_task__compress_type: "{{ var_default_uploads_compress_type }}"
       var_task__uploads_setup__setup_task__compress_src_file: "{{ var_default_uploads_compress_file }}"
