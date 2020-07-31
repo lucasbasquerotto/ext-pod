@@ -120,6 +120,7 @@ services:
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
+    - "$DATA_DIR/tmp/tmp/nginx:/tmp/main/tmp/nginx"
     logging: *mainlog
 
     {% if (params.memory.nginx | default('')) != '' %}
@@ -167,6 +168,7 @@ services:
     volumes:
     - "$DATA_DIR/wordpress/uploads:/var/www/html/web/app/uploads"
     - "$DATA_DIR/tmp/wordpress:/tmp/main/wordpress"
+    - "$DATA_DIR/tmp/tmp/wordpress:/tmp/main/tmp/wordpress"
 
     {% if params.local | bool %}
 
@@ -213,6 +215,7 @@ services:
     - "shared"
     volumes:
     - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
+    - "$DATA_DIR/tmp/tmp/phpmyadmin:/tmp/main/tmp/phpmyadmin"
     logging: *mainlog
 
     {% if (params.memory.phpmyadmin | default('')) != '' %}
@@ -254,6 +257,7 @@ services:
     - "shared"
     volumes:
     - "$DATA_DIR/tmp/adminer:/tmp/main/adminer"
+    - "$DATA_DIR/tmp/tmp/adminer:/tmp/main/tmp/adminer"
     logging: *mainlog
 
     {% if (params.memory.adminer | default('')) != '' %}
@@ -301,6 +305,7 @@ services:
     {% endif %}
 
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
+    - "$DATA_DIR/tmp/tmp/theia:/tmp/main/tmp/theia"
     logging: *mainlog
 
     {% if (params.memory.theia | default('')) != '' %}
@@ -338,6 +343,7 @@ services:
     - "shared"
     volumes:
     - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
+    - "$DATA_DIR/tmp/tmp/minio_gateway:/tmp/main/tmp/minio_gateway"
     logging: *mainlog
     command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
 
@@ -373,6 +379,7 @@ services:
     - "shared"
     volumes:
     - "$DATA_DIR/tmp/filestash:/tmp/main/filestash"
+    - "$DATA_DIR/tmp/tmp/filestash:/tmp/main/tmp/filestash"
     logging: *mainlog
 
     {% if (params.memory.filestash | default('')) != '' %}
@@ -421,6 +428,7 @@ services:
     - "$DATA_DIR/sync:/var/main/data/sync"
     - "$DATA_DIR/action:/var/main/data/action"
     - "$DATA_DIR/tmp/nextcloud:/tmp/main/nextcloud"
+    - "$DATA_DIR/tmp/tmp/nextcloud:/tmp/main/tmp/nextcloud"
     logging: *mainlog
 
     {% if (params.memory.nextcloud | default('')) != '' %}
@@ -471,6 +479,7 @@ services:
     {% endif %}
 
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
+    - "$DATA_DIR/tmp/tmp/mysql:/tmp/main/tmp/mysql"
     - "$DATA_DIR/tmp/log/mysql:/tmp/main/log/mysql"
     logging: *mainlog
 
@@ -540,6 +549,7 @@ services:
     volumes:
     - "$WP_APP_REPO_DIR:/var/www/html"
     - "$DATA_DIR/tmp/composer:/tmp/main/composer"
+    - "$DATA_DIR/tmp/tmp/composer:/tmp/main/tmp/composer"
     logging: *mainlog
     command: "tail -f /dev/null"
     working_dir: "/var/www/html"
@@ -575,6 +585,7 @@ services:
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
+    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
     logging: *jsonlog
 
     {% if (params.memory.fluentd | default('')) != '' %}

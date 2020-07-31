@@ -435,6 +435,34 @@ case "$command" in
 			--redis_service="redis" \
 			${args[@]+"${args[@]}"}
 		;;
+	"delete:old")
+		info "$title - clear old files"
+		>&2 "$pod_script_env_file" up "$arg_toolbox_service"
+
+		dirs=( "/var/log/main/" "/tmp/main/tmp/" )
+
+		re_number='^[0-9]+$'
+		delete_old_days="${var_shared__delete_old__days:-7}"
+
+		if ! [[ $delete_old_days =~ $re_number ]] ; then
+			msg="The variable 'var_shared__delete_old__days' should be a number"
+			error "$command: $msg (value=$delete_old_days)"
+		fi
+
+		info "$command - create the backup base directory and clear old files"
+		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+			set -eou pipefail
+			mkdir -p "$arg_backup_local_base_dir"
+
+			for dir in "${dirs[@]}"; do
+				# remove old files and directories
+				find "\$dir" -mindepth 1 -ctime +$delete_old_days -delete -print;
+
+				# remove old and empty directories
+				find "\$dir" -mindepth 1 -type d -ctime +$delete_old_days -empty -delete -print;
+			done
+		SHELL
+		;;
 	"shared:log:"*)
 		"$log_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;

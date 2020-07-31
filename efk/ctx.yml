@@ -289,6 +289,7 @@ children:
       {% endif %}
 
       var_shared__script_dir: "{{ var_shared_dir }}/scripts"
+      var_shared__delete_old__days: "3"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
       var_custom__use_main_network: "true"
@@ -346,8 +347,7 @@ children:
 
       # General
 
-      var_run__general__backup_delete_old_days: "{{ params.main.backup_delete_old_days | default('3') }}"
-      var_run__general__backup_local_base_dir: "/tmp/main/backup"
+      var_run__general__backup_is_delete_old: "true"
       var_run__general__orchestration: "compose"
       var_run__general__script_dir: "{{ var_main_dir }}/scripts"
       var_run__general__script_env_file: "{{ var_local | bool | ternary('local.sh', 'remote.sh') }}"
