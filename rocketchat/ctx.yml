@@ -547,7 +547,8 @@ children:
       {% set var_default_db_compressed_file_name = params.main.db_backup.db_compressed_file_name
         | default(params.credentials.rocketchat.db.name + '.[[ datetime ]].[[ random ]].zip')
       %}
-      {% set var_default_db_src_dir = '/tmp/main/tmp/mongo/backup' %}
+      {% set var_default_db_src_base_dir = '/tmp/main/tmp/mongo/backup' %}
+      {% set var_default_db_src_dir = var_default_db_src_base_dir + '/' + params.credentials.rocketchat.db.name %}
       {% set var_default_db_tmp_dir = '/tmp/main/tmp/backup/mongo' %}
       {% set var_default_db_compress_type = params.main.db_backup.db_compress_type | default('zip') %}
       {% set var_default_db_compress_dest_file = var_default_db_tmp_dir + '/' + var_default_db_compressed_file_name %}
@@ -566,7 +567,7 @@ children:
 
       var_task__db_backup__backup_task__recursive_dir: "{{ var_default_db_src_dir }}"
       var_task__db_backup__backup_task__compress_type: "{{ var_default_db_compress_type }}"
-      var_task__db_backup__backup_task__compress_src_dir: >-
+      var_task__db_backup__backup_task__compress_src_file: >-
         {{ params.main.db_backup.compress_src_file | default('') }}
       var_task__db_backup__backup_task__compress_src_dir: >-
         {{ params.main.db_backup.compress_src_dir | default(var_default_db_src_dir) }}
@@ -588,7 +589,7 @@ children:
       var_task__db_backup__backup_task__recursive_mode_file: "{{ params.main.db_backup.recursive_mode_file | default('') }}"
       var_task__db_backup__backup_task__file_to_clear: "{{ params.main.db_backup.file_to_clear | default('') }}"
       var_task__db_backup__backup_task__dir_to_clear: "{{ params.main.db_backup.dir_to_clear | default('') }}"
-      var_task__db_backup__backup_local__db_task_base_dir: "{{ var_default_db_src_dir }}"
+      var_task__db_backup__backup_local__db_task_base_dir: "{{ var_default_db_src_base_dir }}"
       var_task__db_backup__backup_local__db_subtask_cmd: "{{ var_default_db_subtask_cmd_db }}"
       var_task__db_backup__backup_local__task_name: "db_main"
       var_task__db_backup__backup_remote__backup_bucket_sync_dir: >-
