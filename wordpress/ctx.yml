@@ -798,7 +798,7 @@ children:
       var_task__logs_setup__task__type: "setup"
       var_task__logs_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
       var_task__logs_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
-      var_task__logs_setup__setup_task__recursive_dir: "{{ var_default_db_dest_dir }}"
+      var_task__logs_setup__setup_task__recursive_dir: "{{ var_default_dest_dir }}"
       var_task__logs_setup__setup_task__recursive_mode: "{{ params.main.logs_setup.recursive_mode | default('') }}"
       var_task__logs_setup__setup_task__recursive_mode_dir: >-
         {{ params.main.logs_setup.recursive_mode_dir | default('777') }}
@@ -847,7 +847,7 @@ children:
       var_task__sync_setup__task__type: "setup"
       var_task__sync_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
       var_task__sync_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
-      var_task__sync_setup__setup_task__recursive_dir: "{{ var_default_db_dest_dir }}"
+      var_task__sync_setup__setup_task__recursive_dir: "{{ var_default_dest_dir }}"
       var_task__sync_setup__setup_task__recursive_mode: "{{ params.main.sync_setup.recursive_mode | default('') }}"
       var_task__sync_setup__setup_task__recursive_mode_dir: >-
         {{ params.main.sync_setup.recursive_mode_dir | default('777') }}

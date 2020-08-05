@@ -425,7 +425,8 @@ children:
       var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.mediawiki_backup_bucket.host | default('') }}"
       var_shared__nextcloud__s3_backup__port: "{{ params.credentials.mediawiki_backup_bucket.port | default('') }}"
       var_shared__nextcloud__s3_backup__region: "{{ params.credentials.mediawiki_backup_bucket.region | default('') }}"
-      var_shared__nextcloud__s3_backup__use_ssl: "{{ params.credentials.mediawiki_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_shared__nextcloud__s3_backup__use_ssl: >-
+        {{ params.credentials.mediawiki_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
       var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.mediawiki_backup_bucket.path_style | default('') }}"
       var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.mediawiki_backup_bucket.legacy_auth | default('') }}"
       var_shared__nextcloud__s3_uploads__enable: "true"
@@ -435,7 +436,8 @@ children:
       var_shared__nextcloud__s3_uploads__hostname: "{{ params.credentials.mediawiki_uploads_bucket.host | default('') }}"
       var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.mediawiki_uploads_bucket.port | default('') }}"
       var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.mediawiki_uploads_bucket.region | default('') }}"
-      var_shared__nextcloud__s3_uploads__use_ssl: "{{ params.credentials.mediawiki_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_shared__nextcloud__s3_uploads__use_ssl: >-
+        {{ params.credentials.mediawiki_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }
       var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.mediawiki_uploads_bucket.path_style | default('') }}"
       var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.mediawiki_uploads_bucket.legacy_auth | default('') }}"
 
@@ -551,7 +553,8 @@ children:
       var_task__certbot__certbot_subtask__force: "{{ params.main.certbot.force | bool | ternary('true', 'false') }}"
       var_task__certbot__certbot_subtask__main_domain: "{{ params.main.certbot.main_domain }}"
       var_task__certbot__certbot_subtask__rsa_key_size: "{{ params.main.certbot.rsa_key_size | default('4096') }}"
-      var_task__certbot__certbot_subtask__staging: "{{ params.main.certbot.staging | default(var_local) | bool | ternary('true', 'false') }}"
+      var_task__certbot__certbot_subtask__staging: >-
+        {{ params.main.certbot.staging | default(var_local) | bool | ternary('true', 'false') }}
       var_task__certbot__certbot_subtask__toolbox_service: "toolbox"
       var_task__certbot__certbot_subtask__webservice_type: "nginx"
       var_task__certbot__certbot_task__certbot_cmd: "setup"
@@ -746,7 +749,7 @@ children:
       var_task__logs_setup__task__type: "setup"
       var_task__logs_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
       var_task__logs_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
-      var_task__logs_setup__setup_task__recursive_dir: "{{ var_default_db_dest_dir }}"
+      var_task__logs_setup__setup_task__recursive_dir: "{{ var_default_dest_dir }}"
       var_task__logs_setup__setup_task__recursive_mode: "{{ params.main.logs_setup.recursive_mode | default('') }}"
       var_task__logs_setup__setup_task__recursive_mode_dir: >-
         {{ params.main.logs_setup.recursive_mode_dir | default('777') }}
@@ -795,7 +798,7 @@ children:
       var_task__sync_setup__task__type: "setup"
       var_task__sync_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
       var_task__sync_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
-      var_task__sync_setup__setup_task__recursive_dir: "{{ var_default_db_dest_dir }}"
+      var_task__sync_setup__setup_task__recursive_dir: "{{ var_default_dest_dir }}"
       var_task__sync_setup__setup_task__recursive_mode: "{{ params.main.sync_setup.recursive_mode | default('') }}"
       var_task__sync_setup__setup_task__recursive_mode_dir: >-
         {{ params.main.sync_setup.recursive_mode_dir | default('777') }}
@@ -842,7 +845,8 @@ children:
 
       var_task__uploads_backup__backup_task__backup_date_format: "{{ params.main.uploads_backup.backup_date_format | default('') }}"
       var_task__uploads_backup__backup_task__backup_time_format: "{{ params.main.uploads_backup.backup_time_format | default('') }}"
-      var_task__uploads_backup__backup_task__backup_datetime_format: "{{ params.main.uploads_backup.backup_datetime_format | default('') }}"
+      var_task__uploads_backup__backup_task__backup_datetime_format: >-
+        {{ params.main.uploads_backup.backup_datetime_format | default('') }}
       var_task__uploads_backup__backup_task__recursive_dir: "{{ var_default_uploads_tmp_dir }}"
       var_task__uploads_backup__backup_task__recursive_mode: "{{ params.main.uploads_backup.recursive_mode | default('') }}"
       var_task__uploads_backup__backup_task__recursive_mode_dir: "{{ params.main.uploads_backup.recursive_mode_dir | default('') }}"
@@ -854,7 +858,8 @@ children:
       var_task__uploads_backup__backup_remote__subtask_cmd_s3: "{{ var_default_uploads_subtask_cmd_s3 }}"
       var_task__uploads_backup__backup_remote__backup_date_format: "{{ params.main.uploads_backup.backup_date_format | default('') }}"
       var_task__uploads_backup__backup_remote__backup_time_format: "{{ params.main.uploads_backup.backup_time_format | default('') }}"
-      var_task__uploads_backup__backup_remote__backup_datetime_format: "{{ params.main.uploads_backup.backup_datetime_format | default('') }}"
+      var_task__uploads_backup__backup_remote__backup_datetime_format: >-
+        {{ params.main.uploads_backup.backup_datetime_format | default('') }}
 
       {% if params.main.uploads_backup.is_compressed_file | default(false) | bool %}
 
