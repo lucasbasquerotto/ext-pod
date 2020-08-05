@@ -53,12 +53,27 @@ pod_shared_run_file="$pod_layer_dir/$var_shared__script_dir/main.sh"
 case "$command" in
 	"prepare")
 		data_dir="/var/main/data"
+		tmp_dir="/tmp/main"
 
 		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
 			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
 				dir="$data_dir/elasticsearch"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 755 "\$dir"
+				fi
+
+				dir="$tmp_dir/elasticsearch"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 755 "\$dir"
+				fi
+
+				dir="$tmp_dir/elasticsearch/snapshots"
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"

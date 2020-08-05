@@ -1,0 +1,2 @@
+path.repo: /tmp/main/elasticsearch/snapshots
+network.host: 0.0.0.0

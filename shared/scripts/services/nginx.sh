@@ -1,7 +1,7 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC1117,SC2153,SC2214
 set -eou pipefail
 
+# shellcheck disable=SC2153
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 GRAY="\033[0;90m"
@@ -27,6 +27,7 @@ fi
 
 shift;
 
+# shellcheck disable=SC2214
 while getopts ':-:' OPT; do
 	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
@@ -351,7 +352,7 @@ case "$command" in
 							grep_args+=( "-e" "\$grep_line" )
 						done <<< "\$(echo -e "\$grep_lines")"
 					fi
-				fi      
+				fi
 
 				if [ "\${#grep_args[@]}" -eq 0 ]; then
 					grep_args=( "." )
@@ -408,7 +409,7 @@ case "$command" in
 				if [ "\${#grep_args[@]}" -eq 0 ]; then
 					grep_args=( "." )
 				fi
-        
+
 				longest_request_durations="\$( \
 					{ grep \${grep_args[@]+"\${grep_args[@]}"} "$arg_log_file" \
 					| awk \

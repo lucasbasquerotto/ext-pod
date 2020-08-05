@@ -1,11 +1,8 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC1117,SC2153,SC2214
 set -eou pipefail
 
-pod_vars_dir="$POD_VARS_DIR"
+# shellcheck disable=SC2153
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
-
-. "${pod_vars_dir}/vars.sh"
 
 GRAY='\033[0;90m'
 RED='\033[0;31m'
@@ -50,7 +47,7 @@ case "$command" in
 			mkdir -p /tmp/main/test/dest/
 		SHELL
 
-		"$pod_script_env_file" "compress:zip" \
+		"$pod_script_env_file" "run:compress:zip" \
 			--task_name="test-1.1" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
@@ -58,7 +55,7 @@ case "$command" in
 			--src_file="/tmp/main/test/src/file1.txt" \
 			--dest_file="/tmp/main/test/dest/file.zip"
 
-		"$pod_script_env_file" "compress:zip" \
+		"$pod_script_env_file" "run:compress:zip" \
 			--task_name="test-1.2" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
@@ -66,7 +63,7 @@ case "$command" in
 			--src_dir="/tmp/main/test/src/dir" \
 			--dest_file="/tmp/main/test/dest/dir.zip"
 
-		"$pod_script_env_file" "compress:zip" \
+		"$pod_script_env_file" "run:compress:zip" \
 			--task_name="test-1.3" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
@@ -75,7 +72,7 @@ case "$command" in
 			--dest_file="/tmp/main/test/dest/flat.zip" \
 			--flat="true"
 
-		"$pod_script_env_file" "compress:zip" \
+		"$pod_script_env_file" "run:compress:zip" \
 			--task_name="test-1.4" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
@@ -99,7 +96,7 @@ case "$command" in
 			mkdir -p /tmp/main/test/newdest/pass
 		SHELL
 
-		"$pod_script_env_file" "uncompress:zip" \
+		"$pod_script_env_file" "run:uncompress:zip" \
 			--task_name="test-2.1" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
@@ -107,7 +104,7 @@ case "$command" in
 			--dest_dir="/tmp/main/test/newdest/file" \
 			--compress_pass=""
 
-		"$pod_script_env_file" "uncompress:zip" \
+		"$pod_script_env_file" "run:uncompress:zip" \
 			--task_name="test-2.2" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
@@ -115,7 +112,7 @@ case "$command" in
 			--dest_dir="/tmp/main/test/newdest/dir" \
 			--compress_pass=""
 
-		"$pod_script_env_file" "uncompress:zip" \
+		"$pod_script_env_file" "run:uncompress:zip" \
 			--task_name="test-2.4" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
@@ -123,7 +120,7 @@ case "$command" in
 			--dest_dir="/tmp/main/test/newdest/flat" \
 			--compress_pass=""
 
-		"$pod_script_env_file" "uncompress:zip" \
+		"$pod_script_env_file" "run:uncompress:zip" \
 			--task_name="test-2.3" \
 			--subtask_cmd="$command" \
 			--toolbox_service="toolbox" \
