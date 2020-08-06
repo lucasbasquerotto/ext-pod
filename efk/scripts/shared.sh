@@ -70,35 +70,26 @@ case "$command" in
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 755 "\$dir"
+					chmod 777 "\$dir"
 				fi
 
 				dir="$tmp_dir/elasticsearch/snapshots"
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 755 "\$dir"
+					chmod 777 "\$dir"
 				fi
 			fi
 		SHELL
 
-		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
-		;;
-	"migrate")
-		"$pod_script_env_file" "migrate:$var_custom__pod_type" ${args[@]+"${args[@]}"}
-		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
-		;;
-	"migrate:app")
-		"$pod_script_env_file" "migrate:web" ${args[@]+"${args[@]}"}
-		"$pod_script_env_file" "migrate:db" ${args[@]+"${args[@]}"}
-		;;
-	"migrate:web")
-		info "$command - nothing to do..."
-		;;
-	"migrate:db")
 		vm_max_map_count="${var_migrate_es_vm_max_map_count:-262144}"
 		info "$command increasing vm max map count to $vm_max_map_count"
 		sudo sysctl -w vm.max_map_count="$vm_max_map_count"
+
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
+	"migrate")
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"action:exec:actions")
 		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:

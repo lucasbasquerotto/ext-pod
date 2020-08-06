@@ -437,12 +437,12 @@ children:
       {% if params.main.db_backup.use_s3 | bool %}
 
         {% set var_default_db_subtask_cmd_local = '' %}
-        {% set var_default_db_subtask_cmd_remote = 'backup:remote:db' %}
+        {% set var_default_db_subtask_cmd_remote = 'backup:db' %}
         {% set var_db_snapshot_type = params.main.db_backup.snapshot_type | default('s3') %}
 
       {% else %}
 
-        {% set var_default_db_subtask_cmd_local = 'backup:local:db' %}
+        {% set var_default_db_subtask_cmd_local = 'backup:db' %}
         {% set var_default_db_subtask_cmd_remote = '' %}
         {% set var_db_snapshot_type = params.main.db_backup.snapshot_type | default('fs') %}
 
@@ -451,17 +451,12 @@ children:
       var_task__db_backup__task__type: "backup"
       var_task__db_backup__backup_task__subtask_cmd_local: "{{ var_default_db_subtask_cmd_local }}"
       var_task__db_backup__backup_task__subtask_cmd_remote: "{{ var_default_db_subtask_cmd_remote }}"
-      var_task__db_backup__backup_local__db_task_base_dir: "{{ var_default_db_dir }}"
-      var_task__db_backup__backup_local__db_subtask_cmd: "{{ var_default_db_subtask_cmd_db }}"
-      var_task__db_backup__backup_local__repository_name: "{{ var_db_repository_name }}"
-      var_task__db_backup__backup_local__snapshot_name: "{{ var_db_snapshot_name }}"
-      var_task__db_backup__backup_local__snapshot_type: "{{ var_db_snapshot_type }}"
-      var_task__db_backup__backup_local__task_name: "db_main"
-      var_task__db_backup__backup_remote__db_subtask_cmd: "{{ var_default_db_subtask_cmd_db }}"
-      var_task__db_backup__backup_remote__repository_name: "{{ var_db_repository_name }}"
-      var_task__db_backup__backup_remote__snapshot_name: "{{ var_db_snapshot_name }}"
-      var_task__db_backup__backup_remote__snapshot_type: "{{ var_db_snapshot_type }}"
-      var_task__db_backup__backup_remote__task_name: "db_main"
+      var_task__db_backup__backup_db__db_task_base_dir: "{{ var_default_db_dir }}"
+      var_task__db_backup__backup_db__db_subtask_cmd: "{{ var_default_db_subtask_cmd_db }}"
+      var_task__db_backup__backup_db__repository_name: "{{ var_db_repository_name }}"
+      var_task__db_backup__backup_db__snapshot_name: "{{ var_db_snapshot_name }}"
+      var_task__db_backup__backup_db__snapshot_type: "{{ var_db_snapshot_type }}"
+      var_task__db_backup__backup_db__task_name: "db_main"
 
       {% endif %}
 
@@ -491,11 +486,13 @@ children:
 
         {% set var_default_db_subtask_cmd_local = '' %}
         {% set var_default_db_subtask_cmd_remote = 'setup:db' %}
+        {% set var_db_snapshot_type = params.main.db_setup.snapshot_type | default('s3') %}
 
       {% else %}
 
         {% set var_default_db_subtask_cmd_local = 'setup:db' %}
         {% set var_default_db_subtask_cmd_remote = '' %}
+        {% set var_db_snapshot_type = params.main.db_setup.snapshot_type | default('fs') %}
 
       {% endif %}
 
@@ -514,19 +511,14 @@ children:
       var_task__db_setup__setup_task__subtask_cmd_local: "{{ var_default_db_subtask_cmd_local }}"
       var_task__db_setup__setup_verify__db_subtask_cmd: "{{ var_default_db_verify_cmd }}"
       var_task__db_setup__setup_verify__task_name: "db_main"
-      var_task__db_setup__setup_verify__elasticsearch_index_prefix: "{{ var_db_index_prefix }}"
+      var_task__db_setup__setup_verify__db_index_prefix: "{{ var_db_index_prefix }}"
       var_task__db_setup__setup_db__db_subtask_cmd: "{{ var_default_db_subtask_cmd_db }}"
+      var_task__db_setup__setup_db__db_task_base_dir: "{{ var_default_db_dir }}"
       var_task__db_setup__setup_db__task_name: "db_main"
       var_task__db_setup__setup_db__repository_name: "{{ var_db_repository_name }}"
       var_task__db_setup__setup_db__snapshot_name: "{{ var_db_snapshot_name }}"
-      var_task__db_setup__setup_db__elasticsearch_ignore_index_settings: "{{ var_db_ignore_index_settings }}"
-      var_task__db_setup__setup_db__elasticsearch_include_aliases: "{{ var_db_include_aliases }}"
-      var_task__db_setup__setup_db__elasticsearch_include_global_state: "{{ var_db_include_global_state }}"
-      var_task__db_setup__setup_db__elasticsearch_index_settings: "{{ var_db_index_settings }}"
-      var_task__db_setup__setup_db__elasticsearch_indices: "{{ var_db_indices }}"
-      var_task__db_setup__setup_db__elasticsearch_partial: "{{ var_db_partial }}"
-      var_task__db_setup__setup_db__elasticsearch_rename_pattern: "{{ var_db_rename_pattern }}"
-      var_task__db_setup__setup_db__elasticsearch_rename_replacement: "{{ var_db_rename_replacement }}"
+      var_task__db_setup__setup_db__snapshot_type: "{{ var_db_snapshot_type }}"
+      var_task__db_setup__setup_db__db_args: "{{ var_db_args | default('') }}"
 
       {% endif %}
 
