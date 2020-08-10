@@ -401,6 +401,12 @@ case "$command" in
 
 		"$pod_main_run_file" "unique:subtask" "${opts[@]}"
 		;;
+	"action:exec:watch")
+		inotifywait -m "$pod_data_dir/action" -e create -e moved_to |
+			while read -r _ _ file; do
+				"$pod_script_env_file" "shared:action:$file"
+			done
+		;;
 	"shared:action:"*)
 		task_name="${command#shared:action:}"
 
