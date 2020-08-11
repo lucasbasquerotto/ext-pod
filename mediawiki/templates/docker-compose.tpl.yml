@@ -58,7 +58,16 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
     depends_on:
+
+    {% if params.use_varnish | bool %}
+
+    - "varnish"
+
+    {% else %}
+
     - "mediawiki"
+
+    {% endif %}
 
     {% if params.use_pma | bool %}
 
@@ -122,6 +131,48 @@ services:
     mem_limit: "{{ params.memory.nginx }}"
 
     {% endif %}
+
+  {% if params.use_varnish %}
+
+  varnish:
+    container_name: "${CTX_PREFIX_MAIN}varnish"
+    hostname: "varnish"
+    build:
+      context: .
+      dockerfile: "shared/containers/varnish/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.varnish_image }}"
+        VERSION: "{{ params.images.varnish_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/varnish:/tmp/main/varnish"
+    - "$DATA_DIR/tmp/tmp/varnish:/tmp/main/tmp/varnish"
+    ulimits:
+      nofile:
+        soft: 131072
+        hard: 131072
+      memlock:
+        hard: 82000
+        soft: 82000
+    logging: *mainlog
+
+    {% if (params.memory.varnish | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.varnish }}"
+
+    {% endif %}
+
+  {% endif %}
 
   mediawiki:
     container_name: "${CTX_PREFIX_MAIN}mediawiki"

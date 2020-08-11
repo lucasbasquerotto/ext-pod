@@ -115,6 +115,7 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
+    use_varnish: "{{ params.main.use_varnish }}"
     use_pma: "{{ params.main.use_pma }}"
     use_adminer: "{{ params.main.use_adminer }}"
     use_theia: "{{ params.main.use_theia }}"
@@ -261,6 +262,7 @@ templates:
     main_port: "{{ var_main_domain_port }}"
     main_ssl: "{{ params.main.custom_domain.main_ssl }}"
     main: "{{ params.main.custom_args.nginx.main | default({}) }}"
+    use_varnish: "{{ params.main.use_varnish }}"
     use_theia: "{{ params.main.use_theia }}"
 
     {% if params.main.use_theia | bool %}
@@ -320,6 +322,15 @@ templates:
     adminer_ssl: "{{ params.main.custom_domain.adminer_ssl }}"
 
     {% endif %}
+
+{% endif %}
+
+{% if params.main.use_varnish | bool %}
+
+- src: "{{ var_main_dir }}/templates/varnish/default.vcl"
+  dest: "{{ var_main_base_dir }}/env/varnish/default.vcl"
+  root: true
+  params: {}
 
 {% endif %}
 
@@ -437,7 +448,7 @@ children:
       var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.mediawiki_uploads_bucket.port | default('') }}"
       var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.mediawiki_uploads_bucket.region | default('') }}"
       var_shared__nextcloud__s3_uploads__use_ssl: >-
-        {{ params.credentials.mediawiki_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }
+        {{ params.credentials.mediawiki_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
       var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.mediawiki_uploads_bucket.path_style | default('') }}"
       var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.mediawiki_uploads_bucket.legacy_auth | default('') }}"
 

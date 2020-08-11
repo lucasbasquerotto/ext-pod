@@ -445,7 +445,8 @@ children:
       var_shared__nextcloud__s3_uploads__hostname: "{{ params.credentials.wp_uploads_bucket.host | default('') }}"
       var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.wp_uploads_bucket.port | default('') }}"
       var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.wp_uploads_bucket.region | default('') }}"
-      var_shared__nextcloud__s3_uploads__use_ssl: "{{ params.credentials.wp_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_shared__nextcloud__s3_uploads__use_ssl: >-
+        {{ params.credentials.wp_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
       var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.wp_uploads_bucket.path_style | default('') }}"
       var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.wp_uploads_bucket.legacy_auth | default('') }}"
 

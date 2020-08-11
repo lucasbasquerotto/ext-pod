@@ -404,7 +404,8 @@ children:
       var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.rocketchat_backup_bucket.host | default('') }}"
       var_shared__nextcloud__s3_backup__port: "{{ params.credentials.rocketchat_backup_bucket.port | default('') }}"
       var_shared__nextcloud__s3_backup__region: "{{ params.credentials.rocketchat_backup_bucket.region | default('') }}"
-      var_shared__nextcloud__s3_backup__use_ssl: "{{ params.credentials.rocketchat_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_shared__nextcloud__s3_backup__use_ssl: >-
+        {{ params.credentials.rocketchat_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
       var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.rocketchat_backup_bucket.path_style | default('') }}"
       var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.rocketchat_backup_bucket.legacy_auth | default('') }}"
       var_shared__nextcloud__s3_uploads__enable: "true"
@@ -414,7 +415,8 @@ children:
       var_shared__nextcloud__s3_uploads__hostname: "{{ params.credentials.rocketchat_uploads_bucket.host | default('') }}"
       var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.rocketchat_uploads_bucket.port | default('') }}"
       var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.rocketchat_uploads_bucket.region | default('') }}"
-      var_shared__nextcloud__s3_uploads__use_ssl: "{{ params.credentials.rocketchat_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}"
+      var_shared__nextcloud__s3_uploads__use_ssl: >-
+        {{ params.credentials.rocketchat_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
       var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.rocketchat_uploads_bucket.path_style | default('') }}"
       var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.rocketchat_uploads_bucket.legacy_auth | default('') }}"
 
