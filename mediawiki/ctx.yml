@@ -359,6 +359,19 @@ templates:
     lang: "{{ params.main.mediawiki.lang }}"
     secret_key: "{{ params.credentials.mediawiki.secret_key }}"
     authentication_token_version: "{{ params.main.mediawiki.authentication_token_version }}"
+    s3_upload_path: ""
+    use_s3_storage: "{{ params.main.use_s3_storage }}"
+
+    {% if params.main.use_s3_storage | bool %}
+
+    s3_key: ""
+    s3_secret: ""
+    s3_endpoint: "{{ params.credentials.mediawiki_uploads_bucket.endpoint | default('') }}"
+    s3_region: "{{ params.credentials.mediawiki_uploads_bucket.region | default('') }}"
+    s3_bucket: "{{ params.main.uploads_bucket_name }}"
+    s3_path: "{{ params.main.uploads_bucket_path | default('') }}"
+
+    {% endif %}
 
 {% endif %}
 

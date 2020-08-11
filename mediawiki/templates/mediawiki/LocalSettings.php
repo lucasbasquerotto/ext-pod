@@ -11,7 +11,6 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 	exit;
 }
 
-
 ## Uncomment this to disable output compression
 # $wgDisableOutputCompression = true;
 
@@ -70,6 +69,12 @@ $wgEnableUploads = true;
 $wgUseImageMagick = true;
 $wgImageMagickConvertCommand = "/usr/bin/convert";
 
+{% if (params.s3_upload_path | default('')) != '' %}
+
+$wgUploadPath = "{{ params.s3_upload_path }}";
+
+{% endif %}
+
 # InstantCommons allows wiki to use images from https://commons.wikimedia.org
 $wgUseInstantCommons = false;
 
@@ -117,9 +122,47 @@ wfLoadSkin( 'MonoBook' );
 wfLoadSkin( 'Timeless' );
 wfLoadSkin( 'Vector' );
 
-
 # Enabled extensions. Most of the extensions are enabled by adding
 # wfLoadExtensions('ExtensionName');
 # to LocalSettings.php. Check specific extension documentation for more details.
 # The following extensions were automatically enabled:
 wfLoadExtension( 'Nuke' );
+
+{% if params.use_s3_storage | bool %}
+
+wfLoadExtension( 'AWS' );
+
+$wgAWSRepoHashLevels = '2'; # Default 0
+# 2 means that S3 objects will be named a/ab/Filename.png (same as when MediaWiki stores files in local directories)
+
+$wgAWSRepoDeletedHashLevels = '3'; # Default 0
+# 3 for naming a/ab/abc/Filename.png (same as when MediaWiki stores deleted files in local directories)
+
+// Configure AWS credentials.
+$wgAWSCredentials = [
+	'key' => '{{ params.s3_key }}',
+	'secret' => '{{ params.s3_secret }}',
+	'token' => false
+];
+
+{% if (params.s3_endpoint | default('')) != '' %}
+
+$wgFileBackends['s3']['endpoint'] = '{{ params.s3_endpoint }}';
+
+{% endif %}
+
+{% if (params.s3_region | default('')) != '' %}
+
+$wgAWSRegion = '{{ params.s3_region }}';
+
+{% endif %}
+
+$wgAWSBucketName = "{{ params.s3_bucket }}";
+
+{% if (params.s3_path | default('')) != '' %}
+
+$wgAWSBucketTopSubdirectory = '{{ params.s3_path }}';
+
+{% endif %}
+
+{% endif %}
