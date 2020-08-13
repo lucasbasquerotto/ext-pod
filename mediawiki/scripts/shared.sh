@@ -69,6 +69,13 @@ case "$command" in
 					mkdir -p "\$dir"
 					chmod 777 "\$dir"
 				fi
+
+				dir="$data_dir/tmp/log/mediawiki"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
 			fi
 		SHELL
 
@@ -90,6 +97,13 @@ case "$command" in
 				"$pod_shared_run_file" exec-nontty mediawiki php maintenance/upgrade.php
 			else
 				>&2 echo "skipping..."
+			fi
+
+			if [ "$var_custom__use_varnish" = "true" ]; then
+				"$pod_shared_run_file" up varnish
+
+				info "$command - clear varnish cache..."
+				"$pod_shared_run_file" exec-nontty varnish varnishadm ban req.url '~' '.'
 			fi
 		fi
 

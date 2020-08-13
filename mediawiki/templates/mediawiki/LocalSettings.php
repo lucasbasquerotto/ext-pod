@@ -69,9 +69,9 @@ $wgEnableUploads = true;
 $wgUseImageMagick = true;
 $wgImageMagickConvertCommand = "/usr/bin/convert";
 
-{% if (params.s3_upload_path | default('')) != '' %}
+{% if (params.upload_path | default('')) != '' %}
 
-$wgUploadPath = "{{ params.s3_upload_path }}";
+$wgUploadPath = "{{ params.upload_path }}";
 
 {% endif %}
 
@@ -151,18 +151,31 @@ $wgFileBackends['s3']['endpoint'] = '{{ params.s3_endpoint }}';
 
 {% endif %}
 
-{% if (params.s3_region | default('')) != '' %}
-
-$wgAWSRegion = '{{ params.s3_region }}';
-
-{% endif %}
-
-$wgAWSBucketName = "{{ params.s3_bucket }}";
+$wgAWSBucketName = '{{ params.s3_bucket }}';
+$wgAWSRegion = '{{ params.s3_region | default("") }}';
 
 {% if (params.s3_path | default('')) != '' %}
 
 $wgAWSBucketTopSubdirectory = '{{ params.s3_path }}';
 
 {% endif %}
+
+{% endif %}
+
+{% if not (params.disable_logs | bool) %}
+
+$wgDBerrorLog = '/tmp/main/log/mediawiki/dberror.log';
+$wgRateLimitLog = '/tmp/main/log/mediawiki/ratelimit.log';
+$wgDebugLogGroups = array(
+	'resourceloader' => '/tmp/main/log/mediawiki/resourceloader.log',
+	'exception' => '/tmp/main/log/mediawiki/exception.log',
+	'error' => '/tmp/main/log/mediawiki/error.log',
+);
+
+{% endif %}
+
+{% if params.debug_logs | bool %}
+
+$wgDebugLogFile = '/tmp/main/log/mediawiki/debug.log';
 
 {% endif %}

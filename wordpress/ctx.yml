@@ -512,7 +512,7 @@ children:
 
       {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
+      {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
         {% if params.main.enable_uploads_backup | bool %}
 
@@ -529,7 +529,7 @@ children:
 
       {% if params.main.restore_db | bool %}
 
-        {% if var_pod_type in ['app', 'web'] %}
+        {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
           {% if params.main.enable_uploads_setup | bool %}
 
@@ -871,7 +871,7 @@ children:
 
       {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
+      {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
       {% if params.main.enable_uploads_backup | bool %}
 

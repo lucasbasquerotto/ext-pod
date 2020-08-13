@@ -359,7 +359,7 @@ templates:
     lang: "{{ params.main.mediawiki.lang }}"
     secret_key: "{{ params.credentials.mediawiki.secret_key }}"
     authentication_token_version: "{{ params.main.mediawiki.authentication_token_version }}"
-    s3_upload_path: ""
+    upload_path: "{{ params.main.mediawiki.upload_path | default('') }}"
     use_s3_storage: "{{ params.main.use_s3_storage }}"
 
     {% if params.main.use_s3_storage | bool %}
@@ -372,6 +372,9 @@ templates:
     s3_path: "{{ params.main.uploads_bucket_path | default('') }}"
 
     {% endif %}
+
+    disable_logs: "{{ params.main.disable_logs | default(false) }}"
+    debug_logs: "{{ params.main.debug_logs | default(false) }}"
 
 {% endif %}
 
@@ -422,6 +425,7 @@ children:
 
       {% if var_pod_type in ['app', 'web'] %}
 
+      var_custom__use_varnish: "{{ params.main.use_varnish | bool | ternary('true', 'false') }}"
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
       var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
 
@@ -519,7 +523,7 @@ children:
 
       {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
+      {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
         {% if params.main.enable_uploads_backup | bool %}
 
@@ -536,7 +540,7 @@ children:
 
       {% if params.main.restore_db | bool %}
 
-        {% if var_pod_type in ['app', 'web'] %}
+        {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
           {% if params.main.enable_uploads_setup | bool %}
 
@@ -842,7 +846,7 @@ children:
 
       {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
+      {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
       {% if params.main.enable_uploads_backup | bool %}
 

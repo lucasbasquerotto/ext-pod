@@ -70,6 +70,14 @@
   %}
 {% endif %}
 
+{% if var_pod_type in ['app', 'web'] %}
+  {% set var_storage_type = params.main.use_s3_storage | bool | ternary(
+      'AmazonS3',
+      params.main.custom_args.rocketchat.storage_type | default('FileSystem')
+    )
+  %}
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -113,6 +121,19 @@ templates:
     use_filestash: "{{ params.main.use_filestash }}"
     use_nextcloud: "{{ params.main.use_nextcloud }}"
     use_bot: "{{ params.main.use_bot }}"
+    rocketchat:
+      mail_url: "{{ credentials.rocketchat.mail_url | default('smtp://smtp.email') }}"
+      storage_type: "{{ var_storage_type }}"
+
+      {% if params.main.use_s3_storage | bool %}
+
+      fileupload_s3_bucketurl: "{{ params.main.custom_args.rocketchat.uploads_bucket_endpoint | default('') }}"
+      fileupload_s3_bucket: "{{ params.main.uploads_bucket_name }}"
+      fileupload_s3_region: "{{ params.main.custom_args.rocketchat.uploads_bucket_region | default('') }}"
+      fileupload_s3_acl: "{{ params.main.custom_args.rocketchat.uploads_bucket_acl | default('') }}"
+      fileupload_s3_cdn: "{{ params.main.custom_args.rocketchat.s3_cdn | default('') }}"
+
+      {% endif %}
 
     {% endif %}
 
@@ -146,36 +167,16 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    {% set var_storage_type = params.main.custom_args.rocketchat.storage_type
-      | default('FileSystem')
-    %}
-
     public_http_port: "{{ params.main.custom_domain.public_http_port }}"
     public_https_port: "{{ params.main.custom_domain.public_https_port }}"
     private_http_port: "{{ params.main.custom_domain.private_http_port }}"
     private_https_port: "{{ params.main.custom_domain.private_https_port }}"
-    rocketchat_mail_url: "{{ credentials.rocketchat.mail_url | default('smtp://smtp.email') }}"
     rocketchat_fileupload_storage_type: "{{ var_storage_type }}"
 
-    {% if var_storage_type == 'AmazonS3' %}
+    {% if params.main.use_s3_storage | bool %}
 
-    rocketchat_fileupload_s3_bucketurl: "{{ params.main.custom_args.rocketchat.uploads_bucket_endpoint }}"
-    rocketchat_fileupload_s3_bucket: "{{ params.main.custom_args.rocketchat.uploads_bucket_name }}"
-    rocketchat_fileupload_s3_region: "{{ params.main.custom_args.rocketchat.uploads_bucket_region | default('') }}"
-    rocketchat_fileupload_s3_acl: "{{ params.main.custom_args.rocketchat.uploads_bucket_acl | default('') }}"
-    rocketchat_fileupload_s3_awsaccesskeyid: "{{ credentials.rocketchat_uploads_bucket.access_key }}"
-    rocketchat_fileupload_s3_awssecretaccesskey: "{{ credentials.rocketchat_uploads_bucket.secret_key }}"
-    rocketchat_fileupload_s3_cdn: "{{ params.main.custom_args.rocketchat.s3_cdn | default('') }}"
-
-    {% else %}
-
-    rocketchat_fileupload_s3_bucketurl: ""
-    rocketchat_fileupload_s3_bucket: ""
-    rocketchat_fileupload_s3_region: ""
-    rocketchat_fileupload_s3_acl: ""
-    rocketchat_fileupload_s3_awsaccesskeyid: ""
-    rocketchat_fileupload_s3_awssecretaccesskey: ""
-    rocketchat_fileupload_s3_cdn: ""
+    rocketchat_fileupload_s3_access_key: "{{ credentials.rocketchat_uploads_bucket.access_key }}"
+    rocketchat_fileupload_s3_secret_key: "{{ credentials.rocketchat_uploads_bucket.secret_key }}"
 
     {% endif %}
 
@@ -474,7 +475,7 @@ children:
 
       {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
+      {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
         {% if params.main.enable_uploads_backup | bool %}
 
@@ -491,7 +492,7 @@ children:
 
       {% if params.main.restore_db | bool %}
 
-        {% if var_pod_type in ['app', 'web'] %}
+        {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
           {% if params.main.enable_uploads_setup | bool %}
 
@@ -794,7 +795,7 @@ children:
 
       {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
+      {% if (var_pod_type in ['app', 'web']) and (not (params.main.use_s3_storage | bool)) %}
 
       {% if params.main.enable_uploads_backup | bool %}
 
