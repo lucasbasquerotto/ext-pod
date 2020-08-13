@@ -57,13 +57,13 @@ sub vcl_recv {
     # normalize Accept-Encoding to reduce vary
     if (req.http.Accept-Encoding) {
         if (req.http.User-Agent ~ "MSIE 6") {
-        unset req.http.Accept-Encoding;
+            unset req.http.Accept-Encoding;
         } elsif (req.http.Accept-Encoding ~ "gzip") {
-        set req.http.Accept-Encoding = "gzip";
+            set req.http.Accept-Encoding = "gzip";
         } elsif (req.http.Accept-Encoding ~ "deflate") {
-        set req.http.Accept-Encoding = "deflate";
+            set req.http.Accept-Encoding = "deflate";
         } else {
-        unset req.http.Accept-Encoding;
+            unset req.http.Accept-Encoding;
         }
     }
 

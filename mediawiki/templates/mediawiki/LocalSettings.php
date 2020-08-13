@@ -128,6 +128,8 @@ wfLoadSkin( 'Vector' );
 # The following extensions were automatically enabled:
 wfLoadExtension( 'Nuke' );
 
+wfLoadExtension( 'WikiEditor' );
+
 {% if params.use_s3_storage | bool %}
 
 wfLoadExtension( 'AWS' );
@@ -177,5 +179,13 @@ $wgDebugLogGroups = array(
 {% if params.debug_logs | bool %}
 
 $wgDebugLogFile = '/tmp/main/log/mediawiki/debug.log';
+
+{% endif %}
+
+{% if params.use_varnish | bool %}
+
+$wgUseCdn = true;
+$wgCdnServers = [];
+$wgCdnServers[] = "varnish";
 
 {% endif %}
