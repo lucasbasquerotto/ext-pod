@@ -524,7 +524,9 @@ children:
       {% else %}
 
         {% set var_db_subtask_cmd_local = 'setup:db' %}
-        {% set var_db_subtask_cmd_remote = '' %}
+        {% set var_db_subtask_cmd_remote = ((params.main.db_setup.restore_remote_file | default('')) != '')
+          | ternary('setup:remote:default', '')
+        %}
         {% set var_db_snapshot_type = params.main.db_setup.snapshot_type | default('fs') %}
 
       {% endif %}
