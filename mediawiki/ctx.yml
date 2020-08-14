@@ -125,6 +125,12 @@ templates:
 
     {% endif %}
 
+    {% if var_pod_type in ['app', 'memcached'] %}
+
+    use_memcached: "{{ params.main.use_memcached }}"
+
+    {% endif %}
+
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "{{ var_main_base_dir }}/docker-compose.run.yml"
   root: true
@@ -376,6 +382,7 @@ templates:
     disable_logs: "{{ params.main.disable_logs | default(false) }}"
     debug_logs: "{{ params.main.debug_logs | default(false) }}"
     use_varnish: "{{ params.main.use_varnish }}"
+    use_memcached: "{{ params.main.use_memcached }}"
 
 {% endif %}
 

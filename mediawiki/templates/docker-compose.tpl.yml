@@ -197,6 +197,12 @@ services:
 
     {% if params.pod_type == 'app' %}
 
+    {% if params.use_memcached | bool %}
+
+    - "memcached"
+
+    {% endif %}
+
     - "mysql"
 
     {% endif %}
@@ -466,6 +472,45 @@ services:
     {% if (params.memory.nextcloud | default('')) != '' %}
 
     mem_limit: "{{ params.memory.nextcloud }}"
+
+    {% endif %}
+
+  {% endif %}
+
+  {% endif %}
+
+  {% if params.pod_type in ['app', 'memcached'] %}
+
+  {% if params.use_memcached %}
+
+  memcached:
+    container_name: "${CTX_PREFIX_MAIN}memcached"
+    hostname: "memcached"
+    build:
+      context: .
+      dockerfile: "shared/containers/memcached/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.memcached_image }}"
+        VERSION: "{{ params.images.memcached_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/memcached:/tmp/main/memcached"
+    - "$DATA_DIR/tmp/tmp/memcached:/tmp/main/tmp/memcached"
+    logging: *mainlog
+
+    {% if (params.memory.memcached | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.memcached }}"
 
     {% endif %}
 
