@@ -643,7 +643,7 @@ children:
       {% set var_db_subtask_cmd_remote = 'setup:remote:default' %}
       {% set var_db_subtask_cmd_local = 'setup:local:db' %}
       {% set var_db_verify_cmd = 'db:restore:verify:mongo' %}
-      {% set var_db_local_cmd = 'db:restore:file:mongo' %}
+      {% set var_db_local_cmd = 'db:restore:mongo:dir' %}
 
       var_task__db_setup__task__type: "setup"
       var_task__db_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
