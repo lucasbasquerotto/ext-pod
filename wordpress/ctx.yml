@@ -937,7 +937,7 @@ children:
       {% set var_verify_file_to_skip = params.main.uploads_setup.verify_file_to_skip | default('/tmp/main/setup/uploads.skip') %}
       {% set var_uploads_tmp_base_dir = '/tmp/main/tmp/wordpress' %}
       {% set var_uploads_compress_type = params.main.uploads_setup.compress_type | default('zip') %}
-      {% set var_uploads_compressed_file_name = params.main.uploads_setup.compressed_file_name | default('upload.zip') %}
+      {% set var_uploads_compressed_file_name = params.main.uploads_setup.compressed_file_name | default('uploads.zip') %}
       {% set var_uploads_compress_file = '/tmp/main/tmp/restore/uploads/' + var_uploads_compressed_file_name %}
 
       var_task__uploads_setup__task__type: "setup"

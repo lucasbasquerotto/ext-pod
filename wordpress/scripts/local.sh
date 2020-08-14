@@ -56,6 +56,13 @@ case "$command" in
 esac
 
 case "$command" in
+	"c")
+		"$pod_env_shared_file" exec composer composer update --verbose
+		;;
+	"composer")
+		"$pod_env_shared_file" exec composer composer clear-cache
+		"$pod_env_shared_file" exec composer composer update --verbose
+		;;
 	"prepare")
 		if [ "${var_custom__use_composer:-}" = "true" ]; then
 			inner_dir="env"
@@ -76,15 +83,6 @@ case "$command" in
 		if [ "${var_custom__use_composer:-}" = "true" ]; then
 			"$pod_env_shared_file" up mysql composer
 			"$pod_env_shared_file" exec composer composer install --verbose
-		fi
-
-		"$pod_env_shared_file" "$command" "$@"
-		;;
-	"migrate")
-		if [ "${var_custom__use_composer:-}" = "true" ]; then
-			"$pod_env_shared_file" up mysql composer
-			# "$pod_env_shared_file" exec composer composer clear-cache
-			# "$pod_env_shared_file" exec composer composer update --verbose
 		fi
 
 		"$pod_env_shared_file" "$command" "$@"
