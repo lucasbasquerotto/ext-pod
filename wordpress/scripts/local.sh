@@ -63,10 +63,11 @@ case "$command" in
 			wp --allow-root plugin install w3-total-cache
 
 			cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/advanced-cache.php /var/www/html/web/app/advanced-cache.php
-			mkdir /var/www/html/web/app/cache
+			mkdir -p /var/www/html/web/app/cache
 			chmod 777 /var/www/html/web/app/cache
-			mkdir /var/www/html/web/app/w3tc-config
+			mkdir -p /var/www/html/web/app/w3tc-config
 			chmod 777 /var/www/html/web/app/w3tc-config
+			chmod 777 /var/www/html/.htaccess
 
 			wp --allow-root plugin activate w3-total-cache
 		SHELL
@@ -75,8 +76,8 @@ case "$command" in
 		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
 			set -eou pipefail
 
-			wp --allow-root plugin deactivate w3-total-cache
-			wp --allow-root plugin uninstall w3-total-cache
+			wp --allow-root plugin deactivate w3-total-cache ||:
+			wp --allow-root plugin uninstall w3-total-cache ||:
 		SHELL
 		;;
 	"c")
