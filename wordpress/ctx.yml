@@ -75,6 +75,12 @@
   %}
 {% endif %}
 
+{% if var_pod_type in ['app', 'web'] %}
+  {% if (params.main.migrate.w3tc_import_src_file | default('')) != '' %}
+    {% set var_w3tc_import_dest_file = var_main_base_dir + '/env/wordpress/config/w3tc/config.conf' %}
+  {% endif %}
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -86,6 +92,14 @@ env_files:
 - src: "{{ params.main.auth_file }}"
   dest: "{{ var_main_base_dir }}/env/nginx/conf/.htpasswd"
   root: true
+
+{% if (params.main.migrate.w3tc_import_src_file | default('')) != '' %}
+
+- src: "{{ params.main.migrate.w3tc_import_src_file }}"
+  dest: "{{ var_w3tc_import_dest_file }}"
+  root: true
+
+{% endif %}
 
 {% endif %}
 
@@ -495,6 +509,7 @@ children:
       var_run__general__toolbox_service: "toolbox"
       var_run__migrate__new_domain_host: "{{ params.main.migrate.new_domain_host | default('') }}"
       var_run__migrate__old_domain_host: "{{ params.main.migrate.old_domain_host | default('') }}"
+      var_run__migrate__w3tc_import_file: "{{ var_w3tc_import_dest_file | default('') }}"
       var_run__tasks__backup: "group_backup"
       var_run__tasks__setup: "group_setup"
 

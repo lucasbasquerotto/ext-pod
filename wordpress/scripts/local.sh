@@ -56,6 +56,29 @@ case "$command" in
 esac
 
 case "$command" in
+	"w3tc")
+		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
+			set -eou pipefail
+
+			wp --allow-root plugin install w3-total-cache
+
+			cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/advanced-cache.php /var/www/html/web/app/advanced-cache.php
+			mkdir /var/www/html/web/app/cache
+			chmod 777 /var/www/html/web/app/cache
+			mkdir /var/www/html/web/app/w3tc-config
+			chmod 777 /var/www/html/web/app/w3tc-config
+
+			wp --allow-root plugin activate w3-total-cache
+		SHELL
+		;;
+	"w3tc-remove")
+		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
+			set -eou pipefail
+
+			wp --allow-root plugin deactivate w3-total-cache
+			wp --allow-root plugin uninstall w3-total-cache
+		SHELL
+		;;
 	"c")
 		"$pod_env_shared_file" exec composer composer update --verbose
 		;;

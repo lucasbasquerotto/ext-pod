@@ -52,6 +52,7 @@ while getopts ':-:' OPT; do
 		setup_remote_seed_data ) arg_setup_remote_seed_data="${OPTARG:-}";;
 		old_domain_host ) arg_old_domain_host="${OPTARG:-}";;
 		new_domain_host ) arg_new_domain_host="${OPTARG:-}";;
+		w3tc_import_file ) arg_w3tc_import_file="${OPTARG:-}";;
 		??* ) error "Illegal option --$OPT" ;;	# bad long option
 		\? )	exit 2 ;;	# bad short option (error reported via getopts)
 	esac
@@ -124,6 +125,11 @@ case "$command" in
 			if [ -n "${arg_old_domain_host:-}" ] && [ -n "${arg_new_domain_host:-}" ]; then
 				info "$command - update domain"
 				wp --allow-root search-replace "$arg_old_domain_host" "$arg_new_domain_host"
+			fi
+
+			if [ -n "${arg_w3tc_import_file:-}" ]; then
+				info "$command - w3-total-cache - import"
+				wp --allow-root w3-total-cache import "$arg_w3tc_import_file"
 			fi
 		SHELL
 		;;

@@ -82,6 +82,7 @@ case "$command" in
 
 		opts+=( "--old_domain_host=${var_run__migrate__old_domain_host:-}" )
 		opts+=( "--new_domain_host=${var_run__migrate__new_domain_host:-}" )
+		opts+=( "--w3tc_import_file=${var_run__migrate__w3tc_import_file:-}" )
 
 		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
 
