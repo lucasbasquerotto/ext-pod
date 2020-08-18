@@ -64,7 +64,16 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
     depends_on:
+
+    {% if params.use_varnish | bool %}
+
+    - "varnish"
+
+    {% else %}
+
     - "wordpress"
+
+    {% endif %}
 
     {% if params.use_pma | bool %}
 
@@ -129,6 +138,48 @@ services:
 
     {% endif %}
 
+  {% if params.use_varnish %}
+
+  varnish:
+    container_name: "${CTX_PREFIX_MAIN}varnish"
+    hostname: "varnish"
+    build:
+      context: .
+      dockerfile: "shared/containers/varnish/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.varnish_image }}"
+        VERSION: "{{ params.images.varnish_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/tmp/varnish:/tmp/main/varnish"
+    - "$DATA_DIR/tmp/tmp/varnish:/tmp/main/tmp/varnish"
+    ulimits:
+      nofile:
+        soft: 131072
+        hard: 131072
+      memlock:
+        hard: 82000
+        soft: 82000
+    logging: *mainlog
+
+    {% if (params.memory.varnish | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.varnish }}"
+
+    {% endif %}
+
+  {% endif %}
+
   wordpress:
     container_name: "${CTX_PREFIX_MAIN}wordpress"
     hostname: "wordpress"
@@ -156,6 +207,12 @@ services:
     {% endif %}
 
     {% if params.pod_type == 'app' %}
+
+    {% if params.use_memcached | bool %}
+
+    - "memcached"
+
+    {% endif %}
 
     - "mysql"
 
@@ -441,6 +498,96 @@ services:
 
   {% endif %}
 
+  {% if params.pod_type in ['app', 'cache'] %}
+
+  {% if params.use_redis %}
+
+  redis:
+    container_name: "${CTX_PREFIX_MAIN}redis"
+    hostname: "redis"
+    build:
+      context: .
+      dockerfile: "shared/containers/redis/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.redis_image }}"
+        VERSION: "{{ params.images.redis_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+
+    {% if params.pod_type in ['cache'] %}
+
+    ports:
+    - "6379:6379"
+
+    {% endif %}
+
+    volumes:
+    - "$DATA_DIR/tmp/redis:/tmp/main/redis"
+    - "$DATA_DIR/tmp/tmp/redis:/tmp/main/tmp/redis"
+    logging: *mainlog
+
+    {% if (params.memory.redis | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.redis }}"
+
+    {% endif %}
+
+  {% endif %}
+
+  {% if params.use_memcached %}
+
+  memcached:
+    container_name: "${CTX_PREFIX_MAIN}memcached"
+    hostname: "memcached"
+    build:
+      context: .
+      dockerfile: "shared/containers/memcached/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.memcached_image }}"
+        VERSION: "{{ params.images.memcached_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+
+    {% if params.pod_type in ['cache'] %}
+
+    ports:
+    - "11211:11211"
+
+    {% endif %}
+
+    volumes:
+    - "$DATA_DIR/tmp/memcached:/tmp/main/memcached"
+    - "$DATA_DIR/tmp/tmp/memcached:/tmp/main/tmp/memcached"
+    logging: *mainlog
+
+    {% if (params.memory.memcached | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.memcached }}"
+
+    {% endif %}
+
+  {% endif %}
+
+  {% endif %}
+
   {% if params.pod_type in ['app', 'db'] %}
 
   mysql:
@@ -466,6 +613,14 @@ services:
 
     networks:
     - "shared"
+
+    {% if params.pod_type in ['db'] %}
+
+    ports:
+    - "3306:3306"
+
+    {% endif %}
+
     volumes:
 
     {% if (params.local | bool) and (not (params.external_volumes | bool)) %}

@@ -23,6 +23,11 @@ CYAN='\033[0;36m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+function info {
+	msg="$(date '+%F %T') - ${1:-}"
+	>&2 echo -e "${GRAY}${msg}${NC}"
+}
+
 function error {
 	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
 	>&2 echo -e "${RED}${msg}${NC}"
@@ -36,7 +41,6 @@ if [ -z "$base_dir" ] || [ "$base_dir" = "/" ]; then
 	error "$msg"
 fi
 
-ctl_layer_dir="$base_dir/ctl"
 app_layer_dir="$base_dir/apps/$var_dev__repo_dir_wordpress"
 
 command="${1:-}"
@@ -68,9 +72,19 @@ case "$command" in
 			mkdir -p /var/www/html/web/app/w3tc-config
 			chmod 777 /var/www/html/web/app/w3tc-config
 			rm -rf /var/www/html/web/app/cache/page_enhanced
+			a2enmod rewrite
 
 			wp --allow-root plugin activate w3-total-cache
 		SHELL
+
+		"$pod_script_env_file" restart wordpress nginx
+
+		if [ "$var_custom__use_varnish" = "true" ]; then
+			"$pod_script_env_file" up varnish
+
+			info "$command - clear varnish cache..."
+			"$pod_script_env_file" "service:varnish:clear"
+		fi
 		;;
 	"w3tc-remove")
 		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
@@ -110,10 +124,6 @@ case "$command" in
 		fi
 
 		"$pod_env_shared_file" "$command" "$@"
-		;;
-	"stop"|"rm")
-		"$pod_env_shared_file" "$command" "$@"
-		"$ctl_layer_dir/run" "$command"
 		;;
 	"clear-remote")
 		"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb

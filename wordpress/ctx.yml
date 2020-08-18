@@ -75,12 +75,6 @@
   %}
 {% endif %}
 
-{% if var_pod_type in ['app', 'web'] %}
-  {% if (params.main.migrate.w3tc_import_src_file | default('')) != '' %}
-    {% set var_w3tc_import_dest_file = var_main_base_dir + '/env/wordpress/config/w3tc/config.conf' %}
-  {% endif %}
-{% endif %}
-
 ### main ###
 
 env_files:
@@ -92,14 +86,6 @@ env_files:
 - src: "{{ params.main.auth_file }}"
   dest: "{{ var_main_base_dir }}/env/nginx/conf/.htpasswd"
   root: true
-
-{% if (params.main.migrate.w3tc_import_src_file | default('')) != '' %}
-
-- src: "{{ params.main.migrate.w3tc_import_src_file }}"
-  dest: "{{ var_w3tc_import_dest_file }}"
-  root: true
-
-{% endif %}
 
 {% endif %}
 
@@ -127,6 +113,7 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
+    use_varnish: "{{ params.main.use_varnish }}"
     use_pma: "{{ params.main.use_pma }}"
     use_adminer: "{{ params.main.use_adminer }}"
     use_theia: "{{ params.main.use_theia }}"
@@ -139,6 +126,13 @@ templates:
     use_composer: "{{ params.main.use_composer }}"
 
     {% endif %}
+
+    {% endif %}
+
+    {% if var_pod_type in ['app', 'cache'] %}
+
+    use_redis: "{{ params.main.use_redis }}"
+    use_memcached: "{{ params.main.use_memcached }}"
 
     {% endif %}
 
@@ -282,6 +276,7 @@ templates:
     main_port: "{{ var_main_domain_port }}"
     main_ssl: "{{ params.main.custom_domain.main_ssl }}"
     main: "{{ params.main.custom_args.nginx.main | default({}) }}"
+    use_varnish: "{{ params.main.use_varnish }}"
     use_theia: "{{ params.main.use_theia }}"
 
     {% if params.main.use_theia | bool %}
@@ -341,6 +336,15 @@ templates:
     adminer_ssl: "{{ params.main.custom_domain.adminer_ssl }}"
 
     {% endif %}
+
+{% endif %}
+
+{% if params.main.use_varnish | bool %}
+
+- src: "{{ var_main_dir }}/templates/varnish/default.vcl"
+  dest: "{{ var_main_base_dir }}/env/varnish/default.vcl"
+  root: true
+  params: {}
 
 {% endif %}
 
@@ -425,6 +429,7 @@ children:
 
       {% if var_pod_type in ['app', 'web'] %}
 
+      var_custom__use_varnish: "{{ params.main.use_varnish | bool | ternary('true', 'false') }}"
       var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
 
       {% if params.main.use_nextcloud | bool %}

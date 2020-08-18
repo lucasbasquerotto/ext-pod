@@ -272,6 +272,13 @@ case "$command" in
 		"$pod_main_run_file" setup
 		;;
 	"migrate")
+		if [ "$var_custom__use_varnish" = "true" ]; then
+			"$pod_script_env_file" up varnish
+
+			info "$command - clear varnish cache..."
+			"$pod_script_env_file" "service:varnish:clear"
+		fi
+
 		if [ "${var_custom__use_certbot:-}" = "true" ]; then
 			info "$command - start certbot if needed..."
 			"$pod_script_env_file" "main:task:certbot"
@@ -446,6 +453,9 @@ case "$command" in
 			--toolbox_service="toolbox" \
 			--redis_service="redis" \
 			${args[@]+"${args[@]}"}
+		;;
+	"service:varnish:clear")
+		"$pod_script_env_file" exec-nontty varnish varnishadm ban req.url '~' '.'
 		;;
 	"delete:old")
 		info "$command - clear old files"

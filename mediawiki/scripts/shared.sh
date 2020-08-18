@@ -98,13 +98,6 @@ case "$command" in
 			else
 				>&2 echo "skipping..."
 			fi
-
-			if [ "$var_custom__use_varnish" = "true" ]; then
-				"$pod_shared_run_file" up varnish
-
-				info "$command - clear varnish cache..."
-				"$pod_shared_run_file" exec-nontty varnish varnishadm ban req.url '~' '.'
-			fi
 		fi
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
