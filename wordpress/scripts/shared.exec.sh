@@ -52,7 +52,7 @@ while getopts ':-:' OPT; do
 		setup_remote_seed_data ) arg_setup_remote_seed_data="${OPTARG:-}";;
 		old_domain_host ) arg_old_domain_host="${OPTARG:-}";;
 		new_domain_host ) arg_new_domain_host="${OPTARG:-}";;
-		w3tc_import_file ) arg_w3tc_import_file="${OPTARG:-}";;
+		use_w3tc ) arg_use_w3tc="${OPTARG:-}";;
 		??* ) error "Illegal option --$OPT" ;;	# bad long option
 		\? )	exit 2 ;;	# bad short option (error reported via getopts)
 	esac
@@ -127,9 +127,18 @@ case "$command" in
 				wp --allow-root search-replace "$arg_old_domain_host" "$arg_new_domain_host"
 			fi
 
-			if [ -n "${arg_w3tc_import_file:-}" ]; then
-				info "$command - w3-total-cache - import"
-				wp --allow-root w3-total-cache import "$arg_w3tc_import_file"
+			if [ "${arg_use_w3tc:-}" = "true" ]; then
+				wp --allow-root plugin install w3-total-cache
+
+				cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/advanced-cache.php /var/www/html/web/app/advanced-cache.php
+				mkdir -p /var/www/html/web/app/cache
+				chmod 777 /var/www/html/web/app/cache
+				mkdir -p /var/www/html/web/app/w3tc-config
+				chmod 777 /var/www/html/web/app/w3tc-config
+				rm -rf /var/www/html/web/app/cache/page_enhanced
+
+				wp --allow-root plugin activate w3-total-cache
+				wp --allow-root w3-total-cache fix_environment
 			fi
 		SHELL
 		;;

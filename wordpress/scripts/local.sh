@@ -67,7 +67,7 @@ case "$command" in
 			chmod 777 /var/www/html/web/app/cache
 			mkdir -p /var/www/html/web/app/w3tc-config
 			chmod 777 /var/www/html/web/app/w3tc-config
-			chmod 777 /var/www/html/.htaccess
+			rm -rf /var/www/html/web/app/cache/page_enhanced
 
 			wp --allow-root plugin activate w3-total-cache
 		SHELL
@@ -88,7 +88,7 @@ case "$command" in
 		"$pod_env_shared_file" exec composer composer update --verbose
 		;;
 	"prepare")
-		if [ "${var_custom__use_composer:-}" = "true" ]; then
+		if [ "${var_custom__wp_dev:-}" = "true" ] && [ "${var_custom__use_composer:-}" = "true" ]; then
 			inner_dir="env"
 
 			if [ "${var_custom__dynamic:-}" = "true" ]; then

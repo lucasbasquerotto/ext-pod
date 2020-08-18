@@ -117,10 +117,11 @@ templates:
   dest: "{{ var_main_base_dir }}/docker-compose.yml"
   root: true
   params:
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local: "{{ var_local | default(false) }}"
+    wp_dev: "{{ params.main.wp_dev | default(false) }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
-    external_volumes: "{{ params.main.external_volumes | default('false') }}"
+    external_volumes: "{{ params.main.external_volumes | default(false) }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 
@@ -145,7 +146,7 @@ templates:
   dest: "{{ var_main_base_dir }}/docker-compose.run.yml"
   root: true
   params:
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local: "{{ var_local | default(false) }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     images: {{ params.main.custom_images | to_json }}
@@ -165,7 +166,7 @@ templates:
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     data_dir: "{{ var_data_dir }}"
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local: "{{ var_local | default(false) }}"
     type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     db_port: "{{ params.main.custom_args.mysql.port | default('3306', true) }}"
@@ -415,6 +416,7 @@ children:
       var_shared__delete_old__days: "3"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
+      var_custom__wp_dev: "{{ params.main.wp_dev | default(false) | bool | ternary('true', 'false') }}"
       var_custom__use_main_network: "true"
       var_custom__use_logrotator: "true"
       var_custom__use_nginx: "true"
@@ -509,7 +511,8 @@ children:
       var_run__general__toolbox_service: "toolbox"
       var_run__migrate__new_domain_host: "{{ params.main.migrate.new_domain_host | default('') }}"
       var_run__migrate__old_domain_host: "{{ params.main.migrate.old_domain_host | default('') }}"
-      var_run__migrate__w3tc_import_file: "{{ var_w3tc_import_dest_file | default('') }}"
+      var_run__migrate__use_w3tc: >-
+        {{ params.main.use_w3tc | default(true) | bool | ternary('true', 'false') }}
       var_run__tasks__backup: "group_backup"
       var_run__tasks__setup: "group_setup"
 

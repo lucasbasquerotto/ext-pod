@@ -170,7 +170,7 @@ services:
     - "$DATA_DIR/tmp/wordpress:/tmp/main/wordpress"
     - "$DATA_DIR/tmp/tmp/wordpress:/tmp/main/tmp/wordpress"
 
-    {% if params.local | bool %}
+    {% if (params.local | bool) and (params.wp_dev | bool) %}
 
     - "$WP_APP_REPO_DIR:/var/www/html"
 
