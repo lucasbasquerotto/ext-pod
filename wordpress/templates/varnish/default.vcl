@@ -70,9 +70,3 @@ sub vcl_backend_response {
     }
   }
 }
-
-sub vcl_hit {
-  if (req.method == "PURGE") {
-    return (purge);
-  }
-}

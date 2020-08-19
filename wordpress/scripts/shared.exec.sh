@@ -127,19 +127,19 @@ case "$command" in
 				wp --allow-root search-replace "$arg_old_domain_host" "$arg_new_domain_host"
 			fi
 
-			if [ "${arg_use_w3tc:-}" = "true" ]; then
-				wp --allow-root plugin install w3-total-cache
+			# if [ "${arg_use_w3tc:-}" = "true" ]; then
+			# 	wp --allow-root plugin install w3-total-cache
 
-				cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/advanced-cache.php /var/www/html/web/app/advanced-cache.php
-				mkdir -p /var/www/html/web/app/cache
-				chmod 777 /var/www/html/web/app/cache
-				mkdir -p /var/www/html/web/app/w3tc-config
-				chmod 777 /var/www/html/web/app/w3tc-config
-				rm -rf /var/www/html/web/app/cache/page_enhanced
+			# 	cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/advanced-cache.php /var/www/html/web/app/advanced-cache.php
+			# 	mkdir -p /var/www/html/web/app/cache
+			# 	chmod 777 /var/www/html/web/app/cache
+			# 	mkdir -p /var/www/html/web/app/w3tc-config
+			# 	chmod 777 /var/www/html/web/app/w3tc-config
 
-				wp --allow-root plugin activate w3-total-cache
-				wp --allow-root w3-total-cache fix_environment
-			fi
+			# 	wp --allow-root plugin activate w3-total-cache
+			# 	rm -rf /var/www/html/web/app/cache/page_enhanced
+			# 	wp --allow-root w3-total-cache fix_environment
+			# fi
 		SHELL
 		;;
 	*)
