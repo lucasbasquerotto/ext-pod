@@ -120,6 +120,8 @@ templates:
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
     use_filestash: "{{ params.main.use_filestash }}"
     use_nextcloud: "{{ params.main.use_nextcloud }}"
+    wordpress:
+      error_log_file: "{{ params.custom_args.wordpress.error_log_file | default('/dev/stderr') }}"
 
     {% if var_local | bool %}
 

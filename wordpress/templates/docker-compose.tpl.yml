@@ -190,6 +190,7 @@ services:
         IMAGE: "{{ params.images.wordpress_image }}"
         VERSION: "{{ params.images.wordpress_version }}"
         WORDPRESS_INI_FILE_TYPE: $WORDPRESS_INI_FILE_TYPE
+        ERROR_LOG_FILE: "{{ params.wordpress.error_log_file }}"
     restart: "unless-stopped"
     environment:
       DB_HOST: mysql
