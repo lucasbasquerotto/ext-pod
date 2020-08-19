@@ -132,7 +132,7 @@ services:
 
     {% endif %}
 
-  {% if params.use_varnish %}
+  {% if params.use_varnish | bool %}
 
   varnish:
     container_name: "${CTX_PREFIX_MAIN}varnish"
@@ -222,7 +222,7 @@ services:
 
     {% endif %}
 
-  {% if params.use_pma %}
+  {% if params.use_pma | bool %}
 
   phpmyadmin:
     container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
@@ -481,7 +481,7 @@ services:
 
   {% if params.pod_type in ['app', 'cache'] %}
 
-  {% if params.use_redis %}
+  {% if params.use_redis | bool %}
 
   redis:
     container_name: "${CTX_PREFIX_MAIN}redis"
@@ -524,7 +524,7 @@ services:
 
   {% endif %}
 
-  {% if params.use_memcached %}
+  {% if params.use_memcached | bool %}
 
   memcached:
     container_name: "${CTX_PREFIX_MAIN}memcached"

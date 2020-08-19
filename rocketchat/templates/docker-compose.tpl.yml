@@ -233,7 +233,7 @@ services:
 
   {% endif %}
 
-  {% if params.use_mongo_express %}
+  {% if params.use_mongo_express | bool %}
 
   mongo_express:
     container_name: "${CTX_PREFIX_MAIN}mongo_express"
