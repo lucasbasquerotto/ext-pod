@@ -20,8 +20,8 @@ sub vcl_recv {
       return (synth(405, "Not allowed."));
     }
 
-    ban("req.url ~ ^" + req.url + "$ && req.http.host == " + req.http.host);
-    #return (purge);
+    # Host is not included because it proxies only Wordpress and W3TC sends Host without the port
+    ban("req.url ~ ^" + req.url + "$");
   }
 
   # Post requests will not be cached
