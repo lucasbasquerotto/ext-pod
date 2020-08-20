@@ -21,6 +21,7 @@ sub vcl_recv {
     }
 
     ban("req.url ~ ^" + req.url + "$ && req.http.host == " + req.http.host);
+    #return (purge);
   }
 
   # Post requests will not be cached
@@ -32,12 +33,12 @@ sub vcl_recv {
 
   # Did not cache the RSS feed
   if (req.url ~ "/feed") {
-          return (pass);
+    return (pass);
   }
 
   # Blitz hack
   if (req.url ~ "/mu-.*") {
-          return (pass);
+    return (pass);
   }
 
   # Do not cache the admin, login and similar pages
