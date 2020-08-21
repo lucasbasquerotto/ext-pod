@@ -4,19 +4,8 @@ set -eou pipefail
 # shellcheck disable=SC2153
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
-GRAY="\033[0;90m"
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
-function info {
-	msg="$(date '+%F %T') - ${1:-}"
-	>&2 echo -e "${GRAY}${msg}${NC}"
-}
-
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -79,17 +68,11 @@ case "$command" in
 		>&2 "$pod_script_env_file" exec-nontty "$arg_nginx_service" nginx -s reload
 		;;
 	"service:nginx:block_ips")
-		reload="$("$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+		reload="$("$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
-			function info {
-				msg="\$(date '+%F %T') - \${1:-}"
-				>&2 echo -e "${GRAY}\${msg}${NC}"
-			}
-
 			function error {
-				msg="\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${1:-}"
-				>&2 echo -e "${RED}\${msg}${NC}"
+				>&2 echo -e "\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${*}"
 				exit 2
 			}
 
@@ -184,7 +167,7 @@ case "$command" in
 					error "$command: amount_day (${arg_amount_day:-}) should be greater than 0"
 				fi
 
-				info "$command: define ips to block (more than ${arg_amount_day:-} requests in the last day) - ${arg_log_file_last_day:-}"
+				>&2 echo "define ips to block (more than ${arg_amount_day:-} requests in the last day) - ${arg_log_file_last_day:-}"
 				ipstoblock "${arg_log_file_last_day:-}" "${arg_amount_day:-}"
 			fi
 
@@ -193,7 +176,7 @@ case "$command" in
 					error "$command: amount_day (${arg_amount_day:-}) should be greater than 0"
 				fi
 
-				info "$command: define ips to block (more than ${arg_amount_day:-} requests in a day) - ${arg_log_file_day:-}"
+				>&2 echo "define ips to block (more than ${arg_amount_day:-} requests in a day) - ${arg_log_file_day:-}"
 				ipstoblock "${arg_log_file_day:-}" "${arg_amount_day:-}"
 			fi
 
@@ -202,7 +185,7 @@ case "$command" in
 					error "$command: amount_hour (${arg_amount_hour:-}) should be greater than 0"
 				fi
 
-				info "$command: define ips to block (more than ${arg_amount_hour:-} requests in the last hour) - ${arg_log_file_last_hour:-}"
+				>&2 echo "define ips to block (more than ${arg_amount_hour:-} requests in the last hour) - ${arg_log_file_last_hour:-}"
 				ipstoblock "${arg_log_file_last_hour:-}" "${arg_amount_hour:-}"
 			fi
 
@@ -211,7 +194,7 @@ case "$command" in
 					error "$command: amount_hour (${arg_amount_hour:-}) should be greater than 0"
 				fi
 
-				info "$command: define ips to block (more than ${arg_amount_hour:-} requests in an hour) - ${arg_log_file_hour:-}"
+				>&2 echo "define ips to block (more than ${arg_amount_hour:-} requests in an hour) - ${arg_log_file_hour:-}"
 				ipstoblock "${arg_log_file_hour:-}" "${arg_amount_hour:-}"
 			fi
 
@@ -230,12 +213,11 @@ case "$command" in
 		fi
 		;;
 	"service:nginx:log:summary:total")
-		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			function error {
-				msg="\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${1:-}"
-				>&2 echo -e "${RED}\${msg}${NC}"
+				>&2 echo -e "\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${*}"
 				exit 2
 			}
 
@@ -379,12 +361,11 @@ case "$command" in
 		SHELL
 		;;
 	"service:nginx:log:duration")
-		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			function error {
-				msg="\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${1:-}"
-				>&2 echo -e "${RED}\${msg}${NC}"
+				>&2 echo -e "\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${*}"
 				exit 2
 			}
 
@@ -422,12 +403,11 @@ case "$command" in
 		SHELL
 		;;
 	"service:nginx:log:connections")
-		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty "$arg_toolbox_service" /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			function error {
-				msg="\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${1:-}"
-				>&2 echo -e "${RED}\${msg}${NC}"
+				>&2 echo -e "\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${*}"
 				exit 2
 			}
 

@@ -9,19 +9,12 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 # shellcheck disable=SC1090
 . "${pod_vars_dir}/vars.sh"
 
-GRAY="\033[0;90m"
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 function info {
-	msg="$(date '+%F %T') - ${1:-}"
-	>&2 echo -e "${GRAY}${msg}${NC}"
+	"$pod_script_env_file" "util:info" --info="${*}"
 }
 
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -88,7 +81,7 @@ case "$command" in
 
 				if [ -n "$arg_setup_remote_seed_data" ]; then
 					info "$command - import remote seed data"
-					"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
+					"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
 						curl -L -o ./tmp/tmp-seed-data.xml -k "$arg_setup_remote_seed_data" \
 							&& wp --allow-root import ./tmp/tmp-seed-data.xml --authors=create \
 							&& rm -f ./tmp/tmp-seed-data.xml
@@ -108,22 +101,17 @@ case "$command" in
 		info "$command - start container"
 		"$pod_script_env_file" up wordpress
 
-		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
-			function info {
-				msg="\$(date '+%F %T') - \${1:-}"
-				>&2 echo -e "${GRAY}\${msg}${NC}"
-			}
-
-			info "$command update database"
+			>&2 echo "update database"
 			wp --allow-root core update-db
 
-			info "$command activate plugins"
+			>&2 echo "activate plugins"
 			wp --allow-root plugin activate --all
 
 			if [ -n "${arg_old_domain_host:-}" ] && [ -n "${arg_new_domain_host:-}" ]; then
-				info "$command - update domain"
+				>&2 echo "update domain"
 				wp --allow-root search-replace "$arg_old_domain_host" "$arg_new_domain_host"
 			fi
 

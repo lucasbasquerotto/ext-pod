@@ -8,13 +8,8 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 . "${pod_vars_dir}/vars.sh"
 
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -29,7 +24,7 @@ pod_env_shared_file="$pod_layer_dir/main/scripts/main.sh"
 
 case "$command" in
   "new-key")
-		"$pod_script_env_file" run dnssec bash <<-SHELL
+		"$pod_script_env_file" run dnssec bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			>&2 rm -rf /tmp/main/bind/keys
@@ -60,12 +55,12 @@ case "$command" in
 		prefix="var_bind_${ctx}"
 		zone_name="${prefix}_zone_name"
 
-		"$pod_script_env_file" exec-nontty toolbox <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox <<-SHELL || error "$command"
 			rm -rf /tmp/main/bind/keys
 			mkdir /tmp/main/bind/keys
 		SHELL
 
-		"$pod_script_env_file" run dnssec <<-SHELL
+		"$pod_script_env_file" run dnssec <<-SHELL || error "$command"
 		  cd /tmp/main/bind/keys
 			dnssec-keygen -a NSEC3RSASHA1 -b 2048 -n ZONE "$zone_name"
 			dnssec-keygen -f KSK -a NSEC3RSASHA1 -b 4096 -n ZONE "$zone_name"

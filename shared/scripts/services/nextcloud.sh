@@ -4,19 +4,12 @@ set -eou pipefail
 # shellcheck disable=SC2153
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
-GRAY="\033[0;90m"
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 function info {
-	msg="$(date '+%F %T') - ${1:-}"
-	>&2 echo -e "${GRAY}${msg}${NC}"
+	"$pod_script_env_file" "util:info" --info="${*}"
 }
 
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -78,17 +71,11 @@ case "$command" in
 		connect_wait_secs="${arg_connect_wait_secs:-300}"
 
 		need_install="$(
-			"$pod_script_env_file" exec-nontty -u www-data "$arg_nextcloud_service" /bin/bash <<-SHELL
+			"$pod_script_env_file" exec-nontty -u www-data "$arg_nextcloud_service" /bin/bash <<-SHELL || error "$command"
 				set -eou pipefail
 
-				function info {
-					msg="\$(date '+%F %T') - \${1:-}"
-					>&2 echo -e "${GRAY}$command: \${msg}${NC}"
-				}
-
 				function error {
-					msg="\$(date '+%F %T') \${1:-}"
-					>&2 echo -e "${RED}$command: \${msg}${NC}"
+					>&2 echo -e "\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${*}"
 					exit 2
 				}
 
@@ -99,7 +86,7 @@ case "$command" in
 					current=\$((end-SECONDS))
 					msg="$connect_wait_secs seconds - \$current second(s) remaining"
 
-					info "$title - wait for the installation to be ready (\$msg)"
+					>&2 echo "wait for the installation to be ready (\$msg)"
 					result="\$(php occ list > /dev/null 2>&1 || echo "continue")"
 
 					if [ -n "\${result:-}" ]; then
@@ -121,13 +108,8 @@ case "$command" in
 		fi
 
 		info "$title: define domain and protocol ($arg_nextcloud_domain)"
-		"$pod_script_env_file" exec-nontty -u www-data "$arg_nextcloud_service" /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty -u www-data "$arg_nextcloud_service" /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
-
-			function info {
-				msg="\$(date '+%F %T') - \${1:-}"
-				>&2 echo -e "${GRAY}$command: \${msg}${NC}"
-			}
 
 			php occ config:system:set trusted_domains 1 --value="$arg_nextcloud_domain"
 			php occ config:system:set overwrite.cli.url --value="$arg_nextcloud_url"
@@ -138,7 +120,7 @@ case "$command" in
 			mime_dest="/var/www/html/config/mimetypemapping.json"
 
 			if [ -f "\$mime_src" ] && [ ! -f "\$mime_dest" ]; then
-				info "$title: copy mimetypemapping.json"
+				>&2 echo "$title: copy mimetypemapping.json"
 				cp "\$mime_src" "\$mime_dest"
 			fi
 		SHELL
@@ -194,7 +176,7 @@ case "$command" in
 
 		if [[ $count -eq 0 ]]; then
 			info "$title: defining s3 storage ($arg_mount_point)..."
-			"$pod_script_env_file" exec-nontty -u www-data "$arg_nextcloud_service" /bin/bash <<-SHELL
+			"$pod_script_env_file" exec-nontty -u www-data "$arg_nextcloud_service" /bin/bash <<-SHELL || error "$command"
 				set -eou pipefail
 
 				php occ files_external:create "$arg_mount_point" \

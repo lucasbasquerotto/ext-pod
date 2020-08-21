@@ -92,12 +92,10 @@ env_files:
 templates:
 
 {% set var_ctx_full_name = params.env_name  + '-' + params.ctx_name + '-' + params.pod.name %}
-{% set var_ctx_prefix_main = params.main.use_prefix | bool
-  | ternary(var_ctx_full_name + '-main', '')
-%}
-{% set var_ctx_prefix_run = params.main.use_prefix | bool
-  | ternary(var_ctx_full_name + '-run', '')
-%}
+{% set var_use_prefix = params.main.use_pod_prefix | default(params.main.use_pod_full_prefix | default(false, true), true) | bool %}
+{% set var_pod_prefix = params.main.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, params.pod.name) %}
+{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
+{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "{{ var_main_base_dir }}/docker-compose.yml"

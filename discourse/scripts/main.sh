@@ -8,13 +8,8 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 . "${pod_vars_dir}/vars.sh"
 
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -71,7 +66,7 @@ case "$command" in
 		fi
     ;;
   "restore")
-		docker exec -i -w /var/www/discourse "$var_restore_container_name" sh -x <<-SHELL
+		docker exec -i -w /var/www/discourse "$var_restore_container_name" sh -x <<-SHELL || error "$command"
 			discourse enable_restore
 			discourse restore $var_restore_filename
 			discourse disable_restore

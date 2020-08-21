@@ -14,19 +14,12 @@ pod_data_dir="$POD_DATA_DIR"
 # shellcheck disable=SC1090
 . "${pod_vars_dir}/vars.sh"
 
-GRAY='\033[0;90m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 function info {
-	msg="$(date '+%F %T') - ${1:-}"
-	>&2 echo -e "${GRAY}${msg}${NC}"
+	"$pod_script_env_file" "util:info" --info="${*}"
 }
 
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -94,7 +87,7 @@ case "$command" in
 
 		"$pod_script_env_file" up "toolbox"
 
-		"$pod_script_env_file" exec-nontty "toolbox" /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty "toolbox" /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			dir="$data_dir/log/bg"
@@ -230,7 +223,7 @@ case "$command" in
 				"$pod_script_env_file" up mongo
 
 				info "$command - init the mongo database if needed"
-				"$pod_script_env_file" run mongo_init /bin/bash <<-SHELL
+				"$pod_script_env_file" run mongo_init /bin/bash <<-SHELL || error "$command"
 					set -eou pipefail
 
 					for i in \$(seq 1 30); do
@@ -472,7 +465,7 @@ case "$command" in
 		fi
 
 		info "$command - create the backup base directory and clear old files"
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			for dir in "${dirs[@]}"; do

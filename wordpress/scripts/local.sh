@@ -19,19 +19,12 @@ pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 pod_layer_base_dir="$(dirname "$pod_layer_dir")"
 base_dir="$(dirname "$pod_layer_base_dir")"
 
-CYAN='\033[0;36m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 function info {
-	msg="$(date '+%F %T') - ${1:-}"
-	>&2 echo -e "${GRAY}${msg}${NC}"
+	"$pod_script_env_file" "util:info" --info="${*}"
 }
 
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 if [ -z "$base_dir" ] || [ "$base_dir" = "/" ]; then
@@ -51,17 +44,9 @@ fi
 
 shift;
 
-start="$(date '+%F %T')"
-
-case "$command" in
-	"prepare"|"setup"|"migrate"|"stop"|"rm"|"clear")
-		echo -e "${CYAN}$(date '+%F %T') - env (local) - $command - start${NC}"
-		;;
-esac
-
 case "$command" in
 	"w3tc")
-		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			wp --allow-root plugin install w3-total-cache
@@ -87,7 +72,7 @@ case "$command" in
 		fi
 		;;
 	"w3tc-remove")
-		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			wp --allow-root plugin deactivate w3-total-cache ||:
@@ -144,14 +129,5 @@ case "$command" in
 		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"
-		;;
-esac
-
-end="$(date '+%F %T')"
-
-case "$command" in
-	"prepare"|"setup"|"migrate"|"stop"|"rm"|"clear")
-		echo -e "${CYAN}$(date '+%F %T') - env (local) - $command - end${NC}"
-		echo -e "${CYAN}env (local) - $command - $start - $end${NC}"
 		;;
 esac

@@ -12,19 +12,12 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 # shellcheck disable=SC1090
 . "${pod_vars_dir}/vars.sh"
 
-GRAY='\033[0;90m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 function info {
-	msg="$(date '+%F %T') - ${1:-}"
-	>&2 echo -e "${GRAY}${msg}${NC}"
+	"$pod_script_env_file" "util:info" --info="${*}"
 }
 
 function error {
-	msg="$(date '+%F %T') - ${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${1:-}"
-	>&2 echo -e "${RED}${msg}${NC}"
-	exit 2
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -97,7 +90,7 @@ case "$command" in
 			--max_amount="${arg_max_amount:-}"
         ;;
 	"shared:log:memory_overview:summary:log")
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			echo -e "##############################################################################################################"
@@ -141,7 +134,7 @@ case "$command" in
 			--max_amount="${arg_max_amount:-}"
         ;;
 	"shared:log:entropy:summary:log")
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			echo -e "##############################################################################################################"
@@ -200,7 +193,7 @@ case "$command" in
 		log_hour_path_prefix="$("$pod_script_env_file" "shared:log:nginx:hour_path_prefix")"
 		dest_base_path="/var/log/main/nginx/main"
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			[ -n "${arg_days_ago:-}" ] && date_arg="${arg_days_ago:-} day ago" || date_arg="today"
@@ -294,7 +287,7 @@ case "$command" in
 	"shared:log:register")
 		log="$("$pod_script_env_file" "$arg_cmd")" || error "$command: $arg_cmd"
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			log_file_prefix="$arg_log_dir/$arg_filename_prefix.\$(date '+%Y-%m-%d')"
@@ -353,7 +346,7 @@ case "$command" in
 		echo -e "-------------------------------------------------------"
 		df -h | grep -E '(^Filesystem|/$)'
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
 			echo -e "-------------------------------------------------------"
