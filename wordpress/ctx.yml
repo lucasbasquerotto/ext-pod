@@ -378,6 +378,8 @@ templates:
     table_prefix: "{{ params.main.custom_args.wordpress.table_prefix | default('wp_') }}"
     wplang: "{{ params.main.custom_args.wordpress.lang }}"
     wp_debug: "{{ params.main.custom_args.wordpress.debug | default(false) | lower }}"
+    use_w3tc: "{{ params.main.use_w3tc | default(true) }}"
+    use_redis: "{{ params.main.use_redis }}"
 
 {% endif %}
 
