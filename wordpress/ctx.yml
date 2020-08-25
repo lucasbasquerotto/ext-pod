@@ -118,8 +118,6 @@ templates:
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
     use_filestash: "{{ params.main.use_filestash }}"
     use_nextcloud: "{{ params.main.use_nextcloud }}"
-    wordpress:
-      error_log_file: "{{ params.custom_args.wordpress.error_log_file | default('/dev/stderr') }}"
 
     {% if var_local | bool %}
 
@@ -377,7 +375,7 @@ templates:
     nonce_salt: "{{ params.credentials.wordpress.config.nonce_salt }}"
     table_prefix: "{{ params.main.custom_args.wordpress.table_prefix | default('wp_') }}"
     wplang: "{{ params.main.custom_args.wordpress.lang }}"
-    wp_debug: "{{ params.main.custom_args.wordpress.debug | default(false) | lower }}"
+    debug: "{{ params.main.custom_args.wordpress.debug | default(false) | lower }}"
     use_w3tc: "{{ params.main.use_w3tc | default(true) }}"
     use_redis: "{{ params.main.use_redis }}"
 
