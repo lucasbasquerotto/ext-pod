@@ -45,7 +45,11 @@ while getopts ':-:' OPT; do
 		setup_remote_seed_data ) arg_setup_remote_seed_data="${OPTARG:-}";;
 		old_domain_host ) arg_old_domain_host="${OPTARG:-}";;
 		new_domain_host ) arg_new_domain_host="${OPTARG:-}";;
+		wp_rewrite_structure ) arg_wp_rewrite_structure="${OPTARG:-}";;
 		use_w3tc ) arg_use_w3tc="${OPTARG:-}";;
+		use_varnish ) arg_use_varnish="${OPTARG:-}";;
+		use_redis ) arg_use_redis="${OPTARG:-}";;
+		use_memcached ) arg_use_memcached="${OPTARG:-}";;
 		??* ) error "Illegal option --$OPT" ;;	# bad long option
 		\? )	exit 2 ;;	# bad short option (error reported via getopts)
 	esac
@@ -123,19 +127,55 @@ case "$command" in
 				chown -R www-data:www-data "/var/www/html/web/app/w3tc-config"
 			fi
 
-			# if [ "${arg_use_w3tc:-}" = "true" ]; then
-			# 	wp --allow-root plugin install w3-total-cache
+			if [ -n "${arg_wp_rewrite_structure:-}" ]; then
+				>&2 echo "rewrite structure to ${arg_wp_rewrite_structure:-}"
+				wp --allow-root rewrite structure "${arg_wp_rewrite_structure:-}"
+			fi
 
-			# 	cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/advanced-cache.php /var/www/html/web/app/advanced-cache.php
-			# 	mkdir -p /var/www/html/web/app/cache
-			# 	chmod 777 /var/www/html/web/app/cache
-			# 	mkdir -p /var/www/html/web/app/w3tc-config
-			# 	chmod 777 /var/www/html/web/app/w3tc-config
+			if [ "${arg_use_w3tc:-}" = "true" ]; then
+				>&2 echo "w3tc: verify if page cache can use apcu"
+				has_apcu="\$(php -m | grep -c apcu ||:)"
 
-			# 	wp --allow-root plugin activate w3-total-cache
-			# 	rm -rf /var/www/html/web/app/cache/page_enhanced
-			# 	wp --allow-root w3-total-cache fix_environment
-			# fi
+				if [ "\$has_apcu" = "1" ]; then
+					>&2 echo "w3tc: page cache: apcu"
+					wp --allow-root w3-total-cache option set pgcache.enabled true --type=boolean
+					wp --allow-root w3-total-cache option set pgcache.engine apc
+				fi
+
+				if [ "${arg_use_varnish:-}" = "true" ]; then
+					>&2 echo "w3tc: enable varnish"
+					wp --allow-root w3-total-cache option set varnish.enabled true --type=boolean
+					wp --allow-root w3-total-cache option set varnish.servers 'varnish'
+				fi
+
+				if [ "${arg_use_redis:-}" = "true" ]; then
+					cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/object-cache.php \
+						/var/www/html/web/app/object-cache.php
+
+					>&2 echo "w3tc: db cache: redis"
+					wp --allow-root w3-total-cache option set dbcache.enabled true --type=boolean
+					wp --allow-root w3-total-cache option set dbcache.engine redis
+					wp --allow-root w3-total-cache option set dbcache.redis.servers 'redis:6379'
+
+					>&2 echo "w3tc: object cache: redis"
+					wp --allow-root w3-total-cache option set objectcache.enabled true --type=boolean
+					wp --allow-root w3-total-cache option set objectcache.engine redis
+					wp --allow-root w3-total-cache option set objectcache.redis.servers 'redis:6379'
+				elif [ "${arg_use_memcached:-}" = "true" ]; then
+					cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/object-cache.php \
+						/var/www/html/web/app/object-cache.php
+
+					>&2 echo "w3tc: db cache: memcached"
+					wp --allow-root w3-total-cache option set dbcache.enabled true --type=boolean
+					wp --allow-root w3-total-cache option set dbcache.engine memcached
+					wp --allow-root w3-total-cache option set dbcache.memcached.servers 'memcached:11211'
+
+					>&2 echo "w3tc: object cache: memcached"
+					wp --allow-root w3-total-cache option set objectcache.enabled true --type=boolean
+					wp --allow-root w3-total-cache option set objectcache.engine memcached
+					wp --allow-root w3-total-cache option set objectcache.memcached.servers 'memcached:11211'
+				fi
+			fi
 		SHELL
 		;;
 	*)

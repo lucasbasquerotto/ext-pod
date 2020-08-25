@@ -75,7 +75,11 @@ case "$command" in
 
 		opts+=( "--old_domain_host=${var_run__migrate__old_domain_host:-}" )
 		opts+=( "--new_domain_host=${var_run__migrate__new_domain_host:-}" )
+		opts+=( "--wp_rewrite_structure=${var_run__migrate__wp_rewrite_structure:-}" )
 		opts+=( "--use_w3tc=${var_run__migrate__use_w3tc:-}" )
+		opts+=( "--use_varnish=${var_run__migrate__use_varnish:-}" )
+		opts+=( "--use_redis=${var_run__migrate__use_redis:-}" )
+		opts+=( "--use_memcached=${var_run__migrate__use_memcached:-}" )
 
 		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
 

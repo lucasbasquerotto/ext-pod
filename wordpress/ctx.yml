@@ -377,7 +377,6 @@ templates:
     wplang: "{{ params.main.custom_args.wordpress.lang }}"
     debug: "{{ params.main.custom_args.wordpress.debug | default(false) | lower }}"
     use_w3tc: "{{ params.main.use_w3tc | default(true) }}"
-    use_redis: "{{ params.main.use_redis }}"
 
 {% endif %}
 
@@ -516,8 +515,16 @@ children:
       var_run__general__toolbox_service: "toolbox"
       var_run__migrate__new_domain_host: "{{ params.main.migrate.new_domain_host | default('') }}"
       var_run__migrate__old_domain_host: "{{ params.main.migrate.old_domain_host | default('') }}"
+      var_run__migrate__wp_rewrite_structure: >-
+        {{ params.main.migrate.wp_rewrite_structure | default('') }}
       var_run__migrate__use_w3tc: >-
         {{ params.main.use_w3tc | default(true) | bool | ternary('true', 'false') }}
+      var_run__migrate__use_varnish: >-
+        {{ params.main.use_varnish | default(false) | bool | ternary('true', 'false') }}
+      var_run__migrate__use_redis: >-
+        {{ params.main.use_redis | default(false) | bool | ternary('true', 'false') }}
+      var_run__migrate__use_memcached: >-
+        {{ params.main.use_memcached | default(false) | bool | ternary('true', 'false') }}
       var_run__tasks__backup: "group_backup"
       var_run__tasks__setup: "group_setup"
 
