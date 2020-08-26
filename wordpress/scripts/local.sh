@@ -45,40 +45,6 @@ fi
 shift;
 
 case "$command" in
-	"w3tc")
-		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
-			set -eou pipefail
-
-			wp --allow-root plugin install w3-total-cache
-
-			cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/advanced-cache.php /var/www/html/web/app/advanced-cache.php
-			mkdir -p /var/www/html/web/app/cache
-			chmod 777 /var/www/html/web/app/cache
-			mkdir -p /var/www/html/web/app/w3tc-config
-			chmod 777 /var/www/html/web/app/w3tc-config
-			rm -rf /var/www/html/web/app/cache/page_enhanced
-			a2enmod rewrite
-
-			wp --allow-root plugin activate w3-total-cache
-		SHELL
-
-		"$pod_script_env_file" restart wordpress nginx
-
-		if [ "$var_custom__use_varnish" = "true" ]; then
-			"$pod_script_env_file" up varnish
-
-			info "$command - clear varnish cache..."
-			"$pod_script_env_file" "service:varnish:clear"
-		fi
-		;;
-	"w3tc-remove")
-		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
-			set -eou pipefail
-
-			wp --allow-root plugin deactivate w3-total-cache ||:
-			wp --allow-root plugin uninstall w3-total-cache ||:
-		SHELL
-		;;
 	"c")
 		"$pod_env_shared_file" exec composer composer update --verbose
 		;;
