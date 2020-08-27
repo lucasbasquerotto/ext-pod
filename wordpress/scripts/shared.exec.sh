@@ -43,6 +43,9 @@ while getopts ':-:' OPT; do
 		setup_restore_seed ) arg_setup_restore_seed="${OPTARG:-}";;
 		setup_local_seed_data ) arg_setup_local_seed_data="${OPTARG:-}";;
 		setup_remote_seed_data ) arg_setup_remote_seed_data="${OPTARG:-}";;
+		wp_activate_all_plugins ) arg_wp_activate_all_plugins="${OPTARG:-}";;
+		wp_plugins_to_activate ) arg_wp_plugins_to_activate="${OPTARG:-}";;
+		wp_plugins_to_deactivate ) arg_wp_plugins_to_deactivate="${OPTARG:-}";;
 		old_domain_host ) arg_old_domain_host="${OPTARG:-}";;
 		new_domain_host ) arg_new_domain_host="${OPTARG:-}";;
 		wp_rewrite_structure ) arg_wp_rewrite_structure="${OPTARG:-}";;
@@ -50,6 +53,7 @@ while getopts ':-:' OPT; do
 		use_varnish ) arg_use_varnish="${OPTARG:-}";;
 		use_redis ) arg_use_redis="${OPTARG:-}";;
 		use_memcached ) arg_use_memcached="${OPTARG:-}";;
+		use_s3_storage ) arg_use_s3_storage="${OPTARG:-}";;
 		??* ) error "Illegal option --$OPT" ;;	# bad long option
 		\? )	exit 2 ;;	# bad short option (error reported via getopts)
 	esac
@@ -57,7 +61,7 @@ done
 shift $((OPTIND-1))
 
 case "$command" in
-	"setup:new:db")
+	"setup:new")
 		"$pod_script_env_file" up wordpress
 
 		# Deploy a brand-new Wordpress site (with possibly seeded data)
@@ -75,7 +79,7 @@ case "$command" in
 				error "$command - seed_data not provided"
 			else
 				info "$command - migrate..."
-				"$pod_script_env_file" migrate ${args[@]+"${args[@]}"}
+				"$pod_script_env_file" migrate
 
 				if [ -n "$arg_setup_local_seed_data" ]; then
 					info "$command - import local seed data"
@@ -111,8 +115,18 @@ case "$command" in
 			>&2 echo "update database"
 			wp --allow-root core update-db
 
-			>&2 echo "activate plugins"
-			wp --allow-root plugin activate --all
+			if [ "${arg_wp_activate_all_plugins:-}" = "true" ]; then
+				>&2 echo "activate all plugins"
+				wp --allow-root plugin activate --all
+			elif [ -n "${arg_wp_plugins_to_activate:-}" ]; then
+				>&2 echo "activate specified plugins: ${arg_wp_plugins_to_activate:-}"
+				wp --allow-root plugin activate ${arg_wp_plugins_to_activate:-}
+			fi
+
+			if [ -n "${arg_wp_plugins_to_deactivate:-}" ]; then
+				>&2 echo "deactivate specified plugins: ${arg_wp_plugins_to_deactivate:-}"
+				wp --allow-root plugin deactivate ${arg_wp_plugins_to_deactivate:-}
+			fi
 
 			if [ -n "${arg_old_domain_host:-}" ] && [ -n "${arg_new_domain_host:-}" ]; then
 				>&2 echo "update domain"
@@ -181,7 +195,7 @@ case "$command" in
 			fi
 
 			if [ "${arg_use_s3_storage:-}" = "true" ]; then
-				>&2 echo "activate plugin: w3tc"
+				>&2 echo "activate plugin: s3-uploads"
 				wp --allow-root plugin activate s3-uploads
 			fi
 		SHELL

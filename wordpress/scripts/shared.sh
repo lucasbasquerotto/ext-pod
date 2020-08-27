@@ -38,6 +38,7 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		task_name ) arg_task_name="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
 		??* ) ;; ## ignore
@@ -73,6 +74,9 @@ case "$command" in
 	"migrate")
 		opts=()
 
+		opts+=( "--wp_activate_all_plugins=${var_run__migrate__wp_activate_all_plugins:-}" )
+		opts+=( "--wp_plugins_to_activate=${var_run__migrate__wp_plugins_to_activate:-}" )
+		opts+=( "--wp_plugins_to_deactivate=${var_run__migrate__wp_plugins_to_deactivate:-}" )
 		opts+=( "--old_domain_host=${var_run__migrate__old_domain_host:-}" )
 		opts+=( "--new_domain_host=${var_run__migrate__new_domain_host:-}" )
 		opts+=( "--wp_rewrite_structure=${var_run__migrate__wp_rewrite_structure:-}" )
@@ -80,6 +84,7 @@ case "$command" in
 		opts+=( "--use_varnish=${var_run__migrate__use_varnish:-}" )
 		opts+=( "--use_redis=${var_run__migrate__use_redis:-}" )
 		opts+=( "--use_memcached=${var_run__migrate__use_memcached:-}" )
+		opts+=( "--use_s3_storage=${var_custom__use_s3_storage:-}" )
 
 		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
 

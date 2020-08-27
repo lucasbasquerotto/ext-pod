@@ -378,6 +378,9 @@ templates:
     debug: "{{ params.main.custom_args.wordpress.debug | default(false) | lower }}"
     use_w3tc: "{{ params.main.use_w3tc | default(true) }}"
     use_s3_uploads: "{{ params.main.use_s3_storage }}"
+
+    {% if params.main.use_s3_storage | bool %}
+
     s3_uploads_bucket: >-
       {{ params.main.uploads_bucket_name }}{{
         ((params.main.uploads_bucket_path | default('')) != '')
@@ -390,6 +393,10 @@ templates:
     s3_uploads_endpoint: "{{ params.credentials.wp_uploads_bucket.endpoint }}"
     s3_use_path_style_endpoint: "{{ params.credentials.wp_uploads_bucket.path_style | default(false) }}"
     s3_provider: "{{ params.credentials.wp_uploads_bucket.provider | default('') }}"
+
+    {% endif %}
+
+{% endif %}
 
 {% if var_pod_type in ['app', 'db'] %}
 
@@ -432,6 +439,7 @@ children:
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
       var_custom__wp_dev: "{{ params.main.wp_dev | default(false) | bool | ternary('true', 'false') }}"
       var_custom__use_main_network: "true"
+      var_custom__use_s3_storage: "{{ params.main.use_s3_storage | default(false) | bool | ternary('true', 'false') }}"
       var_custom__use_logrotator: "true"
       var_custom__use_nginx: "true"
       var_custom__use_mysql: "true"
@@ -494,6 +502,10 @@ children:
       {% endif %}
 
       var_custom__use_composer: "{{ params.main.use_composer | bool | ternary('true', 'false') }}"
+      var_run__migrate__wp_activate_all_plugins: >-
+        "{{ params.main.migrate_wp_activate_all_plugins | default(false) | bool | ternary('true', 'false') }}"
+      var_run__migrate__wp_plugins_to_activate: "{{ params.main.migrate_wp_plugins_to_activate }}"
+      var_run__migrate__wp_plugins_to_deactivate: "{{ params.main.migrate_wp_plugins_to_deactivate }}"
 
       {% endif %}
 
@@ -524,10 +536,10 @@ children:
       var_run__general__script_dir: "{{ var_main_dir }}/scripts"
       var_run__general__script_env_file: "{{ var_local | bool | ternary('local.sh', 'remote.sh') }}"
       var_run__general__toolbox_service: "toolbox"
-      var_run__migrate__new_domain_host: "{{ params.main.migrate.new_domain_host | default('') }}"
-      var_run__migrate__old_domain_host: "{{ params.main.migrate.old_domain_host | default('') }}"
+      var_run__migrate__new_domain_host: "{{ params.main.migrate_new_domain_host | default('') }}"
+      var_run__migrate__old_domain_host: "{{ params.main.migrate_old_domain_host | default('') }}"
       var_run__migrate__wp_rewrite_structure: >-
-        {{ params.main.migrate.wp_rewrite_structure | default('') }}
+        {{ params.main.migrate_wp_rewrite_structure | default('') }}
       var_run__migrate__use_w3tc: >-
         {{ params.main.use_w3tc | default(true) | bool | ternary('true', 'false') }}
       var_run__migrate__use_varnish: >-
