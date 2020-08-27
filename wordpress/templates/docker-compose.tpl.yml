@@ -208,6 +208,12 @@ services:
 
     {% if params.pod_type == 'app' %}
 
+    {% if params.use_redis | bool %}
+
+    - "redis"
+
+    {% endif %}
+
     {% if params.use_memcached | bool %}
 
     - "memcached"
