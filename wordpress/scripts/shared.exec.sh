@@ -133,6 +133,9 @@ case "$command" in
 			fi
 
 			if [ "${arg_use_w3tc:-}" = "true" ]; then
+				>&2 echo "activate plugin: w3tc"
+				wp --allow-root plugin activate w3-total-cache
+
 				>&2 echo "w3tc: verify if page cache can use apcu"
 				has_apcu="\$(php -m | grep -c apcu ||:)"
 
@@ -175,6 +178,11 @@ case "$command" in
 					wp --allow-root w3-total-cache option set objectcache.engine memcached
 					wp --allow-root w3-total-cache option set objectcache.memcached.servers 'memcached:11211'
 				fi
+			fi
+
+			if [ "${arg_use_s3_storage:-}" = "true" ]; then
+				>&2 echo "activate plugin: w3tc"
+				wp --allow-root plugin activate s3-uploads
 			fi
 		SHELL
 		;;

@@ -377,8 +377,19 @@ templates:
     wplang: "{{ params.main.custom_args.wordpress.lang }}"
     debug: "{{ params.main.custom_args.wordpress.debug | default(false) | lower }}"
     use_w3tc: "{{ params.main.use_w3tc | default(true) }}"
-
-{% endif %}
+    use_s3_uploads: "{{ params.main.use_s3_storage }}"
+    s3_uploads_bucket: >-
+      {{ params.main.uploads_bucket_name }}{{
+        ((params.main.uploads_bucket_path | default('')) != '')
+        | ternary('/' + params.main.uploads_bucket_path, '')
+      }}"
+    s3_uploads_region: "{{ params.credentials.wp_uploads_bucket.region | default('') }}"
+    s3_uploads_key: "{{ params.credentials.wp_uploads_bucket.access_key }}"
+    s3_uploads_secret: "{{ params.credentials.wp_uploads_bucket.secret_key }}"
+    s3_uploads_bucket_url: "{{ params.main.uploads_bucket_name_cdn_url | default('') }}"
+    s3_uploads_endpoint: "{{ params.credentials.wp_uploads_bucket.endpoint }}"
+    s3_use_path_style_endpoint: "{{ params.credentials.wp_uploads_bucket.path_style | default(false) }}"
+    s3_provider: "{{ params.credentials.wp_uploads_bucket.provider | default('') }}"
 
 {% if var_pod_type in ['app', 'db'] %}
 
