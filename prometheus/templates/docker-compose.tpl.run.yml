@@ -77,6 +77,13 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+
+    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+    - "prometheus:/var/main/data/prometheus"
+
+    {% endif %}
+
     logging: *mainlog
     command: "tail -f /dev/null"
 

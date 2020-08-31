@@ -264,6 +264,13 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+
+    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+    - "prometheus:/var/main/data/prometheus"
+
+    {% endif %}
+
     logging: *mainlog
     command: "tail -f /dev/null"
 
@@ -352,11 +359,12 @@ services:
 
     {% endif %}
 
-    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
-    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
+    - "$DATA_DIR/tmp/prometheus:/tmp/main/prometheus"
+    - "$DATA_DIR/tmp/tmp/prometheus:/tmp/main/tmp/prometheus"
     command:
     - '--config.file=/etc/prometheus/prometheus.yml'
     - '--storage.tsdb.path=/prometheus'
+    - '--web.enable-admin-api'
     logging: *mainlog
 
     {% if (params.memory.prometheus | default('')) != '' %}

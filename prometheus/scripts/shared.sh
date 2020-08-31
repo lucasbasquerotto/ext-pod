@@ -44,6 +44,24 @@ shift $((OPTIND-1))
 pod_shared_run_file="$pod_layer_dir/$var_shared__script_dir/main.sh"
 
 case "$command" in
+	"prepare")
+		data_dir="/var/main/data"
+
+		"$pod_script_env_file" up toolbox
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+				dir="$data_dir/prometheus/snapshots"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chmod 777 "\$dir"
+				fi
+			fi
+		SHELL
+
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
 	"action:exec:actions")
 		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
