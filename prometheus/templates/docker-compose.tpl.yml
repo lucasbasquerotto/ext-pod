@@ -39,7 +39,8 @@ networks:
 {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
 
 volumes:
-  elasticsearch: {}
+  prometheus: {}
+  grafana: {}
 
 {% endif %}
 
@@ -60,7 +61,13 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
     depends_on:
-    - "kibana"
+    - "grafana"
+
+    {% if params.pod_type in ['app'] %}
+
+    - "prometheus"
+
+    {% endif %}
 
     {% if params.use_theia | bool %}
 
@@ -334,13 +341,22 @@ services:
     ports:
     - 9090:9090
     volumes:
+
+    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+    - "prometheus:/prometheus"
+
+    {% else %}
+
     - "$DATA_DIR/prometheus/data:/prometheus"
+
+    {% endif %}
+
     - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
     - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
     command:
-    - '-config.file=/etc/prometheus/prometheus.yml'
-    - '-storage.local.path=/prometheus'
-    - '-alertmanager.url=http://alertmanager:9093'
+    - '--config.file=/etc/prometheus/prometheus.yml'
+    - '--storage.tsdb.path=/prometheus'
     logging: *mainlog
 
     {% if (params.memory.prometheus | default('')) != '' %}
@@ -447,7 +463,17 @@ services:
     networks:
     - "shared"
     volumes:
+
+    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+
+    - "grafana:/var/lib/grafana"
+
+    {% else %}
+
     - "$DATA_DIR/grafana:/var/lib/grafana"
+
+    {% endif %}
+
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=MYPASSWORT
       - GF_USERS_ALLOW_SIGN_UP=false

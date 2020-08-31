@@ -127,6 +127,12 @@ templates:
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 
+    {% if params.main.use_fluentd | bool %}
+
+    fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
+
+    {% endif %}
+
     {% if var_pod_type in ['app', 'web'] %}
 
     use_certbot: "{{ params.main.use_certbot }}"

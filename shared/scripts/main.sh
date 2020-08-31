@@ -265,7 +265,7 @@ case "$command" in
 		"$pod_main_run_file" setup
 		;;
 	"migrate")
-		if [ "$var_custom__use_varnish" = "true" ]; then
+		if [ "${var_custom__use_varnish:-}" = "true" ]; then
 			"$pod_script_env_file" up varnish
 
 			info "$command - clear varnish cache..."
