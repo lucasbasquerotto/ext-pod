@@ -345,6 +345,7 @@ services:
     networks:
     - "shared"
     volumes:
+    - "$DATA_DIR/minio_gateway:/data"
     - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
     - "$DATA_DIR/tmp/tmp/minio_gateway:/tmp/main/tmp/minio_gateway"
     logging: *mainlog

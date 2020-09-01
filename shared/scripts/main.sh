@@ -215,7 +215,11 @@ case "$command" in
 		SHELL
 		;;
 	"setup")
-		"$pod_script_env_file" "shared:bg:setup"
+		if [ "${var_custom__local:-}" = "true" ]; then
+			"$pod_script_env_file" "action:exec:setup"
+		else
+			"$pod_script_env_file" "shared:bg:setup"
+		fi
 		;;
 	"action:exec:setup")
 		if [ "${var_custom__use_mongo:-}" = "true" ]; then
