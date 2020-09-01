@@ -610,6 +610,7 @@ children:
       {% endif %}
 
       var_task__s3_backup__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
+      var_task__s3_backup__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
       var_task__s3_backup__s3_subtask__cli: "awscli"
       var_task__s3_backup__s3_subtask__cli_cmd: "run"
       var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"

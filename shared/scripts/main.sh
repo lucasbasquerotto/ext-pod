@@ -428,6 +428,44 @@ case "$command" in
 		task_name="${command#action:exec:log_register.}"
 		"$pod_script_env_file" "shared:log:register:$task_name"
 		;;
+	"shared:s3:replicate:backup")
+		opts=()
+
+		opts+=( "--task_name=s3_backup" )
+		opts+=( "--subtask_cmd=$command" )
+		opts+=( "--s3_cmd=sync" )
+
+		opts+=( "--s3_src_alias=${var_task__s3_backup__s3_subtask__alias:-}" )
+		opts+=( "--s3_bucket_src_name=$var_task__s3_backup__s3_subtask__bucket_name" )
+		opts+=( "--s3_bucket_src_path=${var_task__s3_backup__s3_subtask__bucket_path:-}" )
+		opts+=( "--s3_remote_src=true" )
+
+		opts+=( "--s3_dest_alias=${var_shared__s3_replicate_backup__dest_alias:-}" )
+		opts+=( "--s3_bucket_dest_name=$var_shared__s3_replicate_backup__bucket_dest_name" )
+		opts+=( "--s3_bucket_dest_path=${var_shared__s3_replicate_backup__bucket_dest_path:-}" )
+		opts+=( "--s3_remote_dest=true" )
+
+		"$pod_script_env_file" "s3:subtask" "${opts[@]}"
+		;;
+	"shared:s3:replicate:uploads")
+		opts=()
+
+		opts+=( "--task_name=s3_uploads" )
+		opts+=( "--subtask_cmd=$command" )
+		opts+=( "--s3_cmd=sync" )
+
+		opts+=( "--s3_src_alias=${var_task__s3_uploads__s3_subtask__alias:-}" )
+		opts+=( "--s3_bucket_src_name=$var_task__s3_uploads__s3_subtask__bucket_name" )
+		opts+=( "--s3_bucket_src_path=${var_task__s3_uploads__s3_subtask__bucket_path:-}" )
+		opts+=( "--s3_remote_src=true" )
+
+		opts+=( "--s3_dest_alias=${var_shared__s3_replicate_s3_uploads__dest_alias:-}" )
+		opts+=( "--s3_bucket_dest_name=$var_shared__s3_replicate_s3_uploads__bucket_dest_name" )
+		opts+=( "--s3_bucket_dest_path=${var_shared__s3_replicate_s3_uploads__bucket_dest_path:-}" )
+		opts+=( "--s3_remote_dest=true" )
+
+		"$pod_script_env_file" "s3:subtask" "${opts[@]}"
+		;;
 	"service:nginx:"*)
 		"$nginx_run_file" "$command" \
 			--toolbox_service="toolbox" \
