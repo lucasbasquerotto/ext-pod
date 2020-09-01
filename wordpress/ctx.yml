@@ -877,6 +877,8 @@ children:
       var_task__s3_backup__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
       var_task__s3_backup__s3_subtask__cli: "awscli"
       var_task__s3_backup__s3_subtask__cli_cmd: "run"
+      var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"
+      var_task__s3_backup__s3_subtask__alias: "backup"
       var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.wp_backup_bucket.endpoint }}"
       var_task__s3_backup__s3_subtask__service: "s3_backup"
 
@@ -885,6 +887,8 @@ children:
       var_task__s3_uploads__s3_subtask__bucket_name: "{{ params.main.uploads_bucket_name }}"
       var_task__s3_uploads__s3_subtask__cli: "awscli"
       var_task__s3_uploads__s3_subtask__cli_cmd: "run"
+      var_task__s3_uploads__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_uploads"
+      var_task__s3_uploads__s3_subtask__alias: "uploads"
       var_task__s3_uploads__s3_subtask__endpoint: "{{ params.credentials.wp_uploads_bucket.endpoint }}"
       var_task__s3_uploads__s3_subtask__service: "s3_uploads"
 
