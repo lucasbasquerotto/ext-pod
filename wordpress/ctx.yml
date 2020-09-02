@@ -166,8 +166,6 @@ templates:
     db_name: "{{ params.credentials.wordpress.db.name }}"
     db_user: "{{ params.credentials.wordpress.db.user }}"
     db_password: "{{ params.credentials.wordpress.db.password }}"
-    s3_backup_access_key: "{{ params.credentials.backup_bucket.access_key }}"
-    s3_backup_secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
@@ -180,8 +178,6 @@ templates:
     public_https_port: "{{ params.main.custom_domain.public_https_port }}"
     private_http_port: "{{ params.main.custom_domain.private_http_port }}"
     private_https_port: "{{ params.main.custom_domain.private_https_port }}"
-    s3_uploads_access_key: "{{ params.credentials.uploads_bucket.access_key }}"
-    s3_uploads_secret_key: "{{ params.credentials.uploads_bucket.secret_key }}"
     wordpress_ini_file_type: >-
       {{
       (params.main.custom_args.wordpress.env == 'production') |
@@ -430,17 +426,25 @@ templates:
     - alias: "backup"
       endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
       region: "{{ params.credentials.backup_bucket.region | default('') }}"
+      access_key: "{{ params.credentials.backup_bucket.access_key }}"
+      secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
     - alias: "uploads"
       endpoint: "{{ params.credentials.uploads_bucket.endpoint }}"
       region: "{{ params.credentials.uploads_bucket.region | default('') }}"
+      access_key: "{{ params.credentials.uploads_bucket.access_key }}"
+      secret_key: "{{ params.credentials.uploads_bucket.secret_key }}"
       when: "{{ var_pod_type in ['app', 'web'] }}"
     - alias: "backup_replica"
       endpoint: "{{ params.credentials.backup_replica_bucket.endpoint }}"
       region: "{{ params.credentials.backup_replica_bucket.region | default('') }}"
+      access_key: "{{ params.credentials.backup_replica_bucket.access_key }}"
+      secret_key: "{{ params.credentials.backup_replica_bucket.secret_key }}"
       when: "{{ (params.main.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
     - alias: "uploads_replica"
       endpoint: "{{ params.credentials.uploads_replica_bucket.endpoint }}"
       region: "{{ params.credentials.uploads_replica_bucket.region | default('') }}"
+      access_key: "{{ params.credentials.uploads_replica_bucket.access_key }}"
+      secret_key: "{{ params.credentials.uploads_replica_bucket.secret_key }}"
       when: "{{ (params.main.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 children:
@@ -481,15 +485,15 @@ children:
 
       {% if params.main.enable_backup_replica | bool %}
 
-		  var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
-		  var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
+      var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
+      var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
 
       {% endif %}
 
       {% if params.main.enable_uploads_replica | bool %}
 
-		  var_shared__s3_replicate_uploads__bucket_dest_name: "{{ params.main.uploads_replica_bucket_name }}"
-		  var_shared__s3_replicate_uploads__bucket_dest_path: "{{ params.main.uploads_replica_bucket_path | default('') }}"
+      var_shared__s3_replicate_uploads__bucket_dest_name: "{{ params.main.uploads_replica_bucket_name }}"
+      var_shared__s3_replicate_uploads__bucket_dest_path: "{{ params.main.uploads_replica_bucket_path | default('') }}"
 
       {% endif %}
 
@@ -926,7 +930,7 @@ children:
       var_task__s3_backup__s3_subtask__cli_cmd: "run"
       var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"
       var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
-      var_task__s3_backup__s3_subtask__service: "s3_backup"
+      var_task__s3_backup__s3_subtask__service: "s3_cli"
 
       {% if var_pod_type in ['app', 'web'] %}
 
@@ -938,7 +942,7 @@ children:
       var_task__s3_backup_replica__s3_subtask__cli_cmd: "run"
       var_task__s3_backup_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup_replica"
       var_task__s3_backup_replica__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
-      var_task__s3_backup_replica__s3_subtask__service: "s3_backup_replica"
+      var_task__s3_backup_replica__s3_subtask__service: "s3_cli"
 
       {% endif %}
 
@@ -950,7 +954,7 @@ children:
       var_task__s3_uploads_replica__s3_subtask__cli_cmd: "run"
       var_task__s3_uploads_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_uploads_replica"
       var_task__s3_uploads_replica__s3_subtask__endpoint: "{{ params.credentials.uploads_bucket.endpoint }}"
-      var_task__s3_uploads_replica__s3_subtask__service: "s3_uploads_replica"
+      var_task__s3_uploads_replica__s3_subtask__service: "s3_cli"
 
       {% endif %}
 
@@ -960,7 +964,7 @@ children:
       var_task__s3_uploads__s3_subtask__cli_cmd: "run"
       var_task__s3_uploads__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_uploads"
       var_task__s3_uploads__s3_subtask__endpoint: "{{ params.credentials.uploads_bucket.endpoint }}"
-      var_task__s3_uploads__s3_subtask__service: "s3_uploads"
+      var_task__s3_uploads__s3_subtask__service: "s3_cli"
 
       {% endif %}
 

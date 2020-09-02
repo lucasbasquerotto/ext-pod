@@ -171,9 +171,6 @@ templates:
 
     {% endif %}
 
-    s3_backup_access_key: "{{ params.credentials.backup_bucket.access_key }}"
-    s3_backup_secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
-
     {% if var_pod_type in ['app', 'web'] %}
 
     use_certbot: "{{ params.main.use_certbot }}"
@@ -240,6 +237,33 @@ templates:
 
 {% endif %}
 
+{% if params.main.s3_cli == 'awscli' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
+  {% set var_s3_config_dest = var_main_base_dir + '/env/awscli/credentials.ini' %}
+{% elif params.main.s3_cli == 'rclone' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
+  {% set var_s3_config_dest = var_main_base_dir + '/env/rclone/rclone.conf' %}
+{% elif params.main.s3_cli == 'mc' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
+  {% set var_s3_config_dest = var_main_base_dir + '/env/mc/config.json' %}
+{% endif %}
+
+- src: "{{ var_s3_config_src }}"
+  dest: "{{ var_s3_config_dest }}"
+  root: true
+  params:
+    - alias: "backup"
+      endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
+      region: "{{ params.credentials.backup_bucket.region | default('') }}"
+      access_key: "{{ params.credentials.backup_bucket.access_key }}"
+      secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
+    - alias: "backup_replica"
+      endpoint: "{{ params.credentials.backup_replica_bucket.endpoint }}"
+      region: "{{ params.credentials.backup_replica_bucket.region | default('') }}"
+      access_key: "{{ params.credentials.backup_replica_bucket.access_key }}"
+      secret_key: "{{ params.credentials.backup_replica_bucket.secret_key }}"
+      when: "{{ (params.main.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+
 children:
 
 - name: "main/scripts/vars.run.yml"
@@ -275,15 +299,15 @@ children:
 
       {% if params.main.enable_backup_replica | bool %}
 
-		  var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
-		  var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
+      var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
+      var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
 
       {% endif %}
 
       {% if params.main.enable_uploads_replica | bool %}
 
-		  var_shared__s3_replicate_uploads__bucket_dest_name: "{{ params.main.uploads_replica_bucket_name }}"
-		  var_shared__s3_replicate_uploads__bucket_dest_path: "{{ params.main.uploads_replica_bucket_path | default('') }}"
+      var_shared__s3_replicate_uploads__bucket_dest_name: "{{ params.main.uploads_replica_bucket_name }}"
+      var_shared__s3_replicate_uploads__bucket_dest_path: "{{ params.main.uploads_replica_bucket_path | default('') }}"
 
       {% endif %}
 

@@ -111,8 +111,6 @@ services:
 
     {% endif %}
 
-  {% params.s3_cli == 'awscli' %}
-
   s3_cli:
     container_name: "${CTX_PREFIX_RUN}s3_cli"
     hostname: "s3_cli"
@@ -120,8 +118,8 @@ services:
       context: .
       dockerfile: "shared/containers/{{ params.s3_cli }}/Dockerfile"
       args:
-        IMAGE: "{{ params.images[params.s3_cli + 'image'] }}"
-        VERSION: "{{ params.images[params.s3_cli + 'version'] }}"
+        IMAGE: "{{ params.images[params.s3_cli + '_image'] }}"
+        VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
     restart: "unless-stopped"
     networks:
     - "shared"
@@ -137,5 +135,3 @@ services:
     mem_limit: "{{ params.memory.s3_cli }}"
 
     {% endif %}
-
-  {% endif %}

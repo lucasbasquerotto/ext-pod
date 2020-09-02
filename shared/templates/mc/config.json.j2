@@ -7,8 +7,8 @@
 {% set ns_aliases.inner = ns_aliases.inner | combine({
         param.alias: {
             'url': param.endpoint,
-            'accessKey': param.access_key_id,
-            'secretKey': param.secret_access_key,
+            'accessKey': param.access_key,
+            'secretKey': param.secret_key,
             'api': 'S3v4',
             'path': 'auto'
         }
