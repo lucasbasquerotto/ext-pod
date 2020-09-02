@@ -137,6 +137,7 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
+    s3_cli: "{{ params.main.s3_cli }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 
@@ -178,13 +179,13 @@ templates:
 
     {% endif %}
 
-    s3_backup_access_key: "{{ params.credentials.mediawiki_backup_bucket.access_key }}"
-    s3_backup_secret_key: "{{ params.credentials.mediawiki_backup_bucket.secret_key }}"
+    s3_backup_access_key: "{{ params.credentials.backup_bucket.access_key }}"
+    s3_backup_secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    s3_uploads_access_key: "{{ params.credentials.mediawiki_uploads_bucket.access_key }}"
-    s3_uploads_secret_key: "{{ params.credentials.mediawiki_uploads_bucket.secret_key }}"
+    s3_uploads_access_key: "{{ params.credentials.uploads_bucket.access_key }}"
+    s3_uploads_secret_key: "{{ params.credentials.uploads_bucket.secret_key }}"
 
     use_certbot: "{{ params.main.use_certbot }}"
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
@@ -371,8 +372,8 @@ templates:
 
     s3_key: ""
     s3_secret: ""
-    s3_endpoint: "{{ params.credentials.mediawiki_uploads_bucket.endpoint | default('') }}"
-    s3_region: "{{ params.credentials.mediawiki_uploads_bucket.region | default('') }}"
+    s3_endpoint: "{{ params.credentials.uploads_bucket.endpoint | default('') }}"
+    s3_region: "{{ params.credentials.uploads_bucket.region | default('') }}"
     s3_bucket: "{{ params.main.uploads_bucket_name }}"
     s3_path: "{{ params.main.uploads_bucket_path | default('') }}"
 
@@ -433,6 +434,20 @@ children:
 
       {% if var_pod_type in ['app', 'web'] %}
 
+      {% if params.main.enable_backup_replica | bool %}
+
+		  var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
+		  var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
+
+      {% endif %}
+
+      {% if params.main.enable_uploads_replica | bool %}
+
+		  var_shared__s3_replicate_uploads__bucket_dest_name: "{{ params.main.uploads_replica_bucket_name }}"
+		  var_shared__s3_replicate_uploads__bucket_dest_path: "{{ params.main.uploads_replica_bucket_path | default('') }}"
+
+      {% endif %}
+
       var_custom__use_varnish: "{{ params.main.use_varnish | bool | ternary('true', 'false') }}"
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
       var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
@@ -455,27 +470,27 @@ children:
       var_shared__nextcloud__setup__admin_user: "{{ params.credentials.nextcloud.admin_user }}"
       var_shared__nextcloud__setup__admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
       var_shared__nextcloud__s3_backup__enable: "true"
-      var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.mediawiki_backup_bucket.access_key }}"
-      var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.mediawiki_backup_bucket.secret_key }}"
+      var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.backup_bucket.access_key }}"
+      var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
       var_shared__nextcloud__s3_backup__bucket: "{{ params.main.backup_bucket_name }}"
-      var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.mediawiki_backup_bucket.host | default('') }}"
-      var_shared__nextcloud__s3_backup__port: "{{ params.credentials.mediawiki_backup_bucket.port | default('') }}"
-      var_shared__nextcloud__s3_backup__region: "{{ params.credentials.mediawiki_backup_bucket.region | default('') }}"
+      var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.backup_bucket.host | default('') }}"
+      var_shared__nextcloud__s3_backup__port: "{{ params.credentials.backup_bucket.port | default('') }}"
+      var_shared__nextcloud__s3_backup__region: "{{ params.credentials.backup_bucket.region | default('') }}"
       var_shared__nextcloud__s3_backup__use_ssl: >-
-        {{ params.credentials.mediawiki_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
-      var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.mediawiki_backup_bucket.path_style | default('') }}"
-      var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.mediawiki_backup_bucket.legacy_auth | default('') }}"
+        {{ params.credentials.backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
+      var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.backup_bucket.path_style | default('') }}"
+      var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.backup_bucket.legacy_auth | default('') }}"
       var_shared__nextcloud__s3_uploads__enable: "true"
-      var_shared__nextcloud__s3_uploads__access_key: "{{ params.credentials.mediawiki_uploads_bucket.access_key }}"
-      var_shared__nextcloud__s3_uploads__secret_key: "{{ params.credentials.mediawiki_uploads_bucket.secret_key }}"
+      var_shared__nextcloud__s3_uploads__access_key: "{{ params.credentials.uploads_bucket.access_key }}"
+      var_shared__nextcloud__s3_uploads__secret_key: "{{ params.credentials.uploads_bucket.secret_key }}"
       var_shared__nextcloud__s3_uploads__bucket: "{{ params.main.uploads_bucket_name }}"
-      var_shared__nextcloud__s3_uploads__hostname: "{{ params.credentials.mediawiki_uploads_bucket.host | default('') }}"
-      var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.mediawiki_uploads_bucket.port | default('') }}"
-      var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.mediawiki_uploads_bucket.region | default('') }}"
+      var_shared__nextcloud__s3_uploads__hostname: "{{ params.credentials.uploads_bucket.host | default('') }}"
+      var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.uploads_bucket.port | default('') }}"
+      var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.uploads_bucket.region | default('') }}"
       var_shared__nextcloud__s3_uploads__use_ssl: >-
-        {{ params.credentials.mediawiki_uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
-      var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.mediawiki_uploads_bucket.path_style | default('') }}"
-      var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.mediawiki_uploads_bucket.legacy_auth | default('') }}"
+        {{ params.credentials.uploads_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
+      var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.uploads_bucket.path_style | default('') }}"
+      var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.uploads_bucket.legacy_auth | default('') }}"
 
       {% endif %}
 
@@ -806,20 +821,44 @@ children:
 
       var_task__s3_backup__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
       var_task__s3_backup__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
-      var_task__s3_backup__s3_subtask__cli: "awscli"
+      var_task__s3_backup__s3_subtask__cli: "{{ params.main.s3_cli }}"
       var_task__s3_backup__s3_subtask__cli_cmd: "run"
       var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"
-      var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.mediawiki_backup_bucket.endpoint }}"
+      var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
       var_task__s3_backup__s3_subtask__service: "s3_backup"
 
       {% if var_pod_type in ['app', 'web'] %}
 
+      {% if params.main.enable_backup_replica | bool %}
+
+      var_task__s3_backup_replica__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
+      var_task__s3_backup_replica__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
+      var_task__s3_backup_replica__s3_subtask__cli: "{{ params.main.s3_cli }}"
+      var_task__s3_backup_replica__s3_subtask__cli_cmd: "run"
+      var_task__s3_backup_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup_replica"
+      var_task__s3_backup_replica__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
+      var_task__s3_backup_replica__s3_subtask__service: "s3_backup_replica"
+
+      {% endif %}
+
+      {% if params.main.enable_uploads_replica | bool %}
+
+      var_task__s3_uploads_replica__s3_subtask__bucket_name: "{{ params.main.uploads_bucket_name }}"
+      var_task__s3_uploads_replica__s3_subtask__bucket_path: "{{ params.main.uploads_bucket_path | default('') }}"
+      var_task__s3_uploads_replica__s3_subtask__cli: "{{ params.main.s3_cli }}"
+      var_task__s3_uploads_replica__s3_subtask__cli_cmd: "run"
+      var_task__s3_uploads_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_uploads_replica"
+      var_task__s3_uploads_replica__s3_subtask__endpoint: "{{ params.credentials.uploads_bucket.endpoint }}"
+      var_task__s3_uploads_replica__s3_subtask__service: "s3_uploads_replica"
+
+      {% endif %}
+
       var_task__s3_uploads__s3_subtask__bucket_name: "{{ params.main.uploads_bucket_name }}"
       var_task__s3_uploads__s3_subtask__bucket_path: "{{ params.main.uploads_bucket_path | default('') }}"
-      var_task__s3_uploads__s3_subtask__cli: "awscli"
+      var_task__s3_uploads__s3_subtask__cli: "{{ params.main.s3_cli }}"
       var_task__s3_uploads__s3_subtask__cli_cmd: "run"
       var_task__s3_uploads__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_uploads"
-      var_task__s3_uploads__s3_subtask__endpoint: "{{ params.credentials.mediawiki_uploads_bucket.endpoint }}"
+      var_task__s3_uploads__s3_subtask__endpoint: "{{ params.credentials.uploads_bucket.endpoint }}"
       var_task__s3_uploads__s3_subtask__service: "s3_uploads"
 
       {% endif %}

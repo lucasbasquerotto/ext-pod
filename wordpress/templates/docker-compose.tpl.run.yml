@@ -86,66 +86,6 @@ services:
 
   {% endif %}
 
-  {% if params.pod_type in ['app', 'web'] %}
-
-  s3_uploads:
-    container_name: "${CTX_PREFIX_RUN}s3_uploads"
-    hostname: "s3_uploads"
-    build:
-      context: .
-      dockerfile: "shared/containers/awscli/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.awscli_image }}"
-        VERSION: "{{ params.images.awscli_version }}"
-        PERL_VERSION: $PERL_VERSION
-        S3_ACCESS_KEY: $S3_UPLOADS_ACCESS_KEY
-        S3_SECRET_KEY: $S3_UPLOADS_SECRET_KEY
-    restart: "unless-stopped"
-    networks:
-    - "shared"
-    volumes:
-    - "$DATA_DIR:/var/main/data"
-    - "$DATA_DIR/tmp:/tmp/main"
-    - "$DATA_DIR/log:/var/log/main"
-    logging: *mainlog
-    command: "tail -f /dev/null"
-
-    {% if (params.memory.s3_uploads | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.s3_uploads }}"
-
-    {% endif %}
-
-  {% endif %}
-
-  s3_backup:
-    container_name: "${CTX_PREFIX_RUN}s3_backup"
-    hostname: "s3_backup"
-    build:
-      context: .
-      dockerfile: "shared/containers/awscli/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.awscli_image }}"
-        VERSION: "{{ params.images.awscli_version }}"
-        PERL_VERSION: $PERL_VERSION
-        S3_ACCESS_KEY: $S3_BACKUP_ACCESS_KEY
-        S3_SECRET_KEY: $S3_BACKUP_SECRET_KEY
-    restart: "unless-stopped"
-    networks:
-    - "shared"
-    volumes:
-    - "$DATA_DIR:/var/main/data"
-    - "$DATA_DIR/tmp:/tmp/main"
-    - "$DATA_DIR/log:/var/log/main"
-    logging: *mainlog
-    command: "tail -f /dev/null"
-
-    {% if (params.memory.s3_backup | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.s3_backup }}"
-
-    {% endif %}
-
   logrotator:
     container_name: "${CTX_PREFIX_RUN}logrotator"
     hostname: "logrotator"
@@ -170,3 +110,32 @@ services:
     mem_limit: "{{ params.memory.logrotator }}"
 
     {% endif %}
+
+  {% params.s3_cli == 'awscli' %}
+
+  s3_cli:
+    container_name: "${CTX_PREFIX_RUN}s3_cli"
+    hostname: "s3_cli"
+    build:
+      context: .
+      dockerfile: "shared/containers/{{ params.s3_cli }}/Dockerfile"
+      args:
+        IMAGE: "{{ params.images[params.s3_cli + 'image'] }}"
+        VERSION: "{{ params.images[params.s3_cli + 'version'] }}"
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+
+    {% if (params.memory.s3_cli | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.s3_cli }}"
+
+    {% endif %}
+
+  {% endif %}
