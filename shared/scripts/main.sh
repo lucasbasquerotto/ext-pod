@@ -79,9 +79,6 @@ case "$command" in
 	"action:exec:rotate")
 		"$pod_script_env_file" run logrotator
 		;;
-	"local:prepare")
-		"$arg_ctl_layer_dir/run" dev-cmd bash "/root/w/r/$arg_env_local_repo/run" ${arg_opts[@]+"${arg_opts[@]}"}
-		;;
 	"prepare")
 		data_dir="/var/main/data"
 

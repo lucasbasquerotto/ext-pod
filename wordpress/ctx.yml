@@ -561,8 +561,8 @@ children:
 
       {% if var_local and (var_pod_type in ['app', 'web']) %}
 
-      {% set var_wp_app_name = params.main.custom_args.wordpress.app_name | default('') %}
-      {% set var_dev_repo_dir_wordpress = params.pod.app[var_wp_app_name].dir_rel | default('') %}
+      {% set var_wp_app_repo = params.main.custom_args.wordpress.app_repo | default('') %}
+      {% set var_dev_repo_dir_wordpress = params.pod.env_path_map[var_wp_app_repo] | default('') %}
 
       var_dev__repo_dir_wordpress: "{{ var_dev_repo_dir_wordpress }}"
 
