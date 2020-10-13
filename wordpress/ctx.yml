@@ -26,6 +26,20 @@
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
 %}
 
+{% if var_local and (var_pod_type in ['app', 'web']) %}
+  {% set var_wp_app_repo = params.main.custom_args.wordpress.app_repo | default('') %}
+  {% set var_wp_app_repo_dir = params.pod.env_path_map[var_wp_app_repo] | default('') %}
+
+  {% set var_apps_dir_base = params.dirs.apps_dir_base %}
+  {% set var_wp_app_repo_dir_out = (var_wp_app_repo_dir != '')
+    | ternary(
+        var_pod_dir_rel + '/' + var_apps_dir_base + '/'
+        + (var_wp_app_repo_dir | default('')),
+        ''
+      )
+  %}
+{% endif %}
+
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
   ternary(params.main.custom_domain.public_https_port, params.main.custom_domain.public_http_port)
 %}
@@ -169,11 +183,6 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    {% set var_apps_dir_base = params.dirs.apps_dir_base %}
-    {% set var_app_repo_dir = var_pod_dir_rel + '/' + var_apps_dir_base + '/' +
-      (params.pod.app.wp_local.dir_rel | default(''))
-    %}
-
     public_http_port: "{{ params.main.custom_domain.public_http_port }}"
     public_https_port: "{{ params.main.custom_domain.public_https_port }}"
     private_http_port: "{{ params.main.custom_domain.private_http_port }}"
@@ -183,9 +192,14 @@ templates:
       (params.main.custom_args.wordpress.env == 'production') |
       ternary('production', 'development')
       }}
-    wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_app_repo_dir, '') }}"
     use_certbot: "{{ params.main.use_certbot }}"
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+
+    {% if var_local %}
+
+    wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_wp_app_repo_dir_out, '') }}"
+
+    {% endif %}
 
     {% if params.main.use_minio_gateway | bool %}
 
@@ -561,10 +575,7 @@ children:
 
       {% if var_local and (var_pod_type in ['app', 'web']) %}
 
-      {% set var_wp_app_repo = params.main.custom_args.wordpress.app_repo | default('') %}
-      {% set var_dev_repo_dir_wordpress = params.pod.env_path_map[var_wp_app_repo] | default('') %}
-
-      var_dev__repo_dir_wordpress: "{{ var_dev_repo_dir_wordpress }}"
+      var_dev__repo_dir_wordpress: "{{ var_wp_app_repo_dir }}"
 
       {% endif %}
 

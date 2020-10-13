@@ -34,8 +34,6 @@ if [ -z "$base_dir" ] || [ "$base_dir" = "/" ]; then
 	error "$msg"
 fi
 
-app_layer_dir="$base_dir/apps/$var_dev__repo_dir_wordpress"
-
 command="${1:-}"
 
 if [ -z "$command" ]; then
@@ -54,16 +52,22 @@ case "$command" in
 		;;
 	"prepare")
 		if [ "${var_custom__wp_dev:-}" = "true" ] && [ "${var_custom__use_composer:-}" = "true" ]; then
+			if [ -z "${var_dev__repo_dir_wordpress:-}" ]; then
+				error "[error] wordpress directory not defined (var_dev__repo_dir_wordpress)"
+			fi
+
+			app_dir="$base_dir/apps/$var_dev__repo_dir_wordpress"
+
 			inner_dir="env"
 
 			if [ "${var_custom__dynamic:-}" = "true" ]; then
 				inner_dir="main"
 			fi
 
-			sudo chmod +x "$app_layer_dir/"
-			cp "$pod_full_dir/$inner_dir/wordpress/.env" "$app_layer_dir/.env"
-			chmod +r "$app_layer_dir/.env"
-			chmod 777 "$app_layer_dir/web/app/uploads/"
+			sudo chmod +x "$app_dir/"
+			cp "$pod_full_dir/$inner_dir/wordpress/.env" "$app_dir/.env"
+			chmod +r "$app_dir/.env"
+			chmod 777 "$app_dir/web/app/uploads/"
 		fi
 
 		"$pod_env_shared_file" "$command" "$@"
