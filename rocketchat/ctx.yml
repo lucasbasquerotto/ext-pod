@@ -441,16 +441,16 @@ children:
       var_shared__nextcloud__setup__admin_user: "{{ params.credentials.nextcloud.admin_user }}"
       var_shared__nextcloud__setup__admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
       var_shared__nextcloud__s3_backup__enable: "true"
-      var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.rocketchat_backup_bucket.access_key }}"
-      var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.rocketchat_backup_bucket.secret_key }}"
+      var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.backup_bucket.access_key }}"
+      var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
       var_shared__nextcloud__s3_backup__bucket: "{{ params.main.backup_bucket_name }}"
-      var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.rocketchat_backup_bucket.host | default('') }}"
-      var_shared__nextcloud__s3_backup__port: "{{ params.credentials.rocketchat_backup_bucket.port | default('') }}"
-      var_shared__nextcloud__s3_backup__region: "{{ params.credentials.rocketchat_backup_bucket.region | default('') }}"
+      var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.backup_bucket.host | default('') }}"
+      var_shared__nextcloud__s3_backup__port: "{{ params.credentials.backup_bucket.port | default('') }}"
+      var_shared__nextcloud__s3_backup__region: "{{ params.credentials.backup_bucket.region | default('') }}"
       var_shared__nextcloud__s3_backup__use_ssl: >-
-        {{ params.credentials.rocketchat_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
-      var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.rocketchat_backup_bucket.path_style | default('') }}"
-      var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.rocketchat_backup_bucket.legacy_auth | default('') }}"
+        {{ params.credentials.backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
+      var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.backup_bucket.path_style | default('') }}"
+      var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.backup_bucket.legacy_auth | default('') }}"
       var_shared__nextcloud__s3_uploads__enable: "true"
       var_shared__nextcloud__s3_uploads__access_key: "{{ params.credentials.uploads_bucket.access_key }}"
       var_shared__nextcloud__s3_uploads__secret_key: "{{ params.credentials.uploads_bucket.secret_key }}"
@@ -792,7 +792,7 @@ children:
       var_task__s3_backup__s3_subtask__cli: "{{ params.main.s3_cli }}"
       var_task__s3_backup__s3_subtask__cli_cmd: "run"
       var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"
-      var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.rocketchat_backup_bucket.endpoint }}"
+      var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
       var_task__s3_backup__s3_subtask__service: "s3_backup"
 
       {% if var_pod_type in ['app', 'web'] %}

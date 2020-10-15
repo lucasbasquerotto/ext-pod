@@ -304,13 +304,6 @@ children:
 
       {% endif %}
 
-      {% if params.main.enable_uploads_replica | bool %}
-
-      var_shared__s3_replicate_uploads__bucket_dest_name: "{{ params.main.uploads_replica_bucket_name }}"
-      var_shared__s3_replicate_uploads__bucket_dest_path: "{{ params.main.uploads_replica_bucket_path | default('') }}"
-
-      {% endif %}
-
       var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
 
       {% endif %}
@@ -611,18 +604,6 @@ children:
       var_task__s3_backup_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup_replica"
       var_task__s3_backup_replica__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
       var_task__s3_backup_replica__s3_subtask__service: "s3_backup_replica"
-
-      {% endif %}
-
-      {% if params.main.enable_uploads_replica | bool %}
-
-      var_task__s3_uploads_replica__s3_subtask__bucket_name: "{{ params.main.uploads_bucket_name }}"
-      var_task__s3_uploads_replica__s3_subtask__bucket_path: "{{ params.main.uploads_bucket_path | default('') }}"
-      var_task__s3_uploads_replica__s3_subtask__cli: "{{ params.main.s3_cli }}"
-      var_task__s3_uploads_replica__s3_subtask__cli_cmd: "run"
-      var_task__s3_uploads_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_uploads_replica"
-      var_task__s3_uploads_replica__s3_subtask__endpoint: "{{ params.credentials.uploads_bucket.endpoint }}"
-      var_task__s3_uploads_replica__s3_subtask__service: "s3_uploads_replica"
 
       {% endif %}
 
