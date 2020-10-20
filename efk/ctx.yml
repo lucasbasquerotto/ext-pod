@@ -96,7 +96,7 @@ templates:
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     internal_elasticsearch: "{{ params.main.internal_elasticsearch | default('false') }}"
-    external_volumes: "{{ params.main.external_volumes | default('false') }}"
+    named_volumes: "{{ params.main.named_volumes | default(false) }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 

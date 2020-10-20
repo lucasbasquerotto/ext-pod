@@ -51,7 +51,7 @@ case "$command" in
 		"$pod_env_shared_file" exec composer composer update --verbose
 		;;
 	"prepare")
-		if [ "${var_custom__wp_dev:-}" = "true" ] && [ "${var_custom__use_composer:-}" = "true" ]; then
+		if [ "${var_custom__app_dev:-}" = "true" ] && [ "${var_custom__use_composer:-}" = "true" ]; then
 			if [ -z "${var_dev__repo_dir_wordpress:-}" ]; then
 				error "[error] wordpress directory not defined (var_dev__repo_dir_wordpress)"
 			fi

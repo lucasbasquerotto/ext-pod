@@ -26,7 +26,16 @@
   | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
 %}
 
-{% if var_local and (var_pod_type in ['app', 'web']) %}
+{% set var_app_dev = var_local
+  and (params.main.app_dev | default(false) | bool)
+  and (var_pod_type in ['app', 'web'])
+%}
+
+{% set var_use_composer = var_app_dev
+  and (params.main.use_composer | default(false) | bool)
+%}
+
+{% if var_app_dev | bool %}
   {% set var_wp_app_repo = params.main.custom_args.wordpress.app_repo | default('') %}
   {% set var_wp_app_repo_dir = params.pod.env_path_map[var_wp_app_repo] | default('') %}
 
@@ -116,10 +125,10 @@ templates:
   root: true
   params:
     local: "{{ var_local | default(false) }}"
-    wp_dev: "{{ params.main.wp_dev | default(false) }}"
+    app_dev: "{{ var_app_dev }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
-    external_volumes: "{{ params.main.external_volumes | default(false) }}"
+    named_volumes: "{{ params.main.named_volumes | default(false) }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 
@@ -135,7 +144,7 @@ templates:
 
     {% if var_local | bool %}
 
-    use_composer: "{{ params.main.use_composer }}"
+    use_composer: "{{ var_use_composer }}"
 
     {% endif %}
 
@@ -174,6 +183,7 @@ templates:
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) }}"
+    app_dev: "{{ var_app_dev }}"
     type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     db_port: "{{ params.main.custom_args.mysql.port | default('3306', true) }}"
@@ -195,9 +205,9 @@ templates:
     use_certbot: "{{ params.main.use_certbot }}"
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
 
-    {% if var_local %}
+    {% if var_app_dev | bool %}
 
-    wp_app_repo_dir: "{{ var_local | default(false) | bool | ternary(var_wp_app_repo_dir_out, '') }}"
+    wp_app_repo_dir: "{{ var_wp_app_repo_dir_out }}"
 
     {% endif %}
 
@@ -487,7 +497,7 @@ children:
       var_shared__delete_old__days: "3"
       var_custom__pod_type: "{{ var_pod_type }}"
       var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
-      var_custom__wp_dev: "{{ params.main.wp_dev | default(false) | bool | ternary('true', 'false') }}"
+      var_custom__app_dev: "{{ var_app_dev | bool | ternary('true', 'false') }}"
       var_custom__use_main_network: "true"
       var_custom__use_s3_storage: "{{ params.main.use_s3_storage | default(false) | bool | ternary('true', 'false') }}"
       var_custom__use_logrotator: "true"
@@ -565,7 +575,7 @@ children:
 
       {% endif %}
 
-      var_custom__use_composer: "{{ params.main.use_composer | bool | ternary('true', 'false') }}"
+      var_custom__use_composer: "{{ var_use_composer | bool | ternary('true', 'false') }}"
       var_run__migrate__wp_activate_all_plugins: >-
         "{{ params.main.migrate_wp_activate_all_plugins | default(false) | bool | ternary('true', 'false') }}"
       var_run__migrate__wp_plugins_to_activate: "{{ params.main.migrate_wp_plugins_to_activate }}"
@@ -573,7 +583,7 @@ children:
 
       {% endif %}
 
-      {% if var_local and (var_pod_type in ['app', 'web']) %}
+      {% if var_app_dev | bool %}
 
       var_dev__repo_dir_wordpress: "{{ var_wp_app_repo_dir }}"
 

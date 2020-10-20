@@ -36,7 +36,7 @@ networks:
     external: true
     name: "${CTX_NAME}-network"
 
-{% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+{% if (params.local | bool) and (params.named_volumes | bool) %}
 
 volumes:
   elasticsearch: {}
@@ -301,7 +301,7 @@ services:
     - "shared"
     volumes:
 
-    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "nextcloud:/var/www/html"
 
@@ -370,7 +370,7 @@ services:
 
     volumes:
 
-    {% if (params.local | bool) and (not (params.external_volumes | bool)) %}
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "elasticsearch:/usr/share/elasticsearch/data"
 

@@ -102,7 +102,7 @@ templates:
 
     {% endif %}
 
-    external_volumes: "{{ params.main.external_volumes | default('false') }}"
+    named_volumes: "{{ params.main.named_volumes | default(false) }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
     use_node_exporter: "{{ params.main.use_node_exporter }}"
