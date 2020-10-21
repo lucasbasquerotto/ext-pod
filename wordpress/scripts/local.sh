@@ -56,7 +56,7 @@ case "$command" in
 				error "[error] wordpress directory not defined (var_dev__repo_dir_wordpress)"
 			fi
 
-			app_dir="$base_dir/apps/$var_dev__repo_dir_wordpress"
+			app_dir="$pod_layer_dir/$var_dev__repo_dir_wordpress"
 
 			inner_dir="env"
 

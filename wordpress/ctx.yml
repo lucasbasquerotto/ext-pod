@@ -36,17 +36,8 @@
 %}
 
 {% if var_app_dev | bool %}
-  {% set var_wp_app_repo = params.main.custom_args.wordpress.app_repo | default('') %}
-  {% set var_wp_app_repo_dir = params.pod.env_path_map[var_wp_app_repo] | default('') %}
-
-  {% set var_apps_dir_base = params.dirs.apps_dir_base %}
-  {% set var_wp_app_repo_dir_out = (var_wp_app_repo_dir != '')
-    | ternary(
-        var_pod_dir_rel + '/' + var_apps_dir_base + '/'
-        + (var_wp_app_repo_dir | default('')),
-        ''
-      )
-  %}
+  {% set var_wp_app_repo_dir_name = params.main.custom_args.wordpress.app_repo_dir %}
+  {% set var_wp_app_repo_dir = params.pod.extra_repos_dir + '/' + var_wp_app_repo_dir_name %}
 {% endif %}
 
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
@@ -207,7 +198,7 @@ templates:
 
     {% if var_app_dev | bool %}
 
-    wp_app_repo_dir: "{{ var_wp_app_repo_dir_out }}"
+    wp_app_repo_dir: "{{ var_wp_app_repo_dir }}"
 
     {% endif %}
 
