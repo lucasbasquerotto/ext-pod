@@ -17,16 +17,17 @@
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
 
+{% set var_pod_kind = 'efk' %}
+
 {% set var_main_base_dir = params.main.custom_dir %}
-{% set var_main_dir = var_main_base_dir + '/efk' %}
+{% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
+{% set var_main_base_dir_container = (var_local and (params.main.custom_dir_sync | default(false) | bool))
+	| ternary(var_main_base_dir + '-sync', var_main_base_dir)
+%}
+{% set var_main_dir_container = var_main_base_dir_container + '/' + var_pod_kind %}
 {% set var_shared_dir = 'shared' %}
 
-{% set var_pod_dir_rel = '..' %}
-{% set var_data_dir = var_local
-  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir) %}
-{% set var_data_dir_task = params.pod.local_data_dir_inside
-  | default(params.pod.data_dir, true)
-%}
+{% set var_data_dir = params.pod.data_dir %}
 
 {% set var_kibana_domain_port = params.main.custom_domain.kibana_ssl | bool |
   ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
@@ -91,7 +92,7 @@ templates:
   dest: "docker-compose.yml"
   params:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
-    main_dir: "{{ var_main_dir }}"
+    main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     internal_elasticsearch: "{{ params.main.internal_elasticsearch | default('false') }}"
@@ -119,7 +120,7 @@ templates:
   dest: "docker-compose.run.yml"
   params:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
-    main_dir: "{{ var_main_dir }}"
+    main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     s3_cli: "{{ params.main.s3_cli }}"
@@ -374,6 +375,8 @@ children:
       # General
 
       var_run__general__backup_is_delete_old: "true"
+      var_run__general__main_base_dir: "{{ var_main_base_dir }}"
+      var_run__general__main_base_dir_container: "{{ var_main_base_dir_container }}"
       var_run__general__orchestration: "compose"
       var_run__general__script_dir: "{{ var_main_dir }}/scripts"
       var_run__general__script_env_file: "{{ var_local | bool | ternary('local.sh', 'remote.sh') }}"
