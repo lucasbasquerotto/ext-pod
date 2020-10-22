@@ -57,20 +57,23 @@ case "$command" in
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
 					chmod 755 "\$dir"
+					chown 1000:1000 "\$dir"
 				fi
 
 				dir="$tmp_dir/elasticsearch"
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 777 "\$dir"
+					chmod 755 "\$dir"
+					chown 1000:1000 "\$dir"
 				fi
 
 				dir="$tmp_dir/elasticsearch/snapshots"
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 777 "\$dir"
+					chmod 755 "\$dir"
+					chown 1000:1000 "\$dir"
 				fi
 			fi
 		SHELL
