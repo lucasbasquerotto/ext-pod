@@ -21,7 +21,9 @@
 
 {% set var_main_base_dir = params.main.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
-{% set var_main_base_dir_container = var_local | ternary(var_main_base_dir + '-mounted', var_main_base_dir) %}
+{% set var_main_base_dir_container = (var_local and (params.main.custom_dir_sync | default(false) | bool))
+	| ternary(var_main_base_dir + '-sync', var_main_base_dir)
+%}
 {% set var_main_dir_container = var_main_base_dir_container + '/' + var_pod_kind %}
 {% set var_shared_dir = 'shared' %}
 
