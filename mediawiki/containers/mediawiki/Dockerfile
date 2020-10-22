@@ -3,6 +3,8 @@ ARG VERSION
 
 FROM $IMAGE:$VERSION
 
-COPY /mediawiki/containers/mediawiki/CustomCliInstaller.php /var/www/html/includes/installer/CustomCliInstaller.php
-COPY /mediawiki/containers/mediawiki/upgrade.php /var/www/html/maintenance/upgrade.php
+ARG MAIN_DIR
+
+COPY $MAIN_DIR/containers/mediawiki/CustomCliInstaller.php /var/www/html/includes/installer/CustomCliInstaller.php
+COPY $MAIN_DIR/containers/mediawiki/upgrade.php /var/www/html/maintenance/upgrade.php
 COPY /env/mediawiki/LocalSettings.php /var/www/html/LocalSettings.php

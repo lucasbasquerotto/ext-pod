@@ -329,10 +329,11 @@ services:
     hostname: "prometheus"
     build:
       context: .
-      dockerfile: "prometheus/containers/prometheus/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/prometheus/Dockerfile"
       args:
         IMAGE: "{{ params.images.prometheus_image }}"
         VERSION: "{{ params.images.prometheus_version }}"
+        MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
 
     {% if params.use_fluentd | bool %}
@@ -383,7 +384,7 @@ services:
     hostname: "node-exporter"
     build:
       context: .
-      dockerfile: "prometheus/containers/node_exporter/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/node_exporter/Dockerfile"
       args:
         IMAGE: "{{ params.images.node_exporter_image }}"
         VERSION: "{{ params.images.node_exporter_version }}"
@@ -417,7 +418,7 @@ services:
     hostname: "cadvisor"
     build:
       context: .
-      dockerfile: "prometheus/containers/cadvisor/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/cadvisor/Dockerfile"
       args:
         IMAGE: "{{ params.images.cadvisor_image }}"
         VERSION: "{{ params.images.cadvisor_version }}"
@@ -456,7 +457,7 @@ services:
     hostname: "grafana"
     build:
       context: .
-      dockerfile: "prometheus/containers/grafana/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/grafana/Dockerfile"
       args:
         IMAGE: "{{ params.images.grafana_image }}"
         VERSION: "{{ params.images.grafana_version }}"

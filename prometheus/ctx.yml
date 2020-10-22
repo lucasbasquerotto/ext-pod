@@ -19,7 +19,7 @@
 
 {% set var_main_base_dir = params.main.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/prometheus' %}
-{% set var_shared_dir = var_main_base_dir + '/shared' %}
+{% set var_shared_dir = 'shared' %}
 
 {% set var_pod_dir_rel = '..' %}
 {% set var_data_dir = var_local
@@ -61,8 +61,7 @@ env_files:
 {% if var_pod_type in ['app', 'web'] %}
 
 - src: "{{ params.main.auth_file }}"
-  dest: "{{ var_main_base_dir }}/env/nginx/conf/.htpasswd"
-  root: true
+  dest: "env/nginx/conf/.htpasswd"
 
 {% endif %}
 
@@ -75,10 +74,10 @@ templates:
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
-  dest: "{{ var_main_base_dir }}/docker-compose.yml"
-  root: true
+  dest: "docker-compose.yml"
   params:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    main_dir: "{{ var_main_dir }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
 
@@ -118,10 +117,10 @@ templates:
     {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
-  dest: "{{ var_main_base_dir }}/docker-compose.run.yml"
-  root: true
+  dest: "docker-compose.run.yml"
   params:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    main_dir: "{{ var_main_dir }}"
     external_volumes: "{{ params.main.external_volumes | default('false') }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
@@ -142,8 +141,7 @@ templates:
     {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
-  dest: "{{ var_main_base_dir }}/.env"
-  root: true
+  dest: ".env"
   params:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
@@ -191,8 +189,7 @@ templates:
 {% if not params.main.custom_args.nginx.custom | default(false) | bool %}
 
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
-  dest: "{{ var_main_base_dir }}/env/nginx/nginx.conf"
-  root: true
+  dest: "env/nginx/nginx.conf"
   params:
     conf: {{ params.main.custom_args.nginx.conf | default({}) | to_json }}
     enable_validate_origin: "{{ params.main.custom_args.nginx.enable_validate_origin }}"
@@ -239,18 +236,17 @@ templates:
 
 {% if params.main.s3_cli == 'awscli' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
-  {% set var_s3_config_dest = var_main_base_dir + '/env/awscli/credentials.ini' %}
+  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
 {% elif params.main.s3_cli == 'rclone' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
-  {% set var_s3_config_dest = var_main_base_dir + '/env/rclone/rclone.conf' %}
+  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
 {% elif params.main.s3_cli == 'mc' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
-  {% set var_s3_config_dest = var_main_base_dir + '/env/mc/config.json' %}
+  {% set var_s3_config_dest = 'env/mc/config.json' %}
 {% endif %}
 
 - src: "{{ var_s3_config_src }}"
   dest: "{{ var_s3_config_dest }}"
-  root: true
   params:
     - alias: "backup"
       endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
@@ -269,7 +265,6 @@ children:
 - name: "main/scripts/vars.run.yml"
   params:
     env_params: {{ params | to_json }}
-    pod_custom_dir: "{{ var_main_base_dir }}"
     run: {{ var_run | to_json }}
     run_tasks: {{ var_run_tasks | to_json }}
     run_dict: {{ var_run_dict | to_json }}

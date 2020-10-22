@@ -185,7 +185,7 @@ services:
     hostname: "wordpress"
     build:
       context: .
-      dockerfile: "wordpress/containers/wordpress/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/wordpress/Dockerfile"
       args:
         IMAGE: "{{ params.images.wordpress_image }}"
         VERSION: "{{ params.images.wordpress_version }}"

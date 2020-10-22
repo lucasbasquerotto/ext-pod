@@ -123,7 +123,6 @@ children:
 - name: "main/scripts/vars.run.yml"
   params:
     env_params: {{ params | to_json }}
-    pod_custom_dir: "{{ var_main_dir }}"
     run: {{ var_run | to_json }}
     run_dict: {{ var_run_dict | to_json }}
     run_custom:

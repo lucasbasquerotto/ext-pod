@@ -19,12 +19,9 @@
 
 {% set var_main_base_dir = params.main.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/wordpress' %}
-{% set var_shared_dir = var_main_base_dir + '/shared' %}
+{% set var_shared_dir = 'shared' %}
 
-{% set var_pod_dir_rel = '..' %}
-{% set var_data_dir = var_local
-  | ternary(var_pod_dir_rel + '/' + params.pod.data_dir, params.pod.data_dir)
-%}
+{% set var_data_dir = params.pod.data_dir %}
 
 {% set var_app_dev = var_local
   and (params.main.app_dev | default(false) | bool)
@@ -98,8 +95,7 @@ env_files:
 {% if var_pod_type in ['app', 'web'] %}
 
 - src: "{{ params.main.auth_file }}"
-  dest: "{{ var_main_base_dir }}/env/nginx/conf/.htpasswd"
-  root: true
+  dest: "env/nginx/conf/.htpasswd"
 
 {% endif %}
 
@@ -112,10 +108,10 @@ templates:
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
-  dest: "{{ var_main_base_dir }}/docker-compose.yml"
-  root: true
+  dest: "docker-compose.yml"
   params:
     local: "{{ var_local | default(false) }}"
+    main_dir: "{{ var_main_dir }}"
     app_dev: "{{ var_app_dev }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
@@ -149,10 +145,10 @@ templates:
     {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
-  dest: "{{ var_main_base_dir }}/docker-compose.run.yml"
-  root: true
+  dest: "docker-compose.run.yml"
   params:
     local: "{{ var_local | default(false) }}"
+    main_dir: "{{ var_main_dir }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     s3_cli: "{{ params.main.s3_cli }}"
@@ -166,8 +162,7 @@ templates:
     {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
-  dest: "{{ var_main_base_dir }}/.env"
-  root: true
+  dest: ".env"
   params:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
@@ -277,8 +272,7 @@ templates:
 {% if not params.main.custom_args.nginx.custom | default(false) | bool %}
 
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
-  dest: "{{ var_main_base_dir }}/env/nginx/nginx.conf"
-  root: true
+  dest: "env/nginx/nginx.conf"
   params:
     conf: {{ params.main.custom_args.nginx.conf | default({}) | to_json }}
     enable_validate_origin: "{{ params.main.custom_args.nginx.enable_validate_origin }}"
@@ -352,8 +346,7 @@ templates:
 {% if params.main.use_varnish | bool %}
 
 - src: "{{ var_main_dir }}/templates/varnish/default.vcl"
-  dest: "{{ var_main_base_dir }}/env/varnish/default.vcl"
-  root: true
+  dest: "env/varnish/default.vcl"
   params: {}
 
 {% endif %}
@@ -367,8 +360,7 @@ templates:
 %}
 
 - src: "{{ var_main_dir }}/templates/wordpress/wp.env"
-  dest: "{{ var_main_base_dir }}/env/wordpress/.env"
-  root: true
+  dest: "env/wordpress/.env"
   params:
     env: "{{ params.main.custom_args.wordpress.env }}"
     db_host: "mysql"
@@ -413,8 +405,7 @@ templates:
 {% if var_pod_type in ['app', 'db'] %}
 
 - src: "{{ var_shared_dir }}/templates/mysql/init.sql"
-  dest: "{{ var_main_base_dir }}/env/mysql/init.sql"
-  root: true
+  dest: "env/mysql/init.sql"
   params:
     viewer_password: "{{ params.credentials.mysql.viewer_password }}"
     db_name: "{{ params.credentials.wordpress.db.name }}"
@@ -425,18 +416,17 @@ templates:
 
 {% if params.main.s3_cli == 'awscli' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
-  {% set var_s3_config_dest = var_main_base_dir + '/env/awscli/credentials.ini' %}
+  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
 {% elif params.main.s3_cli == 'rclone' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
-  {% set var_s3_config_dest = var_main_base_dir + '/env/rclone/rclone.conf' %}
+  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
 {% elif params.main.s3_cli == 'mc' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
-  {% set var_s3_config_dest = var_main_base_dir + '/env/mc/config.json' %}
+  {% set var_s3_config_dest = 'env/mc/config.json' %}
 {% endif %}
 
 - src: "{{ var_s3_config_src }}"
   dest: "{{ var_s3_config_dest }}"
-  root: true
   params:
     - alias: "backup"
       endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
@@ -467,7 +457,6 @@ children:
 - name: "main/scripts/vars.run.yml"
   params:
     env_params: {{ params | to_json }}
-    pod_custom_dir: "{{ var_main_base_dir }}"
     run: {{ var_run | to_json }}
     run_tasks: {{ var_run_tasks | to_json }}
     run_dict: {{ var_run_dict | to_json }}

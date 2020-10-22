@@ -122,7 +122,7 @@ services:
     hostname: "rocketchat"
     build:
       context: .
-      dockerfile: "rocketchat/containers/rocketchat/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/rocketchat/Dockerfile"
       args:
         IMAGE: "{{ params.images.rocketchat_image }}"
         VERSION: "{{ params.images.rocketchat_version }}"
@@ -197,7 +197,7 @@ services:
     hostname: "hubot"
     build:
       context: .
-      dockerfile: "rocketchat/containers/hubot/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/hubot/Dockerfile"
       args:
         IMAGE: "{{ params.images.hubot_image }}"
         VERSION: "{{ params.images.hubot_version }}"

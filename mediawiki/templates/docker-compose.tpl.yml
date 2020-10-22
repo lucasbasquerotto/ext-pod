@@ -179,10 +179,11 @@ services:
     hostname: "mediawiki"
     build:
       context: .
-      dockerfile: "mediawiki/containers/mediawiki/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/mediawiki/Dockerfile"
       args:
         IMAGE: "{{ params.images.mediawiki_image }}"
         VERSION: "{{ params.images.mediawiki_version }}"
+        MAIN_DIR: "{{ params.main_dir }}"
     restart: "unless-stopped"
 
     {% if (params.use_fluentd | bool) or (params.pod_type == 'app') %}

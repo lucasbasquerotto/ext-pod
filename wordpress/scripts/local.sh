@@ -7,8 +7,6 @@ pod_vars_dir="$POD_VARS_DIR"
 # shellcheck disable=SC2153
 pod_layer_dir="$POD_LAYER_DIR"
 # shellcheck disable=SC2153
-pod_full_dir="$POD_FULL_DIR"
-# shellcheck disable=SC2153
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 # shellcheck disable=SC1090
@@ -58,14 +56,8 @@ case "$command" in
 
 			app_dir="$pod_layer_dir/$var_dev__repo_dir_wordpress"
 
-			inner_dir="env"
-
-			if [ "${var_custom__dynamic:-}" = "true" ]; then
-				inner_dir="main"
-			fi
-
 			sudo chmod +x "$app_dir/"
-			cp "$pod_full_dir/$inner_dir/wordpress/.env" "$app_dir/.env"
+			cp "$pod_layer_dir/env/wordpress/.env" "$app_dir/.env"
 			chmod +r "$app_dir/.env"
 			chmod 777 "$app_dir/web/app/uploads/"
 		fi

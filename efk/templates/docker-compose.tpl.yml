@@ -120,7 +120,7 @@ services:
     hostname: "kibana"
     build:
       context: .
-      dockerfile: "efk/containers/kibana/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/kibana/Dockerfile"
       args:
         IMAGE: "{{ params.images.kibana_image }}"
         VERSION: "{{ params.images.kibana_version }}"
@@ -335,10 +335,11 @@ services:
     hostname: "elasticsearch"
     build:
       context: .
-      dockerfile: "efk/containers/elasticsearch/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/elasticsearch/Dockerfile"
       args:
         IMAGE: "{{ params.images.elasticsearch_image }}"
         VERSION: "{{ params.images.elasticsearch_version }}"
+        MAIN_DIR: "{{ params.main_dir }}"
     restart: "unless-stopped"
 
     {% if params.use_fluentd | bool %}
