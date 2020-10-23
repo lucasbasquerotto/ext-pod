@@ -669,11 +669,11 @@ children:
       {% if (params.main.restore_db | bool) and (params.main.enable_db_setup | bool) %}
 
       {% set var_db_dest_dir = '/tmp/main/tmp/mongo/restore' %}
-      {% set var_db_dest_full_dir = var_db_dest_dir +
-        ((params.main.db_setup.is_compressed_file | default(false) | bool) and
-          ((params.main.db_setup.restore_compressed_inner_dir | default('')) != ''))
-          | ternary('/' + params.main.db_setup.restore_compressed_inner_dir, '')
-      %}
+      # {% set var_db_dest_full_dir = var_db_dest_dir +
+      #   ((params.main.db_setup.is_compressed_file | default(false) | bool) and
+      #     ((params.main.db_setup.restore_compressed_inner_dir | default('')) != ''))
+      #     | ternary('/' + params.main.db_setup.restore_compressed_inner_dir, '')
+      # %}
       {% set var_verify_file_to_skip = params.main.db_setup.verify_file_to_skip | default('/tmp/main/setup/db.skip') %}
       {% set var_db_compress_type = params.main.db_setup.db_compress_type | default('zip') %}
       {% set var_db_compress_file_name = params.main.db_setup.db_compress_file_name
@@ -692,19 +692,24 @@ children:
       var_task__db_setup__setup_task__subtask_cmd_remote: "{{ var_db_subtask_cmd_remote }}"
       var_task__db_setup__setup_task__subtask_cmd_local: "{{ var_db_subtask_cmd_local }}"
       var_task__db_setup__setup_task__is_compressed_file: >-
-        {{ params.main.db_setup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
+        {{
+          params.main.db_setup.is_compressed_file | default(false) | bool
+          | ternary('true', 'false')
+        }}
 
       {% if params.main.db_setup.is_compressed_file | default(false) | bool %}
 
       var_task__db_setup__setup_task__compress_type: "{{ var_db_compress_type }}"
       var_task__db_setup__setup_task__compress_src_file: "{{ var_db_compress_file }}"
       var_task__db_setup__setup_task__compress_dest_dir: "{{ var_db_dest_dir }}"
-      var_task__db_setup__setup_task__compress_pass: "{{ params.credentials.rocketchat_db.compress_pass | default('') }}"
+      var_task__db_setup__setup_task__compress_pass: >-
+        {{ params.credentials.rocketchat_db.compress_pass | default('') }}
 
       {% endif %}
 
       var_task__db_setup__setup_task__recursive_dir: "{{ var_db_dest_dir }}"
-      var_task__db_setup__setup_task__recursive_mode: "{{ params.main.db_setup.recursive_mode | default('') }}"
+      var_task__db_setup__setup_task__recursive_mode: >-
+        {{ params.main.db_setup.recursive_mode | default('') }}
       var_task__db_setup__setup_task__recursive_mode_dir: >-
         {{ params.main.db_setup.recursive_mode_dir | default('777') }}
       var_task__db_setup__setup_task__recursive_mode_file: >-
@@ -745,7 +750,7 @@ children:
       {% endif %}
 
       var_task__db_setup__setup_local__db_subtask_cmd: "{{ var_db_local_cmd }}"
-      var_task__db_setup__setup_local__db_task_base_dir: "{{ var_db_dest_full_dir }}"
+      var_task__db_setup__setup_local__db_task_base_dir: "{{ var_db_dest_dir }}"
       var_task__db_setup__setup_local__task_name: "db_main"
 
       {% endif %}
