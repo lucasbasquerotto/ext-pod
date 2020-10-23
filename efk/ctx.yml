@@ -116,9 +116,9 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
+    named_volumes: "{{ params.main.named_volumes | default(false) }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     internal_elasticsearch: "{{ params.main.internal_elasticsearch | default('false') }}"
-    named_volumes: "{{ params.main.named_volumes | default(false) }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 

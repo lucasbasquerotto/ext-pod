@@ -128,8 +128,8 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.main.use_fluentd }}"
     named_volumes: "{{ params.main.named_volumes | default(false) }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 

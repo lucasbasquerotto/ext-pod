@@ -39,7 +39,14 @@ networks:
 {% if (params.local | bool) and (params.named_volumes | bool) %}
 
 volumes:
+  uploads: {}
   mysql: {}
+
+  {% if params.use_nextcloud | bool %}
+
+  nextcloud: {}
+
+  {% endif %}
 
 {% endif %}
 
@@ -223,7 +230,17 @@ services:
     networks:
     - "shared"
     volumes:
+
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
+
+    - "uploads:/var/www/html/images"
+
+    {% else %}
+
     - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
+
+    {% endif %}
+
     - "$DATA_DIR/tmp/log/mediawiki:/tmp/main/log/mediawiki"
     logging: *mainlog
 

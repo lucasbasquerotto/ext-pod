@@ -39,6 +39,7 @@ networks:
 {% if (params.local | bool) and (params.named_volumes | bool) %}
 
 volumes:
+  uploads: {}
   mysql: {}
 
   {% if params.use_nextcloud | bool %}
@@ -239,7 +240,17 @@ services:
     networks:
     - "shared"
     volumes:
+
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
+
+    - "uploads:/var/www/html/web/app/uploads"
+
+    {% else %}
+
     - "$DATA_DIR/wordpress/uploads:/var/www/html/web/app/uploads"
+
+    {% endif %}
+
     - "$DATA_DIR/tmp/wordpress:/tmp/main/wordpress"
     - "$DATA_DIR/tmp/tmp/wordpress:/tmp/main/tmp/wordpress"
 

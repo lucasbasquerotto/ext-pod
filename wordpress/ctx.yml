@@ -142,8 +142,8 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     app_dev: "{{ var_app_dev }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.main.use_fluentd }}"
     named_volumes: "{{ params.main.named_volumes | default(false) }}"
+    use_fluentd: "{{ params.main.use_fluentd }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
 

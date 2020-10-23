@@ -41,6 +41,12 @@ networks:
 volumes:
   elasticsearch: {}
 
+  {% if params.use_nextcloud | bool %}
+
+  nextcloud: {}
+
+  {% endif %}
+
 {% endif %}
 
 services:

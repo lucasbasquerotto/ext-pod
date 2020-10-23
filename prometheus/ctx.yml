@@ -104,6 +104,7 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
+    named_volumes: "{{ params.main.named_volumes | default(false) }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
 
     {% if params.main.use_fluentd | bool %}
@@ -126,7 +127,6 @@ templates:
 
     {% endif %}
 
-    named_volumes: "{{ params.main.named_volumes | default(false) }}"
     images: {{ params.main.custom_images | to_json }}
     memory: {{ params.main.custom_memory | to_json }}
     use_node_exporter: "{{ params.main.use_node_exporter }}"
@@ -148,7 +148,6 @@ templates:
   params:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
-    external_volumes: "{{ params.main.external_volumes | default('false') }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.main.use_fluentd }}"
     s3_cli: "{{ params.main.s3_cli }}"
