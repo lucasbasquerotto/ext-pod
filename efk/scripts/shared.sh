@@ -56,7 +56,6 @@ case "$command" in
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 755 "\$dir"
 					chown 1000:1000 "\$dir"
 				fi
 
@@ -64,7 +63,6 @@ case "$command" in
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 755 "\$dir"
 					chown 1000:1000 "\$dir"
 				fi
 
@@ -72,7 +70,6 @@ case "$command" in
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 755 "\$dir"
 					chown 1000:1000 "\$dir"
 				fi
 			fi

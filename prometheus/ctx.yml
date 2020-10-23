@@ -170,6 +170,14 @@ templates:
 
     {% endif %}
 
+    grafana_security_admin_password: "{{ params.credentials.grafana.security_admin_password }}"
+    grafana_server_domain: "{{ params.credentials.grafana.server_domain }}"
+    grafana_smtp_enabled: "{{ params.credentials.grafana.smtp_enabled }}"
+    grafana_smtp_host: "{{ params.credentials.grafana.smtp_host }}"
+    grafana_smtp_user: "{{ params.credentials.grafana.smtp_user }}"
+    grafana_smtp_password: "{{ params.credentials.grafana.smtp_password }}"
+    grafana_smtp_from_address: "{{ params.credentials.grafana.smtp_from_address }}"
+
     {% endif %}
 
     {% if var_pod_type in ['app', 'web'] %}

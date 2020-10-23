@@ -241,16 +241,18 @@ services:
 
   {% endif %}
 
-  toolbox:
-    container_name: "${CTX_PREFIX_MAIN}toolbox"
-    hostname: "toolbox"
+  {% if params.pod_type in ['app', 'web'] %}
+
+  grafana:
+    container_name: "${CTX_PREFIX_MAIN}grafana"
+    hostname: "grafana"
     build:
       context: .
-      dockerfile: "shared/containers/toolbox/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/grafana/Dockerfile"
       args:
-        IMAGE: "{{ params.images.toolbox_image }}"
-        VERSION: "{{ params.images.toolbox_version }}"
-    restart: "unless-stopped"
+        IMAGE: "{{ params.images.grafana_image }}"
+        VERSION: "{{ params.images.grafana_version }}"
+    restart: unless-stopped
 
     {% if params.use_fluentd | bool %}
 
@@ -259,68 +261,45 @@ services:
 
     {% endif %}
 
+    {% if not (params.use_nginx | bool) %}
+
+    ports:
+    - "3000:3000"
+
+    {% endif %}
+
     networks:
     - "shared"
     volumes:
-    - "$DATA_DIR:/var/main/data"
-    - "$DATA_DIR/tmp:/tmp/main"
-    - "$DATA_DIR/log:/var/log/main"
 
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
-    - "prometheus:/var/main/data/prometheus"
+    - "grafana:/var/lib/grafana"
+
+    {% else %}
+
+    - "$DATA_DIR/grafana:/var/lib/grafana"
 
     {% endif %}
 
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_SECURITY_ADMIN_PASSWORD
+      - GF_SERVER_DOMAIN=$GRAFANA_SERVER_DOMAIN
+      - GF_SMTP_ENABLED=$GRAFANA_SMTP_ENABLED
+      - GF_SMTP_HOST=$GRAFANA_SMTP_HOST
+      - GF_SMTP_USER=$GRAFANA_SMTP_USER
+      - GF_SMTP_PASSWORD=$GRAFANA_SMTP_PASSWORD
+      - GF_SMTP_FROM_ADDRESS=$GRAFANA_SMTP_FROM_ADDRESS
     logging: *mainlog
-    command: "tail -f /dev/null"
 
-    {% if (params.memory.toolbox | default('')) != '' %}
+    {% if (params.memory.grafana | default('')) != '' %}
 
-    mem_limit: "{{ params.memory.toolbox }}"
-
-    {% endif %}
-
-  {% if params.use_fluentd | bool %}
-
-  fluentd:
-    container_name: "${CTX_PREFIX_MAIN}fluentd"
-    hostname: "fluentd"
-    build:
-      context: .
-      dockerfile: "shared/containers/fluentd/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.fluentd_image }}"
-        VERSION: "{{ params.images.fluentd_version }}"
-        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
-    restart: "unless-stopped"
-    ports:
-    - "{{ params.fluentd_port }}:24224"
-    - "{{ params.fluentd_port }}:24224/udp"
-    networks:
-    - "log"
-
-    {% if (params.elasticsearch_host_ip | default('')) != '' %}
-
-    extra_hosts:
-    - "elasticsearch:{{ params.elasticsearch_host_ip }}"
-
-    {% endif %}
-
-    volumes:
-    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
-    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
-    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
-    logging: *jsonlog
-
-    {% if (params.memory.fluentd | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.fluentd }}"
+    mem_limit: "{{ params.memory.grafana }}"
 
     {% endif %}
 
   {% endif %}
-
 
   {% if params.pod_type in ['app', 'db'] %}
 
@@ -450,18 +429,16 @@ services:
 
   {% endif %}
 
-  {% if params.pod_type in ['app', 'web'] %}
-
-  grafana:
-    container_name: "${CTX_PREFIX_MAIN}grafana"
-    hostname: "grafana"
+  toolbox:
+    container_name: "${CTX_PREFIX_MAIN}toolbox"
+    hostname: "toolbox"
     build:
       context: .
-      dockerfile: "{{ params.main_dir }}/containers/grafana/Dockerfile"
+      dockerfile: "shared/containers/toolbox/Dockerfile"
       args:
-        IMAGE: "{{ params.images.grafana_image }}"
-        VERSION: "{{ params.images.grafana_version }}"
-    restart: unless-stopped
+        IMAGE: "{{ params.images.toolbox_image }}"
+        VERSION: "{{ params.images.toolbox_version }}"
+    restart: "unless-stopped"
 
     {% if params.use_fluentd | bool %}
 
@@ -473,31 +450,60 @@ services:
     networks:
     - "shared"
     volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
 
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
-    - "grafana:/var/lib/grafana"
-
-    {% else %}
-
-    - "$DATA_DIR/grafana:/var/lib/grafana"
+    - "prometheus:/var/main/data/prometheus"
 
     {% endif %}
 
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=MYPASSWORT
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_DOMAIN=myrul.com
-      - GF_SMTP_ENABLED=true
-      - GF_SMTP_HOST=smtp.gmail.com:587
-      - GF_SMTP_USER=myadrress@gmail.com
-      - GF_SMTP_PASSWORD=mypassword
-      - GF_SMTP_FROM_ADDRESS=myaddress@gmail.com
     logging: *mainlog
+    command: "tail -f /dev/null"
 
-    {% if (params.memory.grafana | default('')) != '' %}
+    {% if (params.memory.toolbox | default('')) != '' %}
 
-    mem_limit: "{{ params.memory.grafana }}"
+    mem_limit: "{{ params.memory.toolbox }}"
+
+    {% endif %}
+
+  {% if params.use_fluentd | bool %}
+
+  fluentd:
+    container_name: "${CTX_PREFIX_MAIN}fluentd"
+    hostname: "fluentd"
+    build:
+      context: .
+      dockerfile: "shared/containers/fluentd/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.fluentd_image }}"
+        VERSION: "{{ params.images.fluentd_version }}"
+        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
+    restart: "unless-stopped"
+    ports:
+    - "{{ params.fluentd_port }}:24224"
+    - "{{ params.fluentd_port }}:24224/udp"
+    networks:
+    - "log"
+
+    {% if (params.elasticsearch_host_ip | default('')) != '' %}
+
+    extra_hosts:
+    - "elasticsearch:{{ params.elasticsearch_host_ip }}"
+
+    {% endif %}
+
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
+    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
+    logging: *jsonlog
+
+    {% if (params.memory.fluentd | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.fluentd }}"
 
     {% endif %}
 
