@@ -22,7 +22,7 @@
 {% set var_main_base_dir = params.main.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
 {% set var_main_base_dir_container = (var_local and (params.main.custom_dir_sync | default(false) | bool))
-	| ternary(var_main_base_dir + '-sync', var_main_base_dir)
+  | ternary(var_main_base_dir + '-sync', var_main_base_dir)
 %}
 {% set var_main_dir_container = var_main_base_dir_container + '/' + var_pod_kind %}
 {% set var_shared_dir = 'shared' %}
@@ -99,11 +99,11 @@ env_files:
 {% if var_use_custom_ssl | bool %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
-  dest: "{{ var_data_dir }}/sync/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
   encrypted: "{{ var_custom_ssl_encrypted }}"
 
 - src: "{{ var_custom_ssl_privkey }}"
-  dest: "{{ var_data_dir }}/sync/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
   encrypted: "{{ var_custom_ssl_encrypted }}"
 
 {% endif %}

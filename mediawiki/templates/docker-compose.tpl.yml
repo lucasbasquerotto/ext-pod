@@ -129,7 +129,7 @@ services:
 
     {% if params.use_custom_ssl | default(false) | bool %}
 
-    - "$DATA_DIR/sync/ssl:/etc/ssl:ro"
+    - "./env/nginx/ssl:/etc/ssl:ro"
 
     {% elif params.use_certbot | default(false) | bool %}
 

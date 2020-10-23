@@ -37,6 +37,8 @@ case "$command" in
 	"clear")
 		"$pod_script_env_file" rm
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mongo_db"
+		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_uploads"
+		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_nextcloud"
 		sudo rm -rf "${base_dir}/data/${var_main__env}/${var_main__ctx}/${var_main__pod_name}/"
 		;;
 	"clear-all")
