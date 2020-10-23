@@ -29,6 +29,15 @@
 
 {% set var_data_dir = params.pod.data_dir %}
 
+{% set var_custom_ssl_main_domain = params.main.custom_ssl.main_domain | default('') %}
+{% set var_custom_ssl_fullchain = params.main.custom_ssl.fullchain | default('') %}
+{% set var_custom_ssl_privkey = params.main.custom_ssl.privkey | default('') %}
+{% set var_custom_ssl_encrypted = params.main.custom_ssl.encrypted | default(false) %}
+{% set var_use_custom_ssl = (var_custom_ssl_main_domain != '')
+  and (var_custom_ssl_fullchain != '')
+  and (var_custom_ssl_privkey != '')
+%}
+
 {% set var_app_dev = var_local
   and (params.main.app_dev | default(false) | bool)
   and (var_pod_type in ['app', 'web'])
@@ -100,8 +109,21 @@ env_files:
 
 {% if var_pod_type in ['app', 'web'] %}
 
+{% if var_use_custom_ssl | bool %}
+
+- src: "{{ var_custom_ssl_fullchain }}"
+  dest: "{{ var_data_dir }}/sync/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  encrypted: "{{ var_custom_ssl_encrypted }}"
+
+- src: "{{ var_custom_ssl_privkey }}"
+  dest: "{{ var_data_dir }}/sync/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  encrypted: "{{ var_custom_ssl_encrypted }}"
+
+{% endif %}
+
 - src: "{{ params.main.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
+  encrypted: "{{ params.main.auth_file_encrypted }}"
 
 {% endif %}
 
@@ -134,6 +156,8 @@ templates:
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
     use_filestash: "{{ params.main.use_filestash }}"
     use_nextcloud: "{{ params.main.use_nextcloud }}"
+    use_custom_ssl: "{{ var_use_custom_ssl }}"
+    use_certbot: "{{ params.main.use_certbot }}"
 
     {% if var_local | bool %}
 
@@ -508,6 +532,8 @@ children:
       {% endif %}
 
       var_custom__use_varnish: "{{ params.main.use_varnish | bool | ternary('true', 'false') }}"
+      var_custom__use_custom_ssl: "{{ var_use_custom_ssl | bool | ternary('true', 'false') }}"
+      var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
       var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
 
       {% if params.main.use_nextcloud | bool %}
@@ -681,8 +707,6 @@ children:
       # Tasks (Specific)
 
       {% if var_pod_type in ['app', 'web'] %}
-
-      var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
 
       {% if params.main.use_certbot | bool %}
 

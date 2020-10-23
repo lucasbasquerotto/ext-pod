@@ -100,7 +100,17 @@ services:
     networks:
     - "shared"
     volumes:
+
+    {% if params.use_custom_ssl | default(false) | bool %}
+
+    - "$DATA_DIR/sync/ssl:/etc/ssl:ro"
+
+    {% elif params.use_certbot | default(false) | bool %}
+
     - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
+
+    {% endif %}
+
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
