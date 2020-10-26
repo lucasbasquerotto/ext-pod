@@ -12,9 +12,6 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 # shellcheck disable=SC1090
 . "${pod_vars_dir}/vars.sh"
 
-pod_layer_base_dir="$(dirname "$pod_layer_dir")"
-base_dir="$(dirname "$pod_layer_base_dir")"
-
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
 }
@@ -34,18 +31,13 @@ pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 
 case "$command" in
 	"clear")
-		"$pod_script_env_file" rm
+		"$pod_script_env_file" "local:clear"
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mysql"
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_uploads"
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_nextcloud"
-		sudo rm -rf "${base_dir}/data/${var_main__env}/${var_main__ctx}/${var_main__pod_name}/"
 		;;
 	"clear-all")
-		"$pod_script_env_file" rm
-		sudo docker container prune -f
-		sudo docker network prune -f
-		sudo docker volume prune -f
-		sudo rm -rf "${base_dir}/data/"*
+		"$pod_script_env_file" "local:clear-all"
 		;;
 	"clear-remote")
 		"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb

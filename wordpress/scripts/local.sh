@@ -14,9 +14,6 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 
 pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 
-pod_layer_base_dir="$(dirname "$pod_layer_dir")"
-base_dir="$(dirname "$pod_layer_base_dir")"
-
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
 }
@@ -24,13 +21,6 @@ function info {
 function error {
 	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
-
-if [ -z "$base_dir" ] || [ "$base_dir" = "/" ]; then
-	msg="This project must be in a directory structure of type"
-	msg="$msg [base_dir]/[pod_layer_base_dir]/[this_repo] with"
-	msg="$msg base_dir different than '' or '/' instead of $pod_layer_dir"
-	error "$msg"
-fi
 
 command="${1:-}"
 
@@ -77,18 +67,13 @@ case "$command" in
 		"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
 		;;
 	"clear")
-		"$pod_script_env_file" rm
+		"$pod_script_env_file" "local:clear"
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mysql"
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_uploads"
 		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_nextcloud"
-		sudo rm -rf "${base_dir}/data/${var_main__env}/${var_main__ctx}/${var_main__pod_name}/"
 		;;
 	"clear-all")
-		"$pod_script_env_file" rm
-		sudo docker container prune -f
-		sudo docker network prune -f
-		sudo docker volume prune -f
-		sudo rm -rf "${base_dir}/data/"*
+		"$pod_script_env_file" "local:clear-all"
 		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"
