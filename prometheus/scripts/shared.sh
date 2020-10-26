@@ -51,6 +51,13 @@ case "$command" in
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+				dir="$data_dir/prometheus"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+					chown 65534:65534 "\$dir"
+				fi
+
 				dir="$data_dir/prometheus/data"
 
 				if [ ! -d "\$dir" ]; then
