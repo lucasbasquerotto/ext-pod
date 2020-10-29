@@ -33,8 +33,8 @@ pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 case "$command" in
 	"clear")
 		"$pod_script_env_file" "local:clear"
-		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_grafana"
-		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_prometheus"
+		sudo docker volume rm -f "${var_ctx_full_name}_grafana"
+		sudo docker volume rm -f "${var_ctx_full_name}_prometheus"
 		;;
 	"clear-all")
 		"$pod_script_env_file" "local:clear-all"

@@ -1,15 +1,6 @@
 ## general vars - start ###
 
 {% set var_local = params.main.local | default(false) | bool %}
-{% set var_run = params.main.run | default({}) %}
-{% set var_run_tasks = params.main.run_tasks | default({}) %}
-{% set var_run_dict = params.main.run_dict | default({}) %}
-{% set var_run_tasks_dict = params.main.run_tasks_dict | default({}) %}
-
-## general vars - end ###
-
-### others ###
-
 {% set var_pod_type = params.main.type | default('') %}
 
 {% if not (var_pod_type in ['app']) %}
@@ -310,412 +301,407 @@ templates:
       secret_key: "{{ params.credentials.backup_replica_bucket.secret_key }}"
       when: "{{ (params.main.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
-children:
-
-- name: "main/scripts/vars.run.yml"
+- src: "main/vars/vars.tpl.sh"
+  dest: "vars.sh"
+  mode: '{{ var_local | ternary(0666, 0640) }}'
   params:
-    env_params: {{ params | to_json }}
-    run: {{ var_run | to_json }}
-    run_tasks: {{ var_run_tasks | to_json }}
-    run_dict: {{ var_run_dict | to_json }}
-    run_tasks_dict: {{ var_run_tasks_dict | to_json }}
-    run_custom:
+    var_ctx_full_name: "{{ var_ctx_full_name }}"
 
-      {% if var_local | bool %}
+    {% if var_local | bool %}
 
-      var_data_dir_rel: "{{ params.pod.data_dir }}"
+    var_data_dir_rel: "{{ params.pod.data_dir }}"
 
-      {% else %}
+    {% else %}
 
-      var_data_dir: "{{ params.pod.data_dir }}"
+    var_data_dir: "{{ params.pod.data_dir }}"
 
-      {% endif %}
+    {% endif %}
 
-      var_shared__script_dir: "{{ var_shared_dir }}/scripts"
-      var_shared__delete_old__days: "3"
-      var_custom__pod_type: "{{ var_pod_type }}"
-      var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
-      var_custom__use_main_network: "true"
-      var_custom__use_logrotator: "true"
-      var_custom__use_nginx: "{{ params.main.use_nginx | bool | ternary('true', 'false') }}"
-      var_custom__use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
+    var_shared__script_dir: "{{ var_shared_dir }}/scripts"
+    var_shared__delete_old__days: "3"
+    var_custom__pod_type: "{{ var_pod_type }}"
+    var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
+    var_custom__use_main_network: "true"
+    var_custom__use_logrotator: "true"
+    var_custom__use_nginx: "{{ params.main.use_nginx | bool | ternary('true', 'false') }}"
+    var_custom__use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
 
-      {% if var_pod_type in ['app', 'web'] %}
+    {% if var_pod_type in ['app', 'web'] %}
 
-      {% if params.main.enable_backup_replica | bool %}
+    {% if params.main.enable_backup_replica | bool %}
 
-      var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
-      var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
+    var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
+    var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
 
-      {% endif %}
+    {% endif %}
 
-      var_custom__use_custom_ssl: "{{ var_use_custom_ssl | bool | ternary('true', 'false') }}"
-      var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
-      var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
+    var_custom__use_custom_ssl: "{{ var_use_custom_ssl | bool | ternary('true', 'false') }}"
+    var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+    var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
 
-      {% if params.main.use_nextcloud | bool %}
+    {% if params.main.use_nextcloud | bool %}
 
-      {% set var_nextcloud_protocol = (params.main.custom_domain.nextcloud_ssl | bool | ternary('https', 'http')) %}
-      {% set var_nextcloud_port_suffix = (var_nextcloud_domain_port in ['80', '443'])
-        | ternary('', ':' + var_nextcloud_domain_port)
-      %}
+    {% set var_nextcloud_protocol = (params.main.custom_domain.nextcloud_ssl | bool | ternary('https', 'http')) %}
+    {% set var_nextcloud_port_suffix = (var_nextcloud_domain_port in ['80', '443'])
+      | ternary('', ':' + var_nextcloud_domain_port)
+    %}
 
-      {% set var_nextcloud_url = var_nextcloud_protocol + '://' +
-        params.main.custom_domain.nextcloud_domain + var_nextcloud_port_suffix
-      %}
+    {% set var_nextcloud_url = var_nextcloud_protocol + '://' +
+      params.main.custom_domain.nextcloud_domain + var_nextcloud_port_suffix
+    %}
 
-      var_shared__nextcloud__setup__url: "{{ var_nextcloud_url }}"
-      var_shared__nextcloud__setup__domain: "{{ params.main.custom_domain.nextcloud_domain }}"
-      var_shared__nextcloud__setup__host: "{{ params.main.custom_domain.nextcloud_domain }}{{ var_nextcloud_port_suffix }}"
-      var_shared__nextcloud__setup__protocol: "{{ var_nextcloud_protocol }}"
-      var_shared__nextcloud__setup__admin_user: "{{ params.credentials.nextcloud.admin_user }}"
-      var_shared__nextcloud__setup__admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
-      var_shared__nextcloud__s3_backup__enable: "true"
-      var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
-      var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
-      var_shared__nextcloud__s3_backup__bucket: "{{ params.main.backup_bucket_name }}"
-      var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.wp_backup_bucket.host | default('') }}"
-      var_shared__nextcloud__s3_backup__port: "{{ params.credentials.wp_backup_bucket.port | default('') }}"
-      var_shared__nextcloud__s3_backup__region: "{{ params.credentials.wp_backup_bucket.region | default('') }}"
-      var_shared__nextcloud__s3_backup__use_ssl: >-
-        {{ params.credentials.wp_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
-      var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.wp_backup_bucket.path_style | default('') }}"
-      var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.wp_backup_bucket.legacy_auth | default('') }}"
+    var_shared__nextcloud__setup__url: "{{ var_nextcloud_url }}"
+    var_shared__nextcloud__setup__domain: "{{ params.main.custom_domain.nextcloud_domain }}"
+    var_shared__nextcloud__setup__host: "{{ params.main.custom_domain.nextcloud_domain }}{{ var_nextcloud_port_suffix }}"
+    var_shared__nextcloud__setup__protocol: "{{ var_nextcloud_protocol }}"
+    var_shared__nextcloud__setup__admin_user: "{{ params.credentials.nextcloud.admin_user }}"
+    var_shared__nextcloud__setup__admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
+    var_shared__nextcloud__s3_backup__enable: "true"
+    var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
+    var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
+    var_shared__nextcloud__s3_backup__bucket: "{{ params.main.backup_bucket_name }}"
+    var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.wp_backup_bucket.host | default('') }}"
+    var_shared__nextcloud__s3_backup__port: "{{ params.credentials.wp_backup_bucket.port | default('') }}"
+    var_shared__nextcloud__s3_backup__region: "{{ params.credentials.wp_backup_bucket.region | default('') }}"
+    var_shared__nextcloud__s3_backup__use_ssl: >-
+      {{ params.credentials.wp_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
+    var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.wp_backup_bucket.path_style | default('') }}"
+    var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.wp_backup_bucket.legacy_auth | default('') }}"
 
-      {% endif %}
+    {% endif %}
 
-      {% endif %}
+    {% endif %}
 
-      {% if not (params.main.log_summary.disabled | default(false) | bool) %}
+    {% if not (params.main.log_summary.disabled | default(false) | bool) %}
 
-      var_custom__log_summary__days_ago: "{{ params.main.log_summary.days_ago | default('1') }}"
-      var_custom__log_summary__max_amount: "{{ params.main.log_summary.max_amount | default('100') }}"
-      var_custom__log_summary__verify_size_docker_dir: >-
-        {{ params.main.log_summary.verify_size_docker_dir | default(false) | bool | ternary('true', 'false') }}
-      var_custom__log_summary__verify_size_containers: >-
-        {{ params.main.log_summary.verify_size_containers | default(true) | bool | ternary('true', 'false') }}
+    var_custom__log_summary__days_ago: "{{ params.main.log_summary.days_ago | default('1') }}"
+    var_custom__log_summary__max_amount: "{{ params.main.log_summary.max_amount | default('100') }}"
+    var_custom__log_summary__verify_size_docker_dir: >-
+      {{ params.main.log_summary.verify_size_docker_dir | default(false) | bool | ternary('true', 'false') }}
+    var_custom__log_summary__verify_size_containers: >-
+      {{ params.main.log_summary.verify_size_containers | default(true) | bool | ternary('true', 'false') }}
 
-      {% endif %}
+    {% endif %}
 
-      # General
+    # General
 
-      var_run__general__backup_is_delete_old: "true"
-      var_run__general__main_base_dir: "{{ var_main_base_dir }}"
-      var_run__general__main_base_dir_container: "{{ var_main_base_dir_container }}"
-      var_run__general__orchestration: "compose"
-      var_run__general__script_dir: "{{ var_main_dir }}/scripts"
-      var_run__general__script_env_file: "{{ var_local | bool | ternary('local.sh', 'remote.sh') }}"
-      var_run__general__toolbox_service: "toolbox"
-      var_run__migrate__db_service: "elasticsearch"
-      var_run__migrate__db_user: "{{ params.credentials.efk.db.user }}"
-      var_run__migrate__db_pass: "{{ params.credentials.efk.db.password }}"
-      var_run__migrate__db_connect_wait_secs: "{{ params.main.migrate.db_connect_wait_secs | default('300') }}"
-      var_run__tasks__backup: "group_backup"
-      var_run__tasks__setup: "group_setup"
+    var_run__general__backup_is_delete_old: "true"
+    var_run__general__main_base_dir: "{{ var_main_base_dir }}"
+    var_run__general__main_base_dir_container: "{{ var_main_base_dir_container }}"
+    var_run__general__orchestration: "compose"
+    var_run__general__script_dir: "{{ var_main_dir }}/scripts"
+    var_run__general__script_env_file: "{{ var_local | bool | ternary('local.sh', 'remote.sh') }}"
+    var_run__general__toolbox_service: "toolbox"
+    var_run__migrate__db_service: "elasticsearch"
+    var_run__migrate__db_user: "{{ params.credentials.efk.db.user }}"
+    var_run__migrate__db_pass: "{{ params.credentials.efk.db.password }}"
+    var_run__migrate__db_connect_wait_secs: "{{ params.main.migrate.db_connect_wait_secs | default('300') }}"
+    var_run__tasks__backup: "group_backup"
+    var_run__tasks__setup: "group_setup"
 
-      # Tasks (Group)
+    # Tasks (Group)
 
-      {% set var_group_backup = [] %}
+    {% set var_group_backup = [] %}
 
-      {% if var_pod_type in ['app', 'db'] %}
-
-        {% if params.main.enable_db_backup | bool %}
-
-          {% set var_group_backup = var_group_backup + ['db_backup'] %}
-
-        {% endif %}
-
-      {% endif %}
-
-      var_task__group_backup__group_task__task_names: "{{ var_group_backup | join(',') }}"
-      var_task__group_backup__task__type: "group"
-
-      {% set var_group_setup = [] %}
-
-      {% if params.main.restore_db | bool %}
-
-        {% if var_pod_type in ['app', 'db'] %}
-
-          {% if params.main.enable_db_setup | bool %}
-
-            {% set var_group_setup = var_group_setup + ['db_setup'] %}
-
-          {% endif %}
-
-        {% endif %}
-
-      {% endif %}
-
-      var_task__group_setup__group_task__task_names: "{{ var_group_setup | join(',') }}"
-      var_task__group_setup__task__type: "group"
-
-      # Tasks (Specific)
-
-      {% if var_pod_type in ['app', 'web'] %}
-
-      {% if params.main.use_certbot | bool %}
-
-      var_task__certbot__certbot_subtask__certbot_service: "certbot"
-      var_task__certbot__certbot_subtask__data_base_path: "/var/main/data/sync/certbot"
-      var_task__certbot__certbot_subtask__dev: "{{ params.main.certbot.dev | default(var_local) | bool | ternary('true', 'false') }}"
-      var_task__certbot__certbot_subtask__domains: "{{ params.main.certbot.domains }}"
-      var_task__certbot__certbot_subtask__email: "{{ params.main.certbot.email }}"
-      var_task__certbot__certbot_subtask__force: "{{ params.main.certbot.force | bool | ternary('true', 'false') }}"
-      var_task__certbot__certbot_subtask__main_domain: "{{ params.main.certbot.main_domain }}"
-      var_task__certbot__certbot_subtask__rsa_key_size: "{{ params.main.certbot.rsa_key_size | default('4096') }}"
-      var_task__certbot__certbot_subtask__staging: >-
-        {{ params.main.certbot.staging | default(var_local) | bool | ternary('true', 'false') }}
-      var_task__certbot__certbot_subtask__toolbox_service: "toolbox"
-      var_task__certbot__certbot_subtask__webservice_type: "nginx"
-      var_task__certbot__certbot_task__certbot_cmd: "setup"
-      var_task__certbot__task__type: "certbot"
-
-      {% endif %}
-
-      {% endif %}
-
-      {% if var_pod_type in ['app', 'db'] %}
+    {% if var_pod_type in ['app', 'db'] %}
 
       {% if params.main.enable_db_backup | bool %}
 
-      {% set var_db_dir = '/tmp/main/elasticsearch/snapshots' %}
-      {% set var_db_repository_name = params.main.db_backup.repository_name | default('efk_repository') %}
-      {% set var_db_snapshot_name = params.main.db_backup.snapshot_name
-        | default('<snapshot-{now/d{yyyyMMdd}}-{now/s{HHmmss}}>')
-      %}
-      {% set var_db_subtask_cmd_db = 'db:backup:elasticsearch' %}
-
-      {% if params.main.db_backup.use_s3 | bool %}
-
-        {% set var_db_subtask_cmd_local = '' %}
-        {% set var_db_subtask_cmd_remote = 'backup:db' %}
-        {% set var_db_snapshot_type = params.main.db_backup.snapshot_type | default('s3') %}
-
-      {% else %}
-
-        {% set var_db_subtask_cmd_local = 'backup:db' %}
-        {% set var_db_subtask_cmd_remote = '' %}
-        {% set var_db_snapshot_type = params.main.db_backup.snapshot_type | default('fs') %}
+        {% set var_group_backup = var_group_backup + ['db_backup'] %}
 
       {% endif %}
 
-      var_task__db_backup__task__type: "backup"
-      var_task__db_backup__backup_task__subtask_cmd_local: "{{ var_db_subtask_cmd_local }}"
-      var_task__db_backup__backup_task__subtask_cmd_remote: "{{ var_db_subtask_cmd_remote }}"
-      var_task__db_backup__backup_db__db_task_base_dir: "{{ var_db_dir }}"
-      var_task__db_backup__backup_db__db_subtask_cmd: "{{ var_db_subtask_cmd_db }}"
-      var_task__db_backup__backup_db__repository_name: "{{ var_db_repository_name }}"
-      var_task__db_backup__backup_db__snapshot_name: "{{ var_db_snapshot_name }}"
-      var_task__db_backup__backup_db__snapshot_type: "{{ var_db_snapshot_type }}"
-      var_task__db_backup__backup_db__task_name: "db_main"
+    {% endif %}
 
-      {% if (not params.main.db_backup.use_s3 | bool) and (params.main.db_backup.is_compressed_file | default(false) | bool) %}
+    var_task__group_backup__group_task__task_names: "{{ var_group_backup | join(',') }}"
+    var_task__group_backup__task__type: "group"
 
-      {% set var_db_compress_type = params.main.db_backup.db_compress_type | default('zip') %}
-      {% set var_db_compress_file_name = params.main.db_backup.db_compress_file_name
-        | default('efk.[[ datetime ]].[[ random ]].zip')
-      %}
-      {% set var_db_compress_dest_file = '/tmp/main/tmp/backup/elasticsearch/' + var_db_compress_file_name %}
+    {% set var_group_setup = [] %}
 
-      var_task__db_backup__backup_task__is_compressed_file: "true"
-      var_task__db_backup__backup_task__compress_type: "{{ var_db_compress_type }}"
-      var_task__db_backup__backup_task__compress_src_file: >-
-        {{ params.main.db_backup.compress_src_file | default('') }}
-      var_task__db_backup__backup_task__compress_src_dir: >-
-        {{ params.main.db_backup.compress_src_dir | default(var_db_dir) }}
-      var_task__db_backup__backup_task__compress_dest_file: "{{ var_db_compress_dest_file }}"
-      var_task__db_backup__backup_task__compress_pass: >-
-        {{ params.credentials.efk_db.compress_pass | default('') }}
-
-      var_task__db_backup__backup_task__backup_date_format: "{{ params.main.db_backup.backup_date_format | default('') }}"
-      var_task__db_backup__backup_task__backup_time_format: "{{ params.main.db_backup.backup_time_format | default('') }}"
-      var_task__db_backup__backup_task__backup_datetime_format: >-
-        {{ params.main.db_backup.backup_datetime_format | default('') }}
-      var_task__db_backup__backup_task__recursive_dir: "{{ params.main.db_backup.recursive_dir | default('') }}"
-      var_task__db_backup__backup_task__recursive_mode: "{{ params.main.db_backup.recursive_mode | default('') }}"
-      var_task__db_backup__backup_task__recursive_mode_dir: "{{ params.main.db_backup.recursive_mode_dir | default('') }}"
-      var_task__db_backup__backup_task__recursive_mode_file: "{{ params.main.db_backup.recursive_mode_file | default('') }}"
-      var_task__db_backup__backup_task__file_to_clear: "{{ params.main.db_backup.file_to_clear | default('') }}"
-      var_task__db_backup__backup_task__dir_to_clear: "{{ params.main.db_backup.dir_to_clear | default('') }}"
-
-      {% endif %}
-
-      {% endif %}
-
-      {% endif %}
-
-      var_task__db_main__db_subtask__db_service: "elasticsearch"
-      var_task__db_main__db_subtask__db_host: "{{ params.main.custom_args.elasticsearch.host | default('elasticsearch', true) }}"
-      var_task__db_main__db_subtask__db_port: "{{ params.main.custom_args.elasticsearch.port | default('9200', true) }}"
-      var_task__db_main__db_subtask__db_user: "{{ params.credentials.efk.db.user }}"
-      var_task__db_main__db_subtask__db_pass: "{{ params.credentials.efk.db.password }}"
-      var_task__db_main__db_subtask__db_connect_wait_secs: "{{ params.main.db_main.db_connect_wait_secs | default('300') }}"
+    {% if params.main.restore_db | bool %}
 
       {% if var_pod_type in ['app', 'db'] %}
 
-      {% if (params.main.restore_db | bool) and (params.main.enable_db_setup | bool) %}
+        {% if params.main.enable_db_setup | bool %}
 
-      {% set var_verify_file_to_skip = params.main.db_setup.verify_file_to_skip | default('/tmp/main/setup/db.skip') %}
-      {% set var_db_verify_cmd = 'db:restore:verify:elasticsearch' %}
-      {% set var_db_subtask_cmd_verify = 'setup:verify:db' %}
-      {% set var_db_subtask_cmd_db = 'db:restore:elasticsearch' %}
+          {% set var_group_setup = var_group_setup + ['db_setup'] %}
 
-      {% set var_db_base_dir = '/tmp/main/elasticsearch' %}
-      {% set var_db_dir = var_db_base_dir + '/snapshots' %}
-      {% set var_db_repository_name = params.main.db_setup.repository_name | default('efk_repository') %}
-      {% set var_db_snapshot_name = params.main.db_setup.snapshot_name %}
-      {% set var_db_index_prefix = params.main.db_setup.index_prefix | default('fluentd-') %}
-
-      {% if params.main.db_setup.use_s3 | bool %}
-
-        {% set var_db_subtask_cmd_local = '' %}
-        {% set var_db_subtask_cmd_remote = 'setup:db' %}
-        {% set var_db_snapshot_type = params.main.db_setup.snapshot_type | default('s3') %}
-
-      {% else %}
-
-        {% set var_db_subtask_cmd_local = 'setup:db' %}
-        {% set var_db_subtask_cmd_remote = ((params.main.db_setup.restore_remote_file | default('')) != '')
-          | ternary('setup:remote:default', '')
-        %}
-        {% set var_db_snapshot_type = params.main.db_setup.snapshot_type | default('fs') %}
+        {% endif %}
 
       {% endif %}
 
-      {% set var_db_ignore_index_settings = params.main.db_setup.ignore_index_settings | default('') %}
-      {% set var_db_include_aliases = params.main.db_setup.include_aliases | default('') %}
-      {% set var_db_include_global_state = params.main.db_setup.include_global_state | default('') %}
-      {% set var_db_index_settings = params.main.db_setup.index_settings | default('') %}
-      {% set var_db_indices = params.main.db_setup.indices | default('') %}
-      {% set var_db_partial = params.main.db_setup.partial | default('') %}
-      {% set var_db_rename_pattern = params.main.db_setup.rename_pattern | default('') %}
-      {% set var_db_rename_replacement = params.main.db_setup.rename_replacement | default('') %}
+    {% endif %}
 
-      var_task__db_setup__task__type: "setup"
-      var_task__db_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
-      var_task__db_setup__setup_task__subtask_cmd_verify: "{{ var_db_subtask_cmd_verify }}"
-      var_task__db_setup__setup_task__subtask_cmd_remote: "{{ var_db_subtask_cmd_remote }}"
-      var_task__db_setup__setup_task__subtask_cmd_local: "{{ var_db_subtask_cmd_local }}"
-      var_task__db_setup__setup_verify__db_subtask_cmd: "{{ var_db_verify_cmd }}"
-      var_task__db_setup__setup_verify__task_name: "db_main"
-      var_task__db_setup__setup_verify__db_index_prefix: "{{ var_db_index_prefix }}"
-      var_task__db_setup__setup_db__db_subtask_cmd: "{{ var_db_subtask_cmd_db }}"
-      var_task__db_setup__setup_db__db_task_base_dir: "{{ var_db_dir }}"
-      var_task__db_setup__setup_db__task_name: "db_main"
-      var_task__db_setup__setup_db__repository_name: "{{ var_db_repository_name }}"
-      var_task__db_setup__setup_db__snapshot_name: "{{ var_db_snapshot_name }}"
-      var_task__db_setup__setup_db__snapshot_type: "{{ var_db_snapshot_type }}"
-      var_task__db_setup__setup_db__db_args: "{{ var_db_args | default('') }}"
+    var_task__group_setup__group_task__task_names: "{{ var_group_setup | join(',') }}"
+    var_task__group_setup__task__type: "group"
 
-      {% if (not params.main.db_setup.use_s3 | bool) and ((params.main.db_setup.restore_remote_file | default('')) != '') %}
+    # Tasks (Specific)
 
-      {% set var_db_compress_type = params.main.db_setup.db_compress_type | default('zip') %}
-      {% set var_db_compress_file_name = params.main.db_setup.db_compress_file_name | default('efk.zip') %}
-      {% set var_db_compress_file = '/tmp/main/tmp/restore/elasticsearch/' + var_db_compress_file_name %}
+    {% if var_pod_type in ['app', 'web'] %}
 
-      var_task__db_setup__setup_task__is_compressed_file: "true"
-      var_task__db_setup__setup_task__compress_type: "{{ var_db_compress_type }}"
-      var_task__db_setup__setup_task__compress_src_file: "{{ var_db_compress_file }}"
-      var_task__db_setup__setup_task__compress_dest_dir: "{{ var_db_base_dir }}"
-      var_task__db_setup__setup_task__compress_pass: "{{ params.credentials.efk_db.compress_pass | default('') }}"
-      var_task__db_setup__setup_remote__restore_use_s3: "false"
-      var_task__db_setup__setup_remote__restore_dest_file: "{{ var_db_compress_file }}"
-      var_task__db_setup__setup_remote__restore_remote_file: "{{ params.main.db_setup.restore_remote_file }}"
+    {% if params.main.use_certbot | bool %}
 
-      {% endif %}
+    var_task__certbot__certbot_subtask__certbot_service: "certbot"
+    var_task__certbot__certbot_subtask__data_base_path: "/var/main/data/sync/certbot"
+    var_task__certbot__certbot_subtask__dev: "{{ params.main.certbot.dev | default(var_local) | bool | ternary('true', 'false') }}"
+    var_task__certbot__certbot_subtask__domains: "{{ params.main.certbot.domains }}"
+    var_task__certbot__certbot_subtask__email: "{{ params.main.certbot.email }}"
+    var_task__certbot__certbot_subtask__force: "{{ params.main.certbot.force | bool | ternary('true', 'false') }}"
+    var_task__certbot__certbot_subtask__main_domain: "{{ params.main.certbot.main_domain }}"
+    var_task__certbot__certbot_subtask__rsa_key_size: "{{ params.main.certbot.rsa_key_size | default('4096') }}"
+    var_task__certbot__certbot_subtask__staging: >-
+      {{ params.main.certbot.staging | default(var_local) | bool | ternary('true', 'false') }}
+    var_task__certbot__certbot_subtask__toolbox_service: "toolbox"
+    var_task__certbot__certbot_subtask__webservice_type: "nginx"
+    var_task__certbot__certbot_task__certbot_cmd: "setup"
+    var_task__certbot__task__type: "certbot"
 
-      {% endif %}
+    {% endif %}
 
-      {% endif %}
+    {% endif %}
 
-      {% if params.main.enable_logs_backup | bool %}
+    {% if var_pod_type in ['app', 'db'] %}
 
-      var_task__logs_backup__task__type: "backup"
-      var_task__logs_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
-      var_task__logs_backup__backup_remote__backup_bucket_sync_dir: "log/{{ var_pod_type }}"
-      var_task__logs_backup__backup_remote__backup_src_dir: "/var/log/main"
-      var_task__logs_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+    {% if params.main.enable_db_backup | bool %}
 
-      {% endif %}
+    {% set var_db_dir = '/tmp/main/elasticsearch/snapshots' %}
+    {% set var_db_repository_name = params.main.db_backup.repository_name | default('efk_repository') %}
+    {% set var_db_snapshot_name = params.main.db_backup.snapshot_name
+      | default('<snapshot-{now/d{yyyyMMdd}}-{now/s{HHmmss}}>')
+    %}
+    {% set var_db_subtask_cmd_db = 'db:backup:elasticsearch' %}
 
-      {% if params.main.enable_logs_setup | bool %}
+    {% if params.main.db_backup.use_s3 | bool %}
 
-      {% set var_dest_dir = '/var/log/main' %}
-      {% set var_verify_file_to_skip = params.main.logs_setup.verify_file_to_skip | default('/tmp/main/setup/logs.skip') %}
+      {% set var_db_subtask_cmd_local = '' %}
+      {% set var_db_subtask_cmd_remote = 'backup:db' %}
+      {% set var_db_snapshot_type = params.main.db_backup.snapshot_type | default('s3') %}
 
-      var_task__logs_setup__task__type: "setup"
-      var_task__logs_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
-      var_task__logs_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
-      var_task__logs_setup__setup_task__recursive_dir: "{{ var_dest_dir }}"
-      var_task__logs_setup__setup_task__recursive_mode: "{{ params.main.logs_setup.recursive_mode | default('') }}"
-      var_task__logs_setup__setup_task__recursive_mode_dir: >-
-        {{ params.main.logs_setup.recursive_mode_dir | default('777') }}
-      var_task__logs_setup__setup_task__recursive_mode_file: >-
-        {{ params.main.logs_setup.recursive_mode_file | default('666') }}
-      var_task__logs_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_dest_dir }}"
-      var_task__logs_setup__setup_remote__restore_use_s3: "true"
-      var_task__logs_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
-      var_task__logs_setup__setup_remote__restore_s3_sync: "true"
-      var_task__logs_setup__setup_remote__restore_dest_dir: "{{ var_dest_dir }}"
-      var_task__logs_setup__setup_remote__restore_bucket_path_dir: >-
-        {{ params.main.logs_setup.restore_bucket_path_dir | default('') }}
+    {% else %}
 
-      {% endif %}
+      {% set var_db_subtask_cmd_local = 'backup:db' %}
+      {% set var_db_subtask_cmd_remote = '' %}
+      {% set var_db_snapshot_type = params.main.db_backup.snapshot_type | default('fs') %}
 
-      var_task__s3_backup__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
-      var_task__s3_backup__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
-      var_task__s3_backup__s3_subtask__cli: "{{ params.main.s3_cli }}"
-      var_task__s3_backup__s3_subtask__cli_cmd: "run"
-      var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"
-      var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
-      var_task__s3_backup__s3_subtask__service: "s3_backup"
+    {% endif %}
 
-      {% if var_pod_type in ['app', 'web'] %}
+    var_task__db_backup__task__type: "backup"
+    var_task__db_backup__backup_task__subtask_cmd_local: "{{ var_db_subtask_cmd_local }}"
+    var_task__db_backup__backup_task__subtask_cmd_remote: "{{ var_db_subtask_cmd_remote }}"
+    var_task__db_backup__backup_db__db_task_base_dir: "{{ var_db_dir }}"
+    var_task__db_backup__backup_db__db_subtask_cmd: "{{ var_db_subtask_cmd_db }}"
+    var_task__db_backup__backup_db__repository_name: "{{ var_db_repository_name }}"
+    var_task__db_backup__backup_db__snapshot_name: "{{ var_db_snapshot_name }}"
+    var_task__db_backup__backup_db__snapshot_type: "{{ var_db_snapshot_type }}"
+    var_task__db_backup__backup_db__task_name: "db_main"
 
-      {% if params.main.enable_backup_replica | bool %}
+    {% if (not params.main.db_backup.use_s3 | bool) and (params.main.db_backup.is_compressed_file | default(false) | bool) %}
 
-      var_task__s3_backup_replica__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
-      var_task__s3_backup_replica__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
-      var_task__s3_backup_replica__s3_subtask__cli: "{{ params.main.s3_cli }}"
-      var_task__s3_backup_replica__s3_subtask__cli_cmd: "run"
-      var_task__s3_backup_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup_replica"
-      var_task__s3_backup_replica__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
-      var_task__s3_backup_replica__s3_subtask__service: "s3_backup_replica"
+    {% set var_db_compress_type = params.main.db_backup.db_compress_type | default('zip') %}
+    {% set var_db_compress_file_name = params.main.db_backup.db_compress_file_name
+      | default('efk.[[ datetime ]].[[ random ]].zip')
+    %}
+    {% set var_db_compress_dest_file = '/tmp/main/tmp/backup/elasticsearch/' + var_db_compress_file_name %}
 
-      {% endif %}
+    var_task__db_backup__backup_task__is_compressed_file: "true"
+    var_task__db_backup__backup_task__compress_type: "{{ var_db_compress_type }}"
+    var_task__db_backup__backup_task__compress_src_file: >-
+      {{ params.main.db_backup.compress_src_file | default('') }}
+    var_task__db_backup__backup_task__compress_src_dir: >-
+      {{ params.main.db_backup.compress_src_dir | default(var_db_dir) }}
+    var_task__db_backup__backup_task__compress_dest_file: "{{ var_db_compress_dest_file }}"
+    var_task__db_backup__backup_task__compress_pass: >-
+      {{ params.credentials.efk_db.compress_pass | default('') }}
 
-      {% endif %}
+    var_task__db_backup__backup_task__backup_date_format: "{{ params.main.db_backup.backup_date_format | default('') }}"
+    var_task__db_backup__backup_task__backup_time_format: "{{ params.main.db_backup.backup_time_format | default('') }}"
+    var_task__db_backup__backup_task__backup_datetime_format: >-
+      {{ params.main.db_backup.backup_datetime_format | default('') }}
+    var_task__db_backup__backup_task__recursive_dir: "{{ params.main.db_backup.recursive_dir | default('') }}"
+    var_task__db_backup__backup_task__recursive_mode: "{{ params.main.db_backup.recursive_mode | default('') }}"
+    var_task__db_backup__backup_task__recursive_mode_dir: "{{ params.main.db_backup.recursive_mode_dir | default('') }}"
+    var_task__db_backup__backup_task__recursive_mode_file: "{{ params.main.db_backup.recursive_mode_file | default('') }}"
+    var_task__db_backup__backup_task__file_to_clear: "{{ params.main.db_backup.file_to_clear | default('') }}"
+    var_task__db_backup__backup_task__dir_to_clear: "{{ params.main.db_backup.dir_to_clear | default('') }}"
 
-      {% if params.main.enable_sync_backup | bool %}
+    {% endif %}
 
-      var_task__sync_backup__task__type: "backup"
-      var_task__sync_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
-      var_task__sync_backup__backup_remote__backup_bucket_sync_dir: "sync"
-      var_task__sync_backup__backup_remote__backup_src_dir: "/var/sync/main"
-      var_task__sync_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+    {% endif %}
 
-      {% endif %}
+    {% endif %}
 
-      {% if params.main.enable_sync_setup | bool %}
+    var_task__db_main__db_subtask__db_service: "elasticsearch"
+    var_task__db_main__db_subtask__db_host: "{{ params.main.custom_args.elasticsearch.host | default('elasticsearch', true) }}"
+    var_task__db_main__db_subtask__db_port: "{{ params.main.custom_args.elasticsearch.port | default('9200', true) }}"
+    var_task__db_main__db_subtask__db_user: "{{ params.credentials.efk.db.user }}"
+    var_task__db_main__db_subtask__db_pass: "{{ params.credentials.efk.db.password }}"
+    var_task__db_main__db_subtask__db_connect_wait_secs: "{{ params.main.db_main.db_connect_wait_secs | default('300') }}"
 
-      {% set var_dest_dir = '/var/sync/main' %}
-      {% set var_verify_file_to_skip = params.main.sync_setup.verify_file_to_skip | default('/tmp/main/setup/sync.skip') %}
+    {% if var_pod_type in ['app', 'db'] %}
 
-      var_task__sync_setup__task__type: "setup"
-      var_task__sync_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
-      var_task__sync_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
-      var_task__sync_setup__setup_task__recursive_dir: "{{ var_dest_dir }}"
-      var_task__sync_setup__setup_task__recursive_mode: "{{ params.main.sync_setup.recursive_mode | default('') }}"
-      var_task__sync_setup__setup_task__recursive_mode_dir: >-
-        {{ params.main.sync_setup.recursive_mode_dir | default('777') }}
-      var_task__sync_setup__setup_task__recursive_mode_file: >-
-        {{ params.main.sync_setup.recursive_mode_file | default('666') }}
-      var_task__sync_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_dest_dir }}"
-      var_task__sync_setup__setup_remote__restore_use_s3: "true"
-      var_task__sync_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
-      var_task__sync_setup__setup_remote__restore_s3_sync: "true"
-      var_task__sync_setup__setup_remote__restore_dest_dir: "{{ var_dest_dir }}"
-      var_task__sync_setup__setup_remote__restore_bucket_path_dir: >-
-        {{ params.main.sync_setup.restore_bucket_path_dir | default('') }}
+    {% if (params.main.restore_db | bool) and (params.main.enable_db_setup | bool) %}
 
-      {% endif %}
+    {% set var_verify_file_to_skip = params.main.db_setup.verify_file_to_skip | default('/tmp/main/setup/db.skip') %}
+    {% set var_db_verify_cmd = 'db:restore:verify:elasticsearch' %}
+    {% set var_db_subtask_cmd_verify = 'setup:verify:db' %}
+    {% set var_db_subtask_cmd_db = 'db:restore:elasticsearch' %}
+
+    {% set var_db_base_dir = '/tmp/main/elasticsearch' %}
+    {% set var_db_dir = var_db_base_dir + '/snapshots' %}
+    {% set var_db_repository_name = params.main.db_setup.repository_name | default('efk_repository') %}
+    {% set var_db_snapshot_name = params.main.db_setup.snapshot_name %}
+    {% set var_db_index_prefix = params.main.db_setup.index_prefix | default('fluentd-') %}
+
+    {% if params.main.db_setup.use_s3 | bool %}
+
+      {% set var_db_subtask_cmd_local = '' %}
+      {% set var_db_subtask_cmd_remote = 'setup:db' %}
+      {% set var_db_snapshot_type = params.main.db_setup.snapshot_type | default('s3') %}
+
+    {% else %}
+
+      {% set var_db_subtask_cmd_local = 'setup:db' %}
+      {% set var_db_subtask_cmd_remote = ((params.main.db_setup.restore_remote_file | default('')) != '')
+        | ternary('setup:remote:default', '')
+      %}
+      {% set var_db_snapshot_type = params.main.db_setup.snapshot_type | default('fs') %}
+
+    {% endif %}
+
+    {% set var_db_ignore_index_settings = params.main.db_setup.ignore_index_settings | default('') %}
+    {% set var_db_include_aliases = params.main.db_setup.include_aliases | default('') %}
+    {% set var_db_include_global_state = params.main.db_setup.include_global_state | default('') %}
+    {% set var_db_index_settings = params.main.db_setup.index_settings | default('') %}
+    {% set var_db_indices = params.main.db_setup.indices | default('') %}
+    {% set var_db_partial = params.main.db_setup.partial | default('') %}
+    {% set var_db_rename_pattern = params.main.db_setup.rename_pattern | default('') %}
+    {% set var_db_rename_replacement = params.main.db_setup.rename_replacement | default('') %}
+
+    var_task__db_setup__task__type: "setup"
+    var_task__db_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
+    var_task__db_setup__setup_task__subtask_cmd_verify: "{{ var_db_subtask_cmd_verify }}"
+    var_task__db_setup__setup_task__subtask_cmd_remote: "{{ var_db_subtask_cmd_remote }}"
+    var_task__db_setup__setup_task__subtask_cmd_local: "{{ var_db_subtask_cmd_local }}"
+    var_task__db_setup__setup_verify__db_subtask_cmd: "{{ var_db_verify_cmd }}"
+    var_task__db_setup__setup_verify__task_name: "db_main"
+    var_task__db_setup__setup_verify__db_index_prefix: "{{ var_db_index_prefix }}"
+    var_task__db_setup__setup_db__db_subtask_cmd: "{{ var_db_subtask_cmd_db }}"
+    var_task__db_setup__setup_db__db_task_base_dir: "{{ var_db_dir }}"
+    var_task__db_setup__setup_db__task_name: "db_main"
+    var_task__db_setup__setup_db__repository_name: "{{ var_db_repository_name }}"
+    var_task__db_setup__setup_db__snapshot_name: "{{ var_db_snapshot_name }}"
+    var_task__db_setup__setup_db__snapshot_type: "{{ var_db_snapshot_type }}"
+    var_task__db_setup__setup_db__db_args: "{{ var_db_args | default('') }}"
+
+    {% if (not params.main.db_setup.use_s3 | bool) and ((params.main.db_setup.restore_remote_file | default('')) != '') %}
+
+    {% set var_db_compress_type = params.main.db_setup.db_compress_type | default('zip') %}
+    {% set var_db_compress_file_name = params.main.db_setup.db_compress_file_name | default('efk.zip') %}
+    {% set var_db_compress_file = '/tmp/main/tmp/restore/elasticsearch/' + var_db_compress_file_name %}
+
+    var_task__db_setup__setup_task__is_compressed_file: "true"
+    var_task__db_setup__setup_task__compress_type: "{{ var_db_compress_type }}"
+    var_task__db_setup__setup_task__compress_src_file: "{{ var_db_compress_file }}"
+    var_task__db_setup__setup_task__compress_dest_dir: "{{ var_db_base_dir }}"
+    var_task__db_setup__setup_task__compress_pass: "{{ params.credentials.efk_db.compress_pass | default('') }}"
+    var_task__db_setup__setup_remote__restore_use_s3: "false"
+    var_task__db_setup__setup_remote__restore_dest_file: "{{ var_db_compress_file }}"
+    var_task__db_setup__setup_remote__restore_remote_file: "{{ params.main.db_setup.restore_remote_file }}"
+
+    {% endif %}
+
+    {% endif %}
+
+    {% endif %}
+
+    {% if params.main.enable_logs_backup | bool %}
+
+    var_task__logs_backup__task__type: "backup"
+    var_task__logs_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
+    var_task__logs_backup__backup_remote__backup_bucket_sync_dir: "log/{{ var_pod_type }}"
+    var_task__logs_backup__backup_remote__backup_src_dir: "/var/log/main"
+    var_task__logs_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+
+    {% endif %}
+
+    {% if params.main.enable_logs_setup | bool %}
+
+    {% set var_dest_dir = '/var/log/main' %}
+    {% set var_verify_file_to_skip = params.main.logs_setup.verify_file_to_skip | default('/tmp/main/setup/logs.skip') %}
+
+    var_task__logs_setup__task__type: "setup"
+    var_task__logs_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
+    var_task__logs_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
+    var_task__logs_setup__setup_task__recursive_dir: "{{ var_dest_dir }}"
+    var_task__logs_setup__setup_task__recursive_mode: "{{ params.main.logs_setup.recursive_mode | default('') }}"
+    var_task__logs_setup__setup_task__recursive_mode_dir: >-
+      {{ params.main.logs_setup.recursive_mode_dir | default('777') }}
+    var_task__logs_setup__setup_task__recursive_mode_file: >-
+      {{ params.main.logs_setup.recursive_mode_file | default('666') }}
+    var_task__logs_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_dest_dir }}"
+    var_task__logs_setup__setup_remote__restore_use_s3: "true"
+    var_task__logs_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+    var_task__logs_setup__setup_remote__restore_s3_sync: "true"
+    var_task__logs_setup__setup_remote__restore_dest_dir: "{{ var_dest_dir }}"
+    var_task__logs_setup__setup_remote__restore_bucket_path_dir: >-
+      {{ params.main.logs_setup.restore_bucket_path_dir | default('') }}
+
+    {% endif %}
+
+    var_task__s3_backup__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
+    var_task__s3_backup__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
+    var_task__s3_backup__s3_subtask__cli: "{{ params.main.s3_cli }}"
+    var_task__s3_backup__s3_subtask__cli_cmd: "run"
+    var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"
+    var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
+    var_task__s3_backup__s3_subtask__service: "s3_backup"
+
+    {% if var_pod_type in ['app', 'web'] %}
+
+    {% if params.main.enable_backup_replica | bool %}
+
+    var_task__s3_backup_replica__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
+    var_task__s3_backup_replica__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
+    var_task__s3_backup_replica__s3_subtask__cli: "{{ params.main.s3_cli }}"
+    var_task__s3_backup_replica__s3_subtask__cli_cmd: "run"
+    var_task__s3_backup_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup_replica"
+    var_task__s3_backup_replica__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
+    var_task__s3_backup_replica__s3_subtask__service: "s3_backup_replica"
+
+    {% endif %}
+
+    {% endif %}
+
+    {% if params.main.enable_sync_backup | bool %}
+
+    var_task__sync_backup__task__type: "backup"
+    var_task__sync_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
+    var_task__sync_backup__backup_remote__backup_bucket_sync_dir: "sync"
+    var_task__sync_backup__backup_remote__backup_src_dir: "/var/sync/main"
+    var_task__sync_backup__backup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+
+    {% endif %}
+
+    {% if params.main.enable_sync_setup | bool %}
+
+    {% set var_dest_dir = '/var/sync/main' %}
+    {% set var_verify_file_to_skip = params.main.sync_setup.verify_file_to_skip | default('/tmp/main/setup/sync.skip') %}
+
+    var_task__sync_setup__task__type: "setup"
+    var_task__sync_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
+    var_task__sync_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
+    var_task__sync_setup__setup_task__recursive_dir: "{{ var_dest_dir }}"
+    var_task__sync_setup__setup_task__recursive_mode: "{{ params.main.sync_setup.recursive_mode | default('') }}"
+    var_task__sync_setup__setup_task__recursive_mode_dir: >-
+      {{ params.main.sync_setup.recursive_mode_dir | default('777') }}
+    var_task__sync_setup__setup_task__recursive_mode_file: >-
+      {{ params.main.sync_setup.recursive_mode_file | default('666') }}
+    var_task__sync_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_dest_dir }}"
+    var_task__sync_setup__setup_remote__restore_use_s3: "true"
+    var_task__sync_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
+    var_task__sync_setup__setup_remote__restore_s3_sync: "true"
+    var_task__sync_setup__setup_remote__restore_dest_dir: "{{ var_dest_dir }}"
+    var_task__sync_setup__setup_remote__restore_bucket_path_dir: >-
+      {{ params.main.sync_setup.restore_bucket_path_dir | default('') }}
+
+    {% endif %}

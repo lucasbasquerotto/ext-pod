@@ -32,9 +32,9 @@ pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 case "$command" in
 	"clear")
 		"$pod_script_env_file" "local:clear"
-		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_mysql"
-		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_uploads"
-		sudo docker volume rm -f "${var_main__env}-${var_main__ctx}-${var_main__pod_name}_nextcloud"
+		sudo docker volume rm -f "${var_ctx_full_name}_mysql"
+		sudo docker volume rm -f "${var_ctx_full_name}_uploads"
+		sudo docker volume rm -f "${var_ctx_full_name}_nextcloud"
 		;;
 	"clear-all")
 		"$pod_script_env_file" "local:clear-all"
