@@ -1,0 +1,16 @@
+{% set var_pod_kind = 'test' %}
+{% set var_main_base_dir = params.main.custom_dir %}
+{% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
+
+files:
+
+- src: "{{ var_main_dir }}/credentials.schema.yml"
+  dest: "env/credentials.yml"
+
+children:
+
+- name: "{{ var_main_dir }}/ctx-child.yml"
+  params:
+    main: {{ params.main | to_json }}
+    custom:
+      value: "my test value"

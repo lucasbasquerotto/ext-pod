@@ -1,0 +1,19 @@
+{% set var_pod_kind = 'test' %}
+{% set var_main_base_dir = params.main.custom_dir %}
+{% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
+
+files:
+
+- src: "{{ var_main_dir }}/credentials.schema.yml"
+  dest: "env/credentials2.yml"
+
+- src: "{{ var_main_dir }}/params.schema.yml"
+  dest: "env/params.yml"
+
+templates:
+
+- src: "{{ var_main_dir }}/template.sh"
+  dest: "env/script.sh"
+  mode: 711
+  params:
+    value: "{{ params.custom.value }}"
