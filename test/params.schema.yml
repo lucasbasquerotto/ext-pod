@@ -3,6 +3,8 @@ schemas:
   pod_params:
     type: "dict"
     props:
+      custom_dir:
+        type: "str"
       pod_param_1:
         type: "str"
         non_empty: true
