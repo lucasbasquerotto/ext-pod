@@ -13,4 +13,8 @@ children:
   params:
     main: {{ params.main | to_json }}
     custom:
-      value: "my test value"
+      value: |
+        param1: {{ params.main.pod_param_1 }}$
+        param2: {{ params.main.pod_param_2 }}$
+        param3: {{ params.main.pod_param_3 }}$
+        param4: {{ params.main.pod_param_4 | default('') }}

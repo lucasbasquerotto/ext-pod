@@ -13,5 +13,6 @@ schemas:
         non_empty: true
       pod_param_3:
         type: "str"
+        non_empty: true
       pod_param_4:
         type: "str"
