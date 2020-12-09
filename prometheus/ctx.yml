@@ -18,7 +18,7 @@
 {% set var_main_dir_container = var_main_base_dir_container + '/' + var_pod_kind %}
 {% set var_shared_dir = 'shared' %}
 
-{% set var_data_dir = params.pod.data_dir %}
+{% set var_data_dir = params.data_dir %}
 
 {% set var_custom_ssl_main_domain = params.main.custom_ssl.main_domain | default('') %}
 {% set var_custom_ssl_fullchain = params.main.custom_ssl.fullchain | default('') %}
@@ -83,9 +83,9 @@ env_files:
 
 templates:
 
-{% set var_ctx_full_name = params.env_name  + '-' + params.ctx_name + '-' + params.pod.name %}
+{% set var_ctx_full_name = params.identifier %}
 {% set var_use_prefix = params.main.use_pod_prefix | default(params.main.use_pod_full_prefix | default(false, true), true) | bool %}
-{% set var_pod_prefix = params.main.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, params.pod.name) %}
+{% set var_pod_prefix = params.main.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, params.pod_name) %}
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
@@ -293,11 +293,11 @@ templates:
 
     {% if var_local | bool %}
 
-    var_data_dir_rel: "{{ params.pod.data_dir }}"
+    var_data_dir_rel: "{{ params.data_dir }}"
 
     {% else %}
 
-    var_data_dir: "{{ params.pod.data_dir }}"
+    var_data_dir: "{{ params.data_dir }}"
 
     {% endif %}
 
