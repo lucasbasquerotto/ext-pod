@@ -1,0 +1,29 @@
+root: "task_params"
+schemas:
+  task_params:
+    type: "dict"
+    props:
+      prop1:
+        type: "str"
+        non_empty: true
+      prop2:
+        schema: "complex"
+        non_empty: true
+      prop3:
+        schema: "complex"
+      prop4:
+        type: "str"
+        non_empty: true
+      prop5:
+        type: "str"
+        non_empty: true
+  complex:
+    type: "dict"
+    props:
+      inner_prop1:
+        type: "str"
+        non_empty: true
+      inner_prop2:
+        schema: "complex"
+      inner_prop3:
+        schema: "complex"

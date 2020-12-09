@@ -1,0 +1,13 @@
+- name: "{{ params.title }} - task params & credentials (pod)"
+  set_fact:
+    task_params: "{{ params.task.params }}"
+    task_credentials: "{{ params.task.credentials }}"
+  tags: ["no_print"]
+
+- name: "{{ params.title }} - print params (pod)"
+  debug:
+    var: task_params
+
+- name: "{{ params.title }} - print credentials (pod)"
+  debug:
+    var: task_credentials
