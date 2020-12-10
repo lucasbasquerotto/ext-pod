@@ -3,6 +3,9 @@ schemas:
   pod_params:
     type: "dict"
     props:
+      env_files_dir:
+        type: "str"
+        non_empty: true
       test_schema:
         non_empty: true
         type: "simple_list"

@@ -2,6 +2,19 @@
 {% set var_main_base_dir = params.main.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
 
+env_templates:
+
+- src: "{{ params.main.env_files_dir }}/template.yml"
+  dest: "env/env-template.yml"
+  params:
+    src: "{{ params.main.env_files_dir }}/template.yml"
+    dest: "env/env-template.yml"
+    params:
+      prop1: 1
+      prop2:
+        prop2_1: 2
+        prop2_2: "fgh"
+
 files:
 
 - src: "{{ var_main_dir }}/credentials.schema.yml"
