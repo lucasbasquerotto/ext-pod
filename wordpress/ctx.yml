@@ -40,7 +40,7 @@
 
 {% if var_app_dev | bool %}
   {% set var_wp_app_repo_dir_name = params.main.custom_args.wordpress.app_repo_dir %}
-  {% set var_wp_app_repo_dir = params.extra_repos_dir_rel + '/' + var_wp_app_repo_dir_name %}
+  {% set var_wp_app_repo_dir = params.extra_repos_dir_relpath + '/' + var_wp_app_repo_dir_name %}
 {% endif %}
 
 {% set var_main_domain_port = params.main.custom_domain.main_ssl | bool |
