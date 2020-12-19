@@ -1,6 +1,15 @@
-root: "pod_params"
+root: "pod_schema"
 schemas:
-  pod_params:
+  pod_schema:
+    type: "dict"
+    props:
+      params:
+        schema: "params"
+        non_empty: true
+      credentials:
+        schema: "credentials"
+        non_empty: true
+  params:
     type: "dict"
     props:
       env_files_dir:
@@ -33,3 +42,14 @@ schemas:
   test2:
     type: "simple_list"
     elem_schema: "test"
+  credentials:
+    type: "dict"
+    props:
+      pod_credential_1:
+        type: "str"
+        non_empty: true
+      pod_credential_2:
+        type: "str"
+        non_empty: true
+      pod_credential_3:
+        type: "str"

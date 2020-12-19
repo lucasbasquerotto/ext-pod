@@ -1,6 +1,15 @@
-root: "task_params"
+root: "task_schema"
 schemas:
-  task_params:
+  task_schema:
+    type: "dict"
+    props:
+      params:
+        schema: "params"
+        non_empty: true
+      credentials:
+        schema: "params"
+        non_empty: true
+  params:
     type: "dict"
     props:
       prop1:

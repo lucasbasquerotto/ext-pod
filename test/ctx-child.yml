@@ -9,10 +9,10 @@ env_files:
 
 files:
 
-- src: "{{ var_main_dir }}/credentials.schema.yml"
+- src: "{{ var_main_dir }}/schema.yml"
   dest: "env/credentials2.yml"
 
-- src: "{{ var_main_dir }}/params.schema.yml"
+- src: "{{ var_main_dir }}/schema.yml"
   dest: "env/params.yml"
 
 templates:

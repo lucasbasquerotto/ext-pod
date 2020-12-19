@@ -17,7 +17,7 @@ env_templates:
 
 files:
 
-- src: "{{ var_main_dir }}/credentials.schema.yml"
+- src: "{{ var_main_dir }}/schema.yml"
   dest: "env/credentials.yml"
 
 children:
