@@ -9,6 +9,9 @@ schemas:
       credentials:
         schema: "credentials"
         non_empty: true
+      contents:
+        schema: "contents"
+        non_empty: true
   params:
     type: "dict"
     props:
@@ -53,3 +56,12 @@ schemas:
         non_empty: true
       pod_credential_3:
         type: "str"
+  contents:
+    type: "dict"
+    props:
+      content_pod_1:
+        type: "str"
+        non_empty: true
+      content_pod_2:
+        type: "str"
+        non_empty: true

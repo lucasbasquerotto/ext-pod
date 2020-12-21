@@ -9,6 +9,9 @@ schemas:
       credentials:
         schema: "params"
         non_empty: true
+      contents:
+        schema: "contents"
+        non_empty: true
   params:
     type: "dict"
     props:
@@ -36,3 +39,12 @@ schemas:
         schema: "complex"
       inner_prop3:
         schema: "complex"
+  contents:
+    type: "dict"
+    props:
+      content_task_1:
+        type: "str"
+        non_empty: true
+      content_task_2:
+        type: "str"
+        non_empty: true

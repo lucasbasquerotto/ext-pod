@@ -12,8 +12,8 @@ env_templates:
     params:
       prop1: 1
       prop2:
-        prop2_1: 2
-        prop2_2: "fgh"
+        prop2_1: "{{ params.contents.content_pod_1 }}"
+        prop2_2: {{ params.contents.content_pod_2 | to_json }}
 
 files:
 
