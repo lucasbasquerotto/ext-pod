@@ -1,0 +1,14 @@
+root: "pod_template_schema"
+schemas:
+  pod_template_schema:
+    type: "dict"
+    props:
+      params:
+        schema: "params"
+        non_empty: true
+  params:
+    type: "dict"
+    props:
+      value:
+        type: "str"
+        non_empty: true

@@ -6,9 +6,11 @@ env_templates:
 
 - src: "{{ params.main.env_files_dir }}/template.yml"
   dest: "env/env-template.yml"
+  schema: "{{ params.main.env_files_dir }}/template.schema.yml"
   params:
     src: "{{ params.main.env_files_dir }}/template.yml"
     dest: "env/env-template.yml"
+    schema: "{{ params.main.env_files_dir }}/template.schema.yml"
     params:
       prop1: 1
       prop2:

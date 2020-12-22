@@ -20,5 +20,6 @@ templates:
 - src: "{{ var_main_dir }}/template.sh"
   dest: "env/script.sh"
   mode: 715
+  schema: "{{ var_main_dir }}/template.schema.yml"
   params:
     value: "{{ params.custom.value }}"
