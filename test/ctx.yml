@@ -22,6 +22,14 @@ files:
 - src: "{{ var_main_dir }}/schema.yml"
   dest: "env/file.schema.yml"
 
+templates:
+
+- src: "{{ var_main_dir }}/dynamic.tpl.sh"
+  dest: "env/user-data.test.sh"
+  schema: "{{ var_main_dir }}/user-data.schema.yml"
+  mode: "{{ params.lax | ternary(777, 751) }}"
+  params: {{ params.contents.user_data | to_json }}
+
 children:
 
 - name: "{{ var_main_dir }}/ctx-child.yml"

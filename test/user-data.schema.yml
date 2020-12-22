@@ -1,0 +1,5 @@
+root: "user_data"
+schemas:
+  user_data:
+    type: "str"
+    non_empty: true

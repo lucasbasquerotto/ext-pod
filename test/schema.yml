@@ -65,3 +65,6 @@ schemas:
       content_pod_2:
         type: "str"
         non_empty: true
+      user_data:
+        type: "str"
+        non_empty: true
