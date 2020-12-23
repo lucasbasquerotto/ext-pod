@@ -24,7 +24,6 @@
 {% set var_custom_ssl_main_domain = params.main.custom_ssl.main_domain | default('') %}
 {% set var_custom_ssl_fullchain = params.main.custom_ssl.fullchain | default('') %}
 {% set var_custom_ssl_privkey = params.main.custom_ssl.privkey | default('') %}
-{% set var_custom_ssl_encrypted = params.main.custom_ssl.encrypted | default(false) %}
 {% set var_use_custom_ssl = (var_custom_ssl_main_domain != '')
   and (var_custom_ssl_fullchain != '')
   and (var_custom_ssl_privkey != '')
@@ -94,17 +93,14 @@ env_files:
 
 - src: "{{ var_custom_ssl_fullchain }}"
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
-  encrypted: "{{ var_custom_ssl_encrypted }}"
 
 - src: "{{ var_custom_ssl_privkey }}"
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
-  encrypted: "{{ var_custom_ssl_encrypted }}"
 
 {% endif %}
 
 - src: "{{ params.main.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
-  encrypted: "{{ params.main.auth_file_encrypted }}"
 
 {% endif %}
 
