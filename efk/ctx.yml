@@ -356,11 +356,11 @@ templates:
     var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.wp_backup_bucket.access_key }}"
     var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.wp_backup_bucket.secret_key }}"
     var_shared__nextcloud__s3_backup__bucket: "{{ params.main.backup_bucket_name }}"
-    var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.wp_backup_bucket.host | default('') }}"
+    var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.wp_backup_bucket.endpoint | default('') | urlsplit('hostname') }}"
     var_shared__nextcloud__s3_backup__port: "{{ params.credentials.wp_backup_bucket.port | default('') }}"
     var_shared__nextcloud__s3_backup__region: "{{ params.credentials.wp_backup_bucket.region | default('') }}"
     var_shared__nextcloud__s3_backup__use_ssl: >-
-      {{ params.credentials.wp_backup_bucket.ssl | default(false) | bool | ternary('true', 'false') }}
+      {{ params.credentials.wp_backup_bucket.ssl | default(true) | bool | ternary('true', 'false') }}
     var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.wp_backup_bucket.path_style | default('') }}"
     var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.wp_backup_bucket.legacy_auth | default('') }}"
 
