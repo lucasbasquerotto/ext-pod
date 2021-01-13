@@ -1,0 +1,40 @@
+root: "pod_schema"
+schemas:
+  pod_schema:
+    type: "dict"
+    props:
+      params:
+        schema: "params"
+        non_empty: true
+  params:
+    type: "dict"
+    props:
+      env_files_dir:
+        type: "str"
+        non_empty: true
+      custom_dir:
+        type: "str"
+      test_schema:
+        non_empty: true
+        schema: "test"
+      pod_param_1:
+        type: "str"
+        non_empty: true
+      pod_param_2:
+        type: "str"
+        non_empty: true
+      pod_param_3:
+        type: "str"
+        non_empty: true
+      pod_param_4:
+        type: "str"
+  test:
+    type: "simple_list"
+    elem_schema: "test2"
+  test2:
+    type: "simple_dict"
+    alternative_type: "int"
+    props:
+      p1:
+        type: "simple_map"
+        elem_schema: "test"

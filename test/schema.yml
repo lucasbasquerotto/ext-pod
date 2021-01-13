@@ -18,12 +18,12 @@ schemas:
       env_files_dir:
         type: "str"
         non_empty: true
+      custom_dir:
+        type: "str"
       test_schema:
         non_empty: true
         type: "simple_list"
         elem_schema: "test"
-      custom_dir:
-        type: "str"
       pod_param_1:
         type: "str"
         non_empty: true

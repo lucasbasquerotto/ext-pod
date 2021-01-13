@@ -1,6 +1,10 @@
 {% set var_pod_kind = 'test' %}
-{% set var_main_base_dir = params.main.custom_dir %}
-{% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
+{% set var_main_base_dir = params.main.custom_dir | default('') %}
+{% set var_main_dir =
+  (var_main_base_dir != '')
+  | ternary(var_main_base_dir + '/', '')
+  + var_pod_kind
+%}
 
 env_files:
 
@@ -9,17 +13,17 @@ env_files:
 
 files:
 
-- src: "{{ var_main_dir }}/schema.yml"
-  dest: "env/file.schema2.yml"
+- src: "{{ var_main_dir }}/pod-file.txt"
+  dest: "env/file.child.txt"
 
-- src: "{{ var_main_dir }}/schema.yml"
-  dest: "env/file.schema3.yml"
+- src: "{{ var_main_dir }}/pod-file.txt"
+  dest: "env/file.child2.txt"
 
 templates:
 
 - src: "{{ var_main_dir }}/template.sh"
   dest: "env/script.sh"
-  mode: 715
+  mode: "{{ params.lax | bool | ternary(777, 751) }}"
   schema: "{{ var_main_dir }}/template.schema.yml"
   params:
     value: "{{ params.custom.value }}"
