@@ -30,14 +30,13 @@ templates:
 
 - src: "{{ var_main_dir }}/dynamic.tpl.yml"
   dest: "env/pod-data.test.yml"
-  params: {{ params.main | default({}) | to_json }}
+  params: {{ params | to_json }}
 
 children:
 
 - name: "{{ var_main_dir }}/ctx-child.yml"
   params:
     main: {{ params.main | to_json }}
-    lax: {{ params.lax }}
     custom:
       value: |
         param1: {{ params.main.pod_param_1 }}$

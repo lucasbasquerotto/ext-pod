@@ -23,7 +23,7 @@ templates:
 
 - src: "{{ var_main_dir }}/template.sh"
   dest: "env/script.sh"
-  mode: "{{ params.lax | bool | ternary(777, 751) }}"
   schema: "{{ var_main_dir }}/template.schema.yml"
+  executable: true
   params:
     value: "{{ params.custom.value }}"
