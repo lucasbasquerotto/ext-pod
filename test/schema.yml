@@ -56,6 +56,15 @@ schemas:
         non_empty: true
       pod_credential_3:
         type: "str"
+      pod_credential_node:
+        type: "str"
+        non_empty: true
+      pod_credential_overridden:
+        type: "str"
+        non_empty: true
+      pod_credential_overridden_ctx:
+        type: "str"
+        non_empty: true
   contents:
     type: "dict"
     props:
@@ -63,6 +72,15 @@ schemas:
         type: "str"
         non_empty: true
       content_pod_2:
+        type: "str"
+        non_empty: true
+      content_pod_node:
+        type: "str"
+        non_empty: true
+      content_pod_overridden:
+        type: "str"
+        non_empty: true
+      content_pod_overridden_ctx:
         type: "str"
         non_empty: true
       user_data:

@@ -29,6 +29,10 @@ schemas:
       prop5:
         type: "str"
         non_empty: true
+      overridden:
+        type: "str"
+      run_stage:
+        type: "str"
   complex:
     type: "dict"
     props:

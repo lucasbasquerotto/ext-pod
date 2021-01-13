@@ -25,6 +25,14 @@ files:
 templates:
 
 - src: "{{ var_main_dir }}/dynamic.tpl.sh"
+  dest: "env/pod-data.test.sh"
+  mode: "{{ params.lax | ternary(777, 751) }}"
+  params:
+    params: {{ params.main | default({}) | to_json }}
+    credentials: {{ params.credentials | default({}) | to_json }}
+    contents: {{ params.contents | default({}) | to_json }}
+
+- src: "{{ var_main_dir }}/dynamic.tpl.sh"
   dest: "env/user-data.test.sh"
   schema: "{{ var_main_dir }}/user-data.schema.yml"
   mode: "{{ params.lax | ternary(777, 751) }}"
