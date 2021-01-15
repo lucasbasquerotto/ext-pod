@@ -32,7 +32,7 @@ templates:
   dest: "env/pod-data.test.yml"
   params: {{ params | to_json }}
 
-- src: "{{ var_main_dir }}/dynamic.tpl.sh"
+- src: "{{ var_main_dir }}/dynamic.tpl.yml"
   dest: "env/user-data.test.sh"
   schema: "{{ var_main_dir }}/user-data.schema.yml"
   mode: "{{ params.lax | bool | ternary(777, 751) }}"
