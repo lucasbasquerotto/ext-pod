@@ -76,12 +76,6 @@
   %}
 {% endif %}
 
-{% if params.main.use_nextcloud | bool %}
-  {% set var_nextcloud_domain_port = params.main.custom_domain.nextcloud_ssl | bool |
-    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
-  %}
-{% endif %}
-
 {% if var_pod_type in ['app', 'web'] %}
   {% set var_db_gui_user = params.main.db_gui_root_user | default(false) | bool |
     ternary('root', 'viewer')
@@ -142,7 +136,6 @@ templates:
     use_theia: "{{ params.main.use_theia }}"
     use_minio_gateway: "{{ params.main.use_minio_gateway }}"
     use_filestash: "{{ params.main.use_filestash }}"
-    use_nextcloud: "{{ params.main.use_nextcloud }}"
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_certbot: "{{ params.main.use_certbot }}"
 
@@ -328,16 +321,6 @@ templates:
 
     {% endif %}
 
-    use_nextcloud: "{{ params.main.use_nextcloud }}"
-
-    {% if params.main.use_nextcloud | bool %}
-
-    nextcloud_domain: "{{ params.main.custom_domain.nextcloud_domain }}"
-    nextcloud_port: "{{ var_nextcloud_domain_port }}"
-    nextcloud_ssl: "{{ params.main.custom_domain.nextcloud_ssl }}"
-
-    {% endif %}
-
     use_pma: "{{ params.main.use_pma }}"
 
     {% if params.main.use_pma | bool %}
@@ -516,49 +499,6 @@ templates:
     var_custom__use_varnish: "{{ params.main.use_varnish | bool | ternary('true', 'false') }}"
     var_custom__use_custom_ssl: "{{ var_use_custom_ssl | bool | ternary('true', 'false') }}"
     var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
-    var_custom__use_nextcloud: "{{ params.main.use_nextcloud | bool | ternary('true', 'false') }}"
-
-    {% if params.main.use_nextcloud | bool %}
-
-    {% set var_nextcloud_protocol = (params.main.custom_domain.nextcloud_ssl | bool | ternary('https', 'http')) %}
-    {% set var_nextcloud_port_suffix = (var_nextcloud_domain_port in ['80', '443'])
-      | ternary('', ':' + var_nextcloud_domain_port)
-    %}
-
-    {% set var_nextcloud_url = var_nextcloud_protocol + '://' +
-      params.main.custom_domain.nextcloud_domain + var_nextcloud_port_suffix
-    %}
-
-    var_shared__nextcloud__setup__url: "{{ var_nextcloud_url }}"
-    var_shared__nextcloud__setup__domain: "{{ params.main.custom_domain.nextcloud_domain }}"
-    var_shared__nextcloud__setup__host: "{{ params.main.custom_domain.nextcloud_domain }}{{ var_nextcloud_port_suffix }}"
-    var_shared__nextcloud__setup__protocol: "{{ var_nextcloud_protocol }}"
-    var_shared__nextcloud__setup__admin_user: "{{ params.credentials.nextcloud.admin_user }}"
-    var_shared__nextcloud__setup__admin_pass: "{{ params.credentials.nextcloud.admin_pass }}"
-    var_shared__nextcloud__s3_backup__enable: "true"
-    var_shared__nextcloud__s3_backup__access_key: "{{ params.credentials.backup_bucket.access_key }}"
-    var_shared__nextcloud__s3_backup__secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
-    var_shared__nextcloud__s3_backup__bucket: "{{ params.main.backup_bucket_name }}"
-    var_shared__nextcloud__s3_backup__hostname: "{{ params.credentials.backup_bucket.endpoint | default('') | urlsplit('hostname') }}"
-    var_shared__nextcloud__s3_backup__port: "{{ params.credentials.backup_bucket.port | default('') }}"
-    var_shared__nextcloud__s3_backup__region: "{{ params.credentials.backup_bucket.region | default('') }}"
-    var_shared__nextcloud__s3_backup__use_ssl: >-
-      {{ params.credentials.backup_bucket.ssl | default(true) | bool | ternary('true', 'false') }}
-    var_shared__nextcloud__s3_backup__use_path_style: "{{ params.credentials.backup_bucket.path_style | default('') }}"
-    var_shared__nextcloud__s3_backup__legacy_auth: "{{ params.credentials.backup_bucket.legacy_auth | default('') }}"
-    var_shared__nextcloud__s3_uploads__enable: "true"
-    var_shared__nextcloud__s3_uploads__access_key: "{{ params.credentials.uploads_bucket.access_key }}"
-    var_shared__nextcloud__s3_uploads__secret_key: "{{ params.credentials.uploads_bucket.secret_key }}"
-    var_shared__nextcloud__s3_uploads__bucket: "{{ params.main.uploads_bucket_name }}"
-    var_shared__nextcloud__s3_uploads__hostname: "{{ params.credentials.uploads_bucket.endpoint | default('') | urlsplit('hostname') }}"
-    var_shared__nextcloud__s3_uploads__port: "{{ params.credentials.uploads_bucket.port | default('') }}"
-    var_shared__nextcloud__s3_uploads__region: "{{ params.credentials.uploads_bucket.region | default('') }}"
-    var_shared__nextcloud__s3_uploads__use_ssl: >-
-      {{ params.credentials.uploads_bucket.ssl | default(true) | bool | ternary('true', 'false') }}
-    var_shared__nextcloud__s3_uploads__use_path_style: "{{ params.credentials.uploads_bucket.path_style | default('') }}"
-    var_shared__nextcloud__s3_uploads__legacy_auth: "{{ params.credentials.uploads_bucket.legacy_auth | default('') }}"
-
-    {% endif %}
 
     var_custom__block_ips: "{{ params.main.block_ips | bool | ternary('true', 'false') }}"
 

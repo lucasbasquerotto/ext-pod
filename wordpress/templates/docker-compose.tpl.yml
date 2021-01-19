@@ -42,12 +42,6 @@ volumes:
   uploads: {}
   mysql: {}
 
-  {% if params.use_nextcloud | bool %}
-
-  nextcloud: {}
-
-  {% endif %}
-
 {% endif %}
 
 services:
@@ -103,12 +97,6 @@ services:
     {% if params.use_filestash | bool %}
 
     - "filestash"
-
-    {% endif %}
-
-    {% if params.use_nextcloud | bool %}
-
-    - "nextcloud"
 
     {% endif %}
 
@@ -470,55 +458,6 @@ services:
     {% if (params.memory.filestash | default('')) != '' %}
 
     mem_limit: "{{ params.memory.filestash }}"
-
-    {% endif %}
-
-  {% endif %}
-
-  {% if params.use_nextcloud | bool %}
-
-  nextcloud:
-    container_name: "${CTX_PREFIX_MAIN}nextcloud"
-    hostname: "nextcloud"
-    build:
-      context: .
-      dockerfile: "shared/containers/nextcloud/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.nextcloud_image }}"
-        VERSION: "{{ params.images.nextcloud_version }}"
-    restart: "unless-stopped"
-
-    {% if params.use_fluentd | bool %}
-
-    depends_on:
-    - "fluentd"
-
-    {% endif %}
-
-    networks:
-    - "shared"
-    volumes:
-
-    {% if (params.local | bool) and (params.named_volumes | bool) %}
-
-    - "nextcloud:/var/www/html"
-
-    {% else %}
-
-    - "$DATA_DIR/nextcloud:/var/www/html"
-
-    {% endif %}
-
-    - "$DATA_DIR:/var/main/data:ro"
-    - "$DATA_DIR/sync:/var/main/data/sync"
-    - "$DATA_DIR/action:/var/main/data/action"
-    - "$DATA_DIR/tmp/nextcloud:/tmp/main/nextcloud"
-    - "$DATA_DIR/tmp/tmp/nextcloud:/tmp/main/tmp/nextcloud"
-    logging: *mainlog
-
-    {% if (params.memory.nextcloud | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.nextcloud }}"
 
     {% endif %}
 
