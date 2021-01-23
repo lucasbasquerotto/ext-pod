@@ -251,7 +251,7 @@ templates:
 
     {% else %}
 
-    mysql_host_ip: "{{ params.dependencies_data.mysql.host }}"
+    mysql_host_ip: "{{ params.dependencies.mysql.host }}"
 
     {% endif %}
 
@@ -271,7 +271,7 @@ templates:
 
     {% if var_fluentd_output_plugin == 'elasticsearch' %}
 
-    elasticsearch_host_ip: "{{ params.dependencies_data.elasticsearch.host }}"
+    elasticsearch_host_ip: "{{ params.dependencies.elasticsearch.host }}"
 
     {% endif %}
 

@@ -45,7 +45,7 @@ templates:
 {% set var_docker_args = item.params.docker_args | default([]) %}
 {% set ns_docker_args = namespace(list=var_docker_args) %}
 
-{% for subitem in params.dependencies_data | default({}) | dict2items | list %}
+{% for subitem in params.dependencies | default({}) | dict2items | list %}
   {% set ns_docker_args.list = ns_docker_args.list +
     ['--add-host ' + subitem.key + ':' + subitem.host]
   %}
@@ -53,8 +53,8 @@ templates:
 
 {% set var_params = item.params | combine({ 'docker_args': ns_docker_args.list }) %}
 {% set var_params_env = var_params.env | default({}) %}
-{% set var_db_host = params.dependencies_data.db.host | default('') %}
-{% set var_redis_host = params.dependencies_data.redis.host | default('') %}
+{% set var_db_host = params.dependencies.db.host | default('') %}
+{% set var_redis_host = params.dependencies.redis.host | default('') %}
 
 {% if var_db_host != '' %}
   {% set var_params_env = var_params_env
@@ -107,7 +107,7 @@ templates:
     container_mem_s3_backup: "{{ params.main.custom_memory.s3_backup }}"
     container_mem_toolbox: "{{ params.main.custom_memory.toolbox }}"
     container_mem_postgres: "{{ params.main.custom_memory.postgres }}"
-    postgres_host_ip: "{{ params.dependencies_data.db.host | default('') }}"
+    postgres_host_ip: "{{ params.dependencies.db.host | default('') }}"
     fluentd_image: "{{ params.main.custom_images.fluentd_image }}"
     fluentd_version: "{{ params.main.custom_images.fluentd_version }}"
     fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
