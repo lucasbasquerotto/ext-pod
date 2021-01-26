@@ -496,6 +496,7 @@ templates:
 
     {% endif %}
 
+    var_custom__use_theia: "{{ params.main.use_theia | bool | ternary('true', 'false') }}"
     var_custom__use_varnish: "{{ params.main.use_varnish | bool | ternary('true', 'false') }}"
     var_custom__use_custom_ssl: "{{ var_use_custom_ssl | bool | ternary('true', 'false') }}"
     var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"

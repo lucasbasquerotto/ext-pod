@@ -58,35 +58,10 @@ services:
         IMAGE: "{{ params.images.nginx_image }}"
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
-    depends_on:
-    - "rocketchat"
-
-    {% if params.use_mongo_express | bool %}
-
-    - "mongo_express"
-
-    {% endif %}
-
-    {% if params.use_theia | bool %}
-
-    - "theia"
-
-    {% endif %}
-
-    {% if params.use_minio_gateway | bool %}
-
-    - "minio_gateway"
-
-    {% endif %}
-
-    {% if params.use_filestash | bool %}
-
-    - "filestash"
-
-    {% endif %}
 
     {% if params.use_fluentd | bool %}
 
+    depends_on:
     - "fluentd"
 
     {% endif %}
