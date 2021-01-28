@@ -42,7 +42,7 @@ children:
 
 - name: "{{ var_main_dir }}/ctx-child.yml"
   params:
-    main: {{ params | to_json }}
+    params: {{ params | to_json }}
     custom:
       value: |
         param1: {{ params.pod_param_1 }}$
