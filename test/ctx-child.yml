@@ -1,5 +1,5 @@
 {% set var_pod_kind = 'test' %}
-{% set var_main_base_dir = params.main.custom_dir | default('') %}
+{% set var_main_base_dir = params.custom_dir | default('') %}
 {% set var_main_dir =
   (var_main_base_dir != '')
   | ternary(var_main_base_dir + '/', '')
@@ -8,7 +8,7 @@
 
 env_files:
 
-- src: "{{ params.main.env_files_dir }}/file.txt"
+- src: "{{ params.env_files_dir }}/file.txt"
   dest: "env/env-file.txt"
 
 files:
@@ -26,4 +26,4 @@ templates:
   schema: "{{ var_main_dir }}/template.schema.yml"
   executable: true
   params:
-    value: "{{ params.custom.value }}"
+    value: "{{ custom.value }}"

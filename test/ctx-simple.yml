@@ -1,5 +1,5 @@
 {% set var_pod_kind = 'test' %}
-{% set var_main_base_dir = params.main.custom_dir | default('') %}
+{% set var_main_base_dir = params.custom_dir | default('') %}
 {% set var_main_dir =
   (var_main_base_dir != '')
   | ternary(var_main_base_dir + '/', '')
@@ -8,18 +8,18 @@
 
 env_templates:
 
-- src: "{{ params.main.env_files_dir }}/template.yml"
+- src: "{{ params.env_files_dir }}/template.yml"
   dest: "env/env-template.yml"
-  schema: "{{ params.main.env_files_dir }}/template.schema.yml"
+  schema: "{{ params.env_files_dir }}/template.schema.yml"
   params:
-    src: "{{ params.main.env_files_dir }}/template.yml"
+    src: "{{ params.env_files_dir }}/template.yml"
     dest: "env/env-template.yml"
-    schema: "{{ params.main.env_files_dir }}/template.schema.yml"
+    schema: "{{ params.env_files_dir }}/template.schema.yml"
     params:
       prop1: 1
       prop2:
-        prop2_1: "{{ params.main.pod_param_1 }}"
-        prop2_2: "{{ params.main.pod_param_2 }}"
+        prop2_1: "{{ params.pod_param_1 }}"
+        prop2_2: "{{ params.pod_param_2 }}"
 
 files:
 
@@ -30,12 +30,16 @@ templates:
 
 - src: "{{ var_main_dir }}/dynamic.tpl.yml"
   dest: "env/pod-data.test.yml"
-  params: {{ params | to_json }}
+  params:
+    params: {{ params | to_json }}
+    credentials: {{ credentials | to_json }}
+    contents: {{ contents | to_json }}
+    input: {{ input | to_json }}
 
 children:
 
 - name: "{{ var_main_dir }}/ctx-child.yml"
   params:
-    main: {{ params.main | to_json }}
+    params: {{ params | to_json }}
     custom:
-      value: "{{ params.main.pod_param_3 }}"
+      value: "{{ params.pod_param_3 }}"
