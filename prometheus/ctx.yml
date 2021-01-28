@@ -1,7 +1,7 @@
 ## general vars - start ###
 
-{% set var_local = params.main.local | default(false) | bool %}
-{% set var_pod_type = params.main.type | default('') %}
+{% set var_local = params.local | default(false) | bool %}
+{% set var_pod_type = params.type | default('') %}
 
 {% if not (var_pod_type in ['app']) %}
   {% set error = {} %}
@@ -10,47 +10,47 @@
 
 {% set var_pod_kind = 'prometheus' %}
 
-{% set var_main_base_dir = params.main.custom_dir %}
+{% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
-{% set var_main_base_dir_container = (var_local and (params.main.custom_dir_sync | default(false) | bool))
+{% set var_main_base_dir_container = (var_local and (params.custom_dir_sync | default(false) | bool))
   | ternary(var_main_base_dir + '-sync', var_main_base_dir)
 %}
 {% set var_main_dir_container = var_main_base_dir_container + '/' + var_pod_kind %}
 {% set var_shared_dir = 'shared' %}
 
-{% set var_data_dir = params.data_dir %}
+{% set var_data_dir = input.data_dir %}
 
-{% set var_custom_ssl_main_domain = params.main.custom_ssl.main_domain | default('') %}
-{% set var_custom_ssl_fullchain = params.main.custom_ssl.fullchain | default('') %}
-{% set var_custom_ssl_privkey = params.main.custom_ssl.privkey | default('') %}
+{% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}
+{% set var_custom_ssl_fullchain = params.custom_ssl.fullchain | default('') %}
+{% set var_custom_ssl_privkey = params.custom_ssl.privkey | default('') %}
 {% set var_use_custom_ssl = (var_custom_ssl_main_domain != '')
   and (var_custom_ssl_fullchain != '')
   and (var_custom_ssl_privkey != '')
 %}
 
-{% set var_prometheus_domain_port = params.main.custom_domain.prometheus_ssl | bool |
-  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+{% set var_prometheus_domain_port = params.custom_domain.prometheus_ssl | bool |
+  ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
 %}
 
-{% set var_grafana_domain_port = params.main.custom_domain.grafana_ssl | bool |
-  ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+{% set var_grafana_domain_port = params.custom_domain.grafana_ssl | bool |
+  ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
 %}
 
-{% if params.main.use_theia | bool %}
-  {% set var_theia_domain_port = params.main.custom_domain.theia_ssl | bool |
-    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+{% if params.use_theia | bool %}
+  {% set var_theia_domain_port = params.custom_domain.theia_ssl | bool |
+    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
   %}
 {% endif %}
 
-{% if params.main.use_minio_gateway | bool %}
-  {% set var_minio_gateway_domain_port = params.main.custom_domain.minio_gateway_ssl | bool |
-    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+{% if params.use_minio_gateway | bool %}
+  {% set var_minio_gateway_domain_port = params.custom_domain.minio_gateway_ssl | bool |
+    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
   %}
 {% endif %}
 
-{% if params.main.use_filestash | bool %}
-  {% set var_filestash_domain_port = params.main.custom_domain.filestash_ssl | bool |
-    ternary(params.main.custom_domain.private_https_port, params.main.custom_domain.private_http_port)
+{% if params.use_filestash | bool %}
+  {% set var_filestash_domain_port = params.custom_domain.filestash_ssl | bool |
+    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
   %}
 {% endif %}
 
@@ -72,16 +72,16 @@ env_files:
 
 {% endif %}
 
-- src: "{{ params.main.auth_file }}"
+- src: "{{ params.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
 
 {% endif %}
 
 templates:
 
-{% set var_ctx_full_name = params.identifier %}
-{% set var_use_prefix = params.main.use_pod_prefix | default(params.main.use_pod_full_prefix | default(false, true), true) | bool %}
-{% set var_pod_prefix = params.main.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, params.pod_name) %}
+{% set var_ctx_full_name = input.identifier %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
@@ -91,14 +91,14 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    named_volumes: "{{ params.main.named_volumes | default(false) }}"
-    use_fluentd: "{{ params.main.use_fluentd }}"
+    named_volumes: "{{ params.named_volumes | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd }}"
 
-    {% if params.main.use_fluentd | bool %}
+    {% if params.use_fluentd | bool %}
 
-    fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port }}"
 
-    {% set var_fluentd_output_plugin = params.main.custom_args.fluentd.output_plugin
+    {% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin
       | default(
         (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
       )
@@ -108,25 +108,25 @@ templates:
 
     {% if var_fluentd_output_plugin == 'elasticsearch' %}
 
-    elasticsearch_host_ip: "{{ params.dependencies.elasticsearch.host }}"
+    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host }}"
 
     {% endif %}
 
     {% endif %}
 
-    images: {{ params.main.custom_images | to_json }}
-    memory: {{ params.main.custom_memory | to_json }}
-    use_node_exporter: "{{ params.main.use_node_exporter }}"
-    use_cadvisor: "{{ params.main.use_cadvisor }}"
+    images: {{ params.custom_images | to_json }}
+    memory: {{ params.custom_memory | to_json }}
+    use_node_exporter: "{{ params.use_node_exporter }}"
+    use_cadvisor: "{{ params.use_cadvisor }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    use_nginx: "{{ params.main.use_nginx }}"
-    use_theia: "{{ params.main.use_theia }}"
-    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
-    use_filestash: "{{ params.main.use_filestash }}"
+    use_nginx: "{{ params.use_nginx }}"
+    use_theia: "{{ params.use_theia }}"
+    use_minio_gateway: "{{ params.use_minio_gateway }}"
+    use_filestash: "{{ params.use_filestash }}"
     use_custom_ssl: "{{ var_use_custom_ssl }}"
-    use_certbot: "{{ params.main.use_certbot }}"
+    use_certbot: "{{ params.use_certbot }}"
 
     {% endif %}
 
@@ -136,20 +136,20 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.main.use_fluentd }}"
-    s3_cli: "{{ params.main.s3_cli }}"
-    images: {{ params.main.custom_images | to_json }}
-    memory: {{ params.main.custom_memory | to_json }}
+    use_fluentd: "{{ params.use_fluentd }}"
+    s3_cli: "{{ params.s3_cli }}"
+    images: {{ params.custom_images | to_json }}
+    memory: {{ params.custom_memory | to_json }}
 
-    {% if params.main.use_fluentd | bool %}
+    {% if params.use_fluentd | bool %}
 
-    fluentd_port: "{{ params.main.custom_args.fluentd.port }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port }}"
 
     {% endif %}
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    use_certbot: "{{ params.main.use_certbot }}"
+    use_certbot: "{{ params.use_certbot }}"
 
     {% endif %}
 
@@ -162,44 +162,44 @@ templates:
     data_dir: "{{ var_data_dir }}"
     local: "{{ var_local | default(false) }}"
     type: "{{ var_pod_type }}"
-    use_nginx: "{{ params.main.use_nginx }}"
-    use_fluentd: "{{ params.main.use_fluentd }}"
+    use_nginx: "{{ params.use_nginx }}"
+    use_fluentd: "{{ params.use_fluentd }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    {% if params.main.use_nginx | bool %}
+    {% if params.use_nginx | bool %}
 
-    public_http_port: "{{ params.main.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.main.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.main.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.main.custom_domain.private_https_port }}"
+    public_http_port: "{{ params.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.custom_domain.private_https_port }}"
 
     {% else %}
 
-    grafana_port: "{{ params.main.custom_args.grafana.port }}"
+    grafana_port: "{{ params.custom_args.grafana.port }}"
 
     {% endif %}
 
-    grafana_security_admin_password: "{{ params.credentials.grafana.security_admin_password }}"
-    grafana_server_domain: "{{ params.credentials.grafana.server_domain }}"
-    grafana_smtp_enabled: "{{ params.credentials.grafana.smtp_enabled }}"
-    grafana_smtp_host: "{{ params.credentials.grafana.smtp_host }}"
-    grafana_smtp_user: "{{ params.credentials.grafana.smtp_user }}"
-    grafana_smtp_password: "{{ params.credentials.grafana.smtp_password }}"
-    grafana_smtp_from_address: "{{ params.credentials.grafana.smtp_from_address }}"
+    grafana_security_admin_password: "{{ credentials.grafana.security_admin_password }}"
+    grafana_server_domain: "{{ credentials.grafana.server_domain }}"
+    grafana_smtp_enabled: "{{ credentials.grafana.smtp_enabled }}"
+    grafana_smtp_host: "{{ credentials.grafana.smtp_host }}"
+    grafana_smtp_user: "{{ credentials.grafana.smtp_user }}"
+    grafana_smtp_password: "{{ credentials.grafana.smtp_password }}"
+    grafana_smtp_from_address: "{{ credentials.grafana.smtp_from_address }}"
 
     {% endif %}
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    use_certbot: "{{ params.main.use_certbot }}"
-    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+    use_certbot: "{{ params.use_certbot }}"
+    use_minio_gateway: "{{ params.use_minio_gateway }}"
 
-    {% if params.main.use_minio_gateway | bool %}
+    {% if params.use_minio_gateway | bool %}
 
-    minio_gateway_endpoint: "{{ params.credentials.minio_gateway.endpoint }}"
-    minio_gateway_access_key: "{{ params.credentials.minio_gateway.access_key }}"
-    minio_gateway_secret_key: "{{ params.credentials.minio_gateway.secret_key }}"
+    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint }}"
+    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key }}"
+    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key }}"
 
     {% endif %}
 
@@ -207,47 +207,47 @@ templates:
 
 {% if var_pod_type in ['app', 'web'] %}
 
-{% if not params.main.custom_args.nginx.custom | default(false) | bool %}
+{% if not params.custom_args.nginx.custom | default(false) | bool %}
 
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
   dest: "env/nginx/nginx.conf"
   params:
-    conf: {{ params.main.custom_args.nginx.conf | default({}) | to_json }}
-    enable_validate_origin: "{{ params.main.custom_args.nginx.enable_validate_origin }}"
-    main_domain: "{{ params.main.custom_domain.main_domain }}"
-    prometheus_domain: "{{ params.main.custom_domain.prometheus_domain }}"
+    conf: {{ params.custom_args.nginx.conf | default({}) | to_json }}
+    enable_validate_origin: "{{ params.custom_args.nginx.enable_validate_origin }}"
+    main_domain: "{{ params.custom_domain.main_domain }}"
+    prometheus_domain: "{{ params.custom_domain.prometheus_domain }}"
     prometheus_port: "{{ var_prometheus_domain_port }}"
-    prometheus_ssl: "{{ params.main.custom_domain.prometheus_ssl }}"
-    grafana_domain: "{{ params.main.custom_domain.grafana_domain }}"
+    prometheus_ssl: "{{ params.custom_domain.prometheus_ssl }}"
+    grafana_domain: "{{ params.custom_domain.grafana_domain }}"
     grafana_port: "{{ var_grafana_domain_port }}"
-    grafana_ssl: "{{ params.main.custom_domain.grafana_ssl }}"
-    use_theia: "{{ params.main.use_theia }}"
+    grafana_ssl: "{{ params.custom_domain.grafana_ssl }}"
+    use_theia: "{{ params.use_theia }}"
 
-    {% if params.main.use_theia | bool %}
+    {% if params.use_theia | bool %}
 
-    theia_domain: "{{ params.main.custom_domain.theia_domain }}"
+    theia_domain: "{{ params.custom_domain.theia_domain }}"
     theia_port: "{{ var_theia_domain_port }}"
-    theia_ssl: "{{ params.main.custom_domain.theia_ssl }}"
+    theia_ssl: "{{ params.custom_domain.theia_ssl }}"
 
     {% endif %}
 
-    use_minio_gateway: "{{ params.main.use_minio_gateway }}"
+    use_minio_gateway: "{{ params.use_minio_gateway }}"
 
-    {% if params.main.use_minio_gateway | bool %}
+    {% if params.use_minio_gateway | bool %}
 
-    minio_gateway_domain: "{{ params.main.custom_domain.minio_gateway_domain }}"
+    minio_gateway_domain: "{{ params.custom_domain.minio_gateway_domain }}"
     minio_gateway_port: "{{ var_minio_gateway_domain_port }}"
-    minio_gateway_ssl: "{{ params.main.custom_domain.minio_gateway_ssl }}"
+    minio_gateway_ssl: "{{ params.custom_domain.minio_gateway_ssl }}"
 
     {% endif %}
 
-    use_filestash: "{{ params.main.use_filestash }}"
+    use_filestash: "{{ params.use_filestash }}"
 
-    {% if params.main.use_filestash | bool %}
+    {% if params.use_filestash | bool %}
 
-    filestash_domain: "{{ params.main.custom_domain.filestash_domain }}"
+    filestash_domain: "{{ params.custom_domain.filestash_domain }}"
     filestash_port: "{{ var_filestash_domain_port }}"
-    filestash_ssl: "{{ params.main.custom_domain.filestash_ssl }}"
+    filestash_ssl: "{{ params.custom_domain.filestash_ssl }}"
 
     {% endif %}
 
@@ -255,13 +255,13 @@ templates:
 
 {% endif %}
 
-{% if params.main.s3_cli == 'awscli' %}
+{% if params.s3_cli == 'awscli' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
   {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
-{% elif params.main.s3_cli == 'rclone' %}
+{% elif params.s3_cli == 'rclone' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
   {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
-{% elif params.main.s3_cli == 'mc' %}
+{% elif params.s3_cli == 'mc' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
   {% set var_s3_config_dest = 'env/mc/config.json' %}
 {% endif %}
@@ -270,16 +270,16 @@ templates:
   dest: "{{ var_s3_config_dest }}"
   params:
     - alias: "backup"
-      endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
-      region: "{{ params.credentials.backup_bucket.region | default('') }}"
-      access_key: "{{ params.credentials.backup_bucket.access_key }}"
-      secret_key: "{{ params.credentials.backup_bucket.secret_key }}"
+      endpoint: "{{ credentials.backup_bucket.endpoint }}"
+      region: "{{ credentials.backup_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_bucket.access_key }}"
+      secret_key: "{{ credentials.backup_bucket.secret_key }}"
     - alias: "backup_replica"
-      endpoint: "{{ params.credentials.backup_replica_bucket.endpoint }}"
-      region: "{{ params.credentials.backup_replica_bucket.region | default('') }}"
-      access_key: "{{ params.credentials.backup_replica_bucket.access_key }}"
-      secret_key: "{{ params.credentials.backup_replica_bucket.secret_key }}"
-      when: "{{ (params.main.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+      endpoint: "{{ credentials.backup_replica_bucket.endpoint }}"
+      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_replica_bucket.access_key }}"
+      secret_key: "{{ credentials.backup_replica_bucket.secret_key }}"
+      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
@@ -289,11 +289,11 @@ templates:
 
     {% if var_local | bool %}
 
-    var_data_dir_rel: "{{ params.data_dir }}"
+    var_data_dir_rel: "{{ input.data_dir }}"
 
     {% else %}
 
-    var_data_dir: "{{ params.data_dir }}"
+    var_data_dir: "{{ input.data_dir }}"
 
     {% endif %}
 
@@ -304,31 +304,31 @@ templates:
     var_custom__use_main_network: "true"
     var_custom__use_logrotator: "true"
     var_custom__use_nginx: "true"
-    var_custom__use_fluentd: "{{ params.main.use_fluentd | bool | ternary('true', 'false') }}"
+    var_custom__use_fluentd: "{{ params.use_fluentd | bool | ternary('true', 'false') }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    {% if params.main.enable_backup_replica | bool %}
+    {% if params.enable_backup_replica | bool %}
 
-    var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.main.backup_replica_bucket_name }}"
-    var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.main.backup_replica_bucket_path | default('') }}"
+    var_shared__s3_replicate_backup__bucket_dest_name: "{{ params.backup_replica_bucket_name }}"
+    var_shared__s3_replicate_backup__bucket_dest_path: "{{ params.backup_replica_bucket_path | default('') }}"
 
     {% endif %}
 
-    var_custom__use_theia: "{{ params.main.use_theia | bool | ternary('true', 'false') }}"
+    var_custom__use_theia: "{{ params.use_theia | bool | ternary('true', 'false') }}"
     var_custom__use_custom_ssl: "{{ var_use_custom_ssl | bool | ternary('true', 'false') }}"
-    var_custom__use_certbot: "{{ params.main.use_certbot | bool | ternary('true', 'false') }}"
+    var_custom__use_certbot: "{{ params.use_certbot | bool | ternary('true', 'false') }}"
 
     {% endif %}
 
-    {% if not (params.main.log_summary.disabled | default(false) | bool) %}
+    {% if not (params.log_summary.disabled | default(false) | bool) %}
 
-    var_custom__log_summary__days_ago: "{{ params.main.log_summary.days_ago | default('1') }}"
-    var_custom__log_summary__max_amount: "{{ params.main.log_summary.max_amount | default('100') }}"
+    var_custom__log_summary__days_ago: "{{ params.log_summary.days_ago | default('1') }}"
+    var_custom__log_summary__max_amount: "{{ params.log_summary.max_amount | default('100') }}"
     var_custom__log_summary__verify_size_docker_dir: >-
-      {{ params.main.log_summary.verify_size_docker_dir | default(false) | bool | ternary('true', 'false') }}
+      {{ params.log_summary.verify_size_docker_dir | default(false) | bool | ternary('true', 'false') }}
     var_custom__log_summary__verify_size_containers: >-
-      {{ params.main.log_summary.verify_size_containers | default(true) | bool | ternary('true', 'false') }}
+      {{ params.log_summary.verify_size_containers | default(true) | bool | ternary('true', 'false') }}
 
     {% endif %}
 
@@ -350,7 +350,7 @@ templates:
 
     {% if var_pod_type in ['app', 'db'] %}
 
-      {% if params.main.enable_db_backup | bool %}
+      {% if params.enable_db_backup | bool %}
 
         {% set var_group_backup = var_group_backup + ['db_backup'] %}
 
@@ -363,11 +363,11 @@ templates:
 
     {% set var_group_setup = [] %}
 
-    {% if params.main.restore_db | bool %}
+    {% if params.restore_db | bool %}
 
       {% if var_pod_type in ['app', 'db'] %}
 
-        {% if params.main.enable_db_setup | bool %}
+        {% if params.enable_db_setup | bool %}
 
           {% set var_group_setup = var_group_setup + ['db_setup'] %}
 
@@ -384,17 +384,17 @@ templates:
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    {% if params.main.use_certbot | bool %}
+    {% if params.use_certbot | bool %}
 
     var_task__certbot__certbot_subtask__certbot_service: "certbot"
     var_task__certbot__certbot_subtask__data_base_path: "/var/main/data/sync/certbot"
-    var_task__certbot__certbot_subtask__dev: "{{ params.main.certbot.dev | default(var_local) | bool | ternary('true', 'false') }}"
-    var_task__certbot__certbot_subtask__domains: "{{ params.main.certbot.domains }}"
-    var_task__certbot__certbot_subtask__email: "{{ params.main.certbot.email }}"
-    var_task__certbot__certbot_subtask__force: "{{ params.main.certbot.force | bool | ternary('true', 'false') }}"
-    var_task__certbot__certbot_subtask__main_domain: "{{ params.main.certbot.main_domain }}"
-    var_task__certbot__certbot_subtask__rsa_key_size: "{{ params.main.certbot.rsa_key_size | default('4096') }}"
-    var_task__certbot__certbot_subtask__staging: "{{ params.main.certbot.staging | default(var_local) | bool | ternary('true', 'false') }}"
+    var_task__certbot__certbot_subtask__dev: "{{ params.certbot.dev | default(var_local) | bool | ternary('true', 'false') }}"
+    var_task__certbot__certbot_subtask__domains: "{{ params.certbot.domains }}"
+    var_task__certbot__certbot_subtask__email: "{{ params.certbot.email }}"
+    var_task__certbot__certbot_subtask__force: "{{ params.certbot.force | bool | ternary('true', 'false') }}"
+    var_task__certbot__certbot_subtask__main_domain: "{{ params.certbot.main_domain }}"
+    var_task__certbot__certbot_subtask__rsa_key_size: "{{ params.certbot.rsa_key_size | default('4096') }}"
+    var_task__certbot__certbot_subtask__staging: "{{ params.certbot.staging | default(var_local) | bool | ternary('true', 'false') }}"
     var_task__certbot__certbot_subtask__toolbox_service: "toolbox"
     var_task__certbot__certbot_subtask__webservice_type: "nginx"
     var_task__certbot__certbot_task__certbot_cmd: "setup"
@@ -406,14 +406,14 @@ templates:
 
     {% if var_pod_type in ['app', 'db'] %}
 
-    {% if params.main.enable_db_backup | bool %}
+    {% if params.enable_db_backup | bool %}
 
-    {% set var_db_compressed_file_name = params.main.db_backup.db_compressed_file_name
+    {% set var_db_compressed_file_name = params.db_backup.db_compressed_file_name
       | default('prometheus.[[ datetime ]].[[ random ]].zip')
     %}
     {% set var_db_src_dir = '/tmp/main/tmp/prometheus/snapshots' %}
     {% set var_db_tmp_dir = '/tmp/main/tmp/backup/prometheus' %}
-    {% set var_db_compress_type = params.main.db_backup.db_compress_type | default('zip') %}
+    {% set var_db_compress_type = params.db_backup.db_compress_type | default('zip') %}
     {% set var_db_compress_dest_file = var_db_tmp_dir + '/' + var_db_compressed_file_name %}
     {% set var_db_subtask_cmd_local = 'backup:local:db' %}
     {% set var_db_subtask_cmd_db = 'db:backup:prometheus' %}
@@ -424,19 +424,19 @@ templates:
     var_task__db_backup__backup_task__subtask_cmd_local: "{{ var_db_subtask_cmd_local }}"
     var_task__db_backup__backup_task__subtask_cmd_remote: "{{ var_db_subtask_cmd_remote }}"
     var_task__db_backup__backup_task__is_compressed_file: >-
-      {{ params.main.db_backup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
+      {{ params.db_backup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
 
-    {% if params.main.db_backup.is_compressed_file | default(false) | bool %}
+    {% if params.db_backup.is_compressed_file | default(false) | bool %}
 
     var_task__db_backup__backup_task__recursive_dir: "{{ var_db_src_dir }}"
     var_task__db_backup__backup_task__compress_type: "{{ var_db_compress_type }}"
     var_task__db_backup__backup_task__compress_src_file: >-
-      {{ params.main.db_backup.compress_src_file | default('') }}
+      {{ params.db_backup.compress_src_file | default('') }}
     var_task__db_backup__backup_task__compress_src_dir: >-
-      {{ params.main.db_backup.compress_src_dir | default(var_db_src_dir) }}
+      {{ params.db_backup.compress_src_dir | default(var_db_src_dir) }}
     var_task__db_backup__backup_task__compress_dest_file: "{{ var_db_compress_dest_file }}"
     var_task__db_backup__backup_task__compress_pass: >-
-      {{ params.credentials.db.compress_pass | default('') }}
+      {{ credentials.db.compress_pass | default('') }}
 
     {% else %}
 
@@ -444,24 +444,24 @@ templates:
 
     {% endif %}
 
-    var_task__db_backup__backup_task__backup_date_format: "{{ params.main.db_backup.backup_date_format | default('') }}"
-    var_task__db_backup__backup_task__backup_time_format: "{{ params.main.db_backup.backup_time_format | default('') }}"
-    var_task__db_backup__backup_task__backup_datetime_format: "{{ params.main.db_backup.backup_datetime_format | default('') }}"
-    var_task__db_backup__backup_task__recursive_mode: "{{ params.main.db_backup.recursive_mode | default('') }}"
-    var_task__db_backup__backup_task__recursive_mode_dir: "{{ params.main.db_backup.recursive_mode_dir | default('') }}"
-    var_task__db_backup__backup_task__recursive_mode_file: "{{ params.main.db_backup.recursive_mode_file | default('') }}"
-    var_task__db_backup__backup_task__file_to_clear: "{{ params.main.db_backup.file_to_clear | default('') }}"
-    var_task__db_backup__backup_task__dir_to_clear: "{{ params.main.db_backup.dir_to_clear | default('') }}"
+    var_task__db_backup__backup_task__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
+    var_task__db_backup__backup_task__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"
+    var_task__db_backup__backup_task__backup_datetime_format: "{{ params.db_backup.backup_datetime_format | default('') }}"
+    var_task__db_backup__backup_task__recursive_mode: "{{ params.db_backup.recursive_mode | default('') }}"
+    var_task__db_backup__backup_task__recursive_mode_dir: "{{ params.db_backup.recursive_mode_dir | default('') }}"
+    var_task__db_backup__backup_task__recursive_mode_file: "{{ params.db_backup.recursive_mode_file | default('') }}"
+    var_task__db_backup__backup_task__file_to_clear: "{{ params.db_backup.file_to_clear | default('') }}"
+    var_task__db_backup__backup_task__dir_to_clear: "{{ params.db_backup.dir_to_clear | default('') }}"
     var_task__db_backup__backup_local__db_subtask_cmd: "{{ var_db_subtask_cmd_db }}"
     var_task__db_backup__backup_local__task_name: "db_main"
     var_task__db_backup__backup_remote__backup_bucket_sync_dir: >-
-      {{ params.main.db_backup.backup_bucket_sync_dir | default('[[ date ]]') }}
-    var_task__db_backup__backup_remote__backup_date_format: "{{ params.main.db_backup.backup_date_format | default('') }}"
-    var_task__db_backup__backup_remote__backup_time_format: "{{ params.main.db_backup.backup_time_format | default('') }}"
-    var_task__db_backup__backup_remote__backup_datetime_format: "{{ params.main.db_backup.backup_datetime_format | default('') }}"
+      {{ params.db_backup.backup_bucket_sync_dir | default('[[ date ]]') }}
+    var_task__db_backup__backup_remote__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
+    var_task__db_backup__backup_remote__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"
+    var_task__db_backup__backup_remote__backup_datetime_format: "{{ params.db_backup.backup_datetime_format | default('') }}"
     var_task__db_backup__backup_remote__subtask_cmd_s3: "{{ var_db_subtask_cmd_s3 }}"
 
-    {% if params.main.db_backup.is_compressed_file | default(false) | bool %}
+    {% if params.db_backup.is_compressed_file | default(false) | bool %}
 
     var_task__db_backup__backup_remote__backup_src_file: "{{ var_db_compress_dest_file }}"
 
@@ -476,22 +476,22 @@ templates:
     {% endif %}
 
     var_task__db_main__db_subtask__db_service: "prometheus"
-    var_task__db_main__db_subtask__db_host: "{{ params.main.custom_args.prometheus.host | default('prometheus', true) }}"
-    var_task__db_main__db_subtask__db_port: "{{ params.main.custom_args.prometheus.port | default('9090', true) }}"
-    var_task__db_main__db_subtask__db_connect_wait_secs: "{{ params.main.db_main.db_connect_wait_secs | default('300') }}"
+    var_task__db_main__db_subtask__db_host: "{{ params.custom_args.prometheus.host | default('prometheus', true) }}"
+    var_task__db_main__db_subtask__db_port: "{{ params.custom_args.prometheus.port | default('9090', true) }}"
+    var_task__db_main__db_subtask__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('300') }}"
 
     {% if var_pod_type in ['app', 'db'] %}
 
-    {% if (params.main.restore_db | bool) and (params.main.enable_db_setup | bool) %}
+    {% if (params.restore_db | bool) and (params.enable_db_setup | bool) %}
 
-    {% set var_db_s3_sync = (params.main.db_setup.restore_use_s3 | bool)
-      and (params.main.db_setup.restore_s3_sync | bool)
+    {% set var_db_s3_sync = (params.db_setup.restore_use_s3 | bool)
+      and (params.db_setup.restore_s3_sync | bool)
     %}
     {% set var_db_dest_dir = '/var/main/data/prometheus' %}
-    {% set var_verify_file_to_skip = params.main.db_setup.verify_file_to_skip | default('/tmp/main/setup/db.skip') %}
+    {% set var_verify_file_to_skip = params.db_setup.verify_file_to_skip | default('/tmp/main/setup/db.skip') %}
     {% set var_db_tmp_base_dir = '/tmp/main/tmp/prometheus/restore' %}
-    {% set var_db_compress_type = params.main.db_setup.compress_type | default('zip') %}
-    {% set var_db_compressed_file_name = params.main.db_setup.compressed_file_name | default('db.zip') %}
+    {% set var_db_compress_type = params.db_setup.compress_type | default('zip') %}
+    {% set var_db_compressed_file_name = params.db_setup.compressed_file_name | default('db.zip') %}
     {% set var_db_compress_file = '/tmp/main/tmp/restore/db/' + var_db_compressed_file_name %}
 
     var_task__db_setup__task__type: "setup"
@@ -499,26 +499,26 @@ templates:
     var_task__db_setup__setup_task__subtask_cmd_verify: "setup:verify:default"
     var_task__db_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
     var_task__db_setup__setup_task__is_compressed_file: >-
-      {{ params.main.db_setup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
+      {{ params.db_setup.is_compressed_file | default(false) | bool | ternary('true', 'false') }}
 
-    {% if params.main.db_setup.is_compressed_file | default(false) | bool %}
+    {% if params.db_setup.is_compressed_file | default(false) | bool %}
 
     var_task__db_setup__setup_task__compress_type: "{{ var_db_compress_type }}"
     var_task__db_setup__setup_task__compress_src_file: "{{ var_db_compress_file }}"
     var_task__db_setup__setup_task__compress_dest_dir: "{{ var_db_tmp_base_dir }}"
     var_task__db_setup__setup_task__compress_pass: >-
-      {{ params.credentials.db.compress_pass | default('') }}
+      {{ credentials.db.compress_pass | default('') }}
 
     {% endif %}
 
-    var_task__db_setup__setup_task__recursive_mode: "{{ params.main.db_setup.recursive_mode | default('') }}"
-    var_task__db_setup__setup_task__recursive_mode_dir: "{{ params.main.db_setup.recursive_mode_dir | default('777') }}"
-    var_task__db_setup__setup_task__recursive_mode_file: "{{ params.main.db_setup.recursive_mode_file | default('666') }}"
+    var_task__db_setup__setup_task__recursive_mode: "{{ params.db_setup.recursive_mode | default('') }}"
+    var_task__db_setup__setup_task__recursive_mode_dir: "{{ params.db_setup.recursive_mode_dir | default('777') }}"
+    var_task__db_setup__setup_task__recursive_mode_file: "{{ params.db_setup.recursive_mode_file | default('666') }}"
 
     {% if not var_db_s3_sync | bool %}
 
     {% set var_db_tmp_dir = var_db_tmp_base_dir + '/'
-      + params.main.db_setup.restore_compressed_inner_dir
+      + params.db_setup.restore_compressed_inner_dir
     %}
 
     var_task__db_setup__setup_task__recursive_dir: "{{ var_db_tmp_dir }}"
@@ -535,28 +535,28 @@ templates:
 
     var_task__db_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_db_dest_dir }}"
     var_task__db_setup__setup_remote__restore_use_s3: >-
-      {{ params.main.db_setup.restore_use_s3 | bool | ternary('true', 'false') }}
+      {{ params.db_setup.restore_use_s3 | bool | ternary('true', 'false') }}
 
-    {% if not (params.main.db_setup.restore_use_s3 | bool) %}
+    {% if not (params.db_setup.restore_use_s3 | bool) %}
 
     var_task__db_setup__setup_remote__restore_dest_file: >-
-      {{ params.main.db_setup.restore_dest_file | default(var_db_compress_file) }}
+      {{ params.db_setup.restore_dest_file | default(var_db_compress_file) }}
     var_task__db_setup__setup_remote__restore_remote_file: >-
-      {{ params.main.db_setup.restore_remote_file }}
+      {{ params.db_setup.restore_remote_file }}
 
     {% else %}
 
     var_task__db_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
     var_task__db_setup__setup_remote__restore_s3_sync: >-
-      {{ params.main.db_setup.restore_s3_sync | bool | ternary('true', 'false') }}
+      {{ params.db_setup.restore_s3_sync | bool | ternary('true', 'false') }}
     var_task__db_setup__setup_remote__restore_dest_dir: >-
-      {{ params.main.db_setup.restore_dest_dir | default(var_db_dest_dir) }}
+      {{ params.db_setup.restore_dest_dir | default(var_db_dest_dir) }}
     var_task__db_setup__setup_remote__restore_dest_file: >-
-      {{ params.main.db_setup.restore_dest_file | default('') }}
+      {{ params.db_setup.restore_dest_file | default('') }}
     var_task__db_setup__setup_remote__restore_bucket_path_dir: >-
-      {{ params.main.db_setup.restore_bucket_path_dir | default('') }}
+      {{ params.db_setup.restore_bucket_path_dir | default('') }}
     var_task__db_setup__setup_remote__restore_bucket_path_file: >-
-      {{ params.main.db_setup.restore_bucket_path_file | default('') }}
+      {{ params.db_setup.restore_bucket_path_file | default('') }}
 
     {% endif %}
 
@@ -564,7 +564,7 @@ templates:
 
     {% endif %}
 
-    {% if params.main.enable_logs_backup | bool %}
+    {% if params.enable_logs_backup | bool %}
 
     var_task__logs_backup__task__type: "backup"
     var_task__logs_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
@@ -574,55 +574,55 @@ templates:
 
     {% endif %}
 
-    {% if params.main.enable_logs_setup | bool %}
+    {% if params.enable_logs_setup | bool %}
 
     {% set var_dest_dir = '/var/log/main' %}
-    {% set var_verify_file_to_skip = params.main.logs_setup.verify_file_to_skip | default('/tmp/main/setup/logs.skip') %}
+    {% set var_verify_file_to_skip = params.logs_setup.verify_file_to_skip | default('/tmp/main/setup/logs.skip') %}
 
     var_task__logs_setup__task__type: "setup"
     var_task__logs_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
     var_task__logs_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
     var_task__logs_setup__setup_task__recursive_dir: "{{ var_dest_dir }}"
-    var_task__logs_setup__setup_task__recursive_mode: "{{ params.main.logs_setup.recursive_mode | default('') }}"
+    var_task__logs_setup__setup_task__recursive_mode: "{{ params.logs_setup.recursive_mode | default('') }}"
     var_task__logs_setup__setup_task__recursive_mode_dir: >-
-      {{ params.main.logs_setup.recursive_mode_dir | default('777') }}
+      {{ params.logs_setup.recursive_mode_dir | default('777') }}
     var_task__logs_setup__setup_task__recursive_mode_file: >-
-      {{ params.main.logs_setup.recursive_mode_file | default('666') }}
+      {{ params.logs_setup.recursive_mode_file | default('666') }}
     var_task__logs_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_dest_dir }}"
     var_task__logs_setup__setup_remote__restore_use_s3: "true"
     var_task__logs_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
     var_task__logs_setup__setup_remote__restore_s3_sync: "true"
     var_task__logs_setup__setup_remote__restore_dest_dir: "{{ var_dest_dir }}"
     var_task__logs_setup__setup_remote__restore_bucket_path_dir: >-
-      {{ params.main.logs_setup.restore_bucket_path_dir | default('') }}
+      {{ params.logs_setup.restore_bucket_path_dir | default('') }}
 
     {% endif %}
 
-    var_task__s3_backup__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
-    var_task__s3_backup__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
-    var_task__s3_backup__s3_subtask__cli: "{{ params.main.s3_cli }}"
+    var_task__s3_backup__s3_subtask__bucket_name: "{{ params.backup_bucket_name }}"
+    var_task__s3_backup__s3_subtask__bucket_path: "{{ params.backup_bucket_path | default('') }}"
+    var_task__s3_backup__s3_subtask__cli: "{{ params.s3_cli }}"
     var_task__s3_backup__s3_subtask__cli_cmd: "run"
     var_task__s3_backup__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup"
-    var_task__s3_backup__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
+    var_task__s3_backup__s3_subtask__endpoint: "{{ credentials.backup_bucket.endpoint }}"
     var_task__s3_backup__s3_subtask__service: "s3_backup"
 
     {% if var_pod_type in ['app', 'web'] %}
 
-    {% if params.main.enable_backup_replica | bool %}
+    {% if params.enable_backup_replica | bool %}
 
-    var_task__s3_backup_replica__s3_subtask__bucket_name: "{{ params.main.backup_bucket_name }}"
-    var_task__s3_backup_replica__s3_subtask__bucket_path: "{{ params.main.backup_bucket_path | default('') }}"
-    var_task__s3_backup_replica__s3_subtask__cli: "{{ params.main.s3_cli }}"
+    var_task__s3_backup_replica__s3_subtask__bucket_name: "{{ params.backup_bucket_name }}"
+    var_task__s3_backup_replica__s3_subtask__bucket_path: "{{ params.backup_bucket_path | default('') }}"
+    var_task__s3_backup_replica__s3_subtask__cli: "{{ params.s3_cli }}"
     var_task__s3_backup_replica__s3_subtask__cli_cmd: "run"
     var_task__s3_backup_replica__s3_subtask__tmp_dir: "/tmp/main/tmp/s3_backup_replica"
-    var_task__s3_backup_replica__s3_subtask__endpoint: "{{ params.credentials.backup_bucket.endpoint }}"
+    var_task__s3_backup_replica__s3_subtask__endpoint: "{{ credentials.backup_bucket.endpoint }}"
     var_task__s3_backup_replica__s3_subtask__service: "s3_backup_replica"
 
     {% endif %}
 
     {% endif %}
 
-    {% if params.main.enable_sync_backup | bool %}
+    {% if params.enable_sync_backup | bool %}
 
     var_task__sync_backup__task__type: "backup"
     var_task__sync_backup__backup_task__subtask_cmd_remote: "backup:remote:default"
@@ -632,26 +632,26 @@ templates:
 
     {% endif %}
 
-    {% if params.main.enable_sync_setup | bool %}
+    {% if params.enable_sync_setup | bool %}
 
     {% set var_dest_dir = '/var/sync/main' %}
-    {% set var_verify_file_to_skip = params.main.sync_setup.verify_file_to_skip | default('/tmp/main/setup/sync.skip') %}
+    {% set var_verify_file_to_skip = params.sync_setup.verify_file_to_skip | default('/tmp/main/setup/sync.skip') %}
 
     var_task__sync_setup__task__type: "setup"
     var_task__sync_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
     var_task__sync_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
     var_task__sync_setup__setup_task__recursive_dir: "{{ var_dest_dir }}"
-    var_task__sync_setup__setup_task__recursive_mode: "{{ params.main.sync_setup.recursive_mode | default('') }}"
+    var_task__sync_setup__setup_task__recursive_mode: "{{ params.sync_setup.recursive_mode | default('') }}"
     var_task__sync_setup__setup_task__recursive_mode_dir: >-
-      {{ params.main.sync_setup.recursive_mode_dir | default('777') }}
+      {{ params.sync_setup.recursive_mode_dir | default('777') }}
     var_task__sync_setup__setup_task__recursive_mode_file: >-
-      {{ params.main.sync_setup.recursive_mode_file | default('666') }}
+      {{ params.sync_setup.recursive_mode_file | default('666') }}
     var_task__sync_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_dest_dir }}"
     var_task__sync_setup__setup_remote__restore_use_s3: "true"
     var_task__sync_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_backup"
     var_task__sync_setup__setup_remote__restore_s3_sync: "true"
     var_task__sync_setup__setup_remote__restore_dest_dir: "{{ var_dest_dir }}"
     var_task__sync_setup__setup_remote__restore_bucket_path_dir: >-
-      {{ params.main.sync_setup.restore_bucket_path_dir | default('') }}
+      {{ params.sync_setup.restore_bucket_path_dir | default('') }}
 
     {% endif %}
