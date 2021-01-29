@@ -6,6 +6,8 @@ schemas:
       params:
         schema: "params"
         non_empty: true
+      input:
+        type: "dict"
   params:
     type: "dict"
     props:
