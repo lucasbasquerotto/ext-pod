@@ -614,7 +614,7 @@ services:
 
     {% endif %}
 
-  {% if params.use_composer | bool %}
+  {% if params.use_composer | default(false) | bool %}
 
   composer:
     container_name: "${CTX_PREFIX_MAIN}composer"
