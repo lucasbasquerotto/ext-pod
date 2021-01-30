@@ -12,6 +12,8 @@ schemas:
       contents:
         schema: "contents"
         non_empty: true
+      input:
+        type: "dict"
   params:
     type: "dict"
     props:
