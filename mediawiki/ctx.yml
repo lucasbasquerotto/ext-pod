@@ -665,7 +665,7 @@ templates:
     {% set var_db_dest_dir = '/tmp/main/tmp/mysql/restore' %}
     {% set var_verify_file_to_skip = params.db_setup.verify_file_to_skip | default('/tmp/main/setup/db.skip') %}
     {% set var_db_compress_type = params.db_setup.db_compress_type | default('zip') %}
-    {% set var_db_compress_file_name = params.db_setup.db_compress_file_name
+    {% set var_db_compress_file_name = params.db_setup.compressed_file_name
       | default(credentials.mediawiki.db.name + '.zip')
     %}
     {% set var_db_compress_file = '/tmp/main/tmp/restore/mysql/' + var_db_compress_file_name %}
@@ -722,9 +722,18 @@ templates:
 
     {% if params.db_setup.restore_s3_sync | bool %}
 
-    var_task__db_setup__setup_remote__restore_dest_dir: "{{ var_db_dest_dir }}"
     var_task__db_setup__setup_remote__restore_bucket_path_dir: >-
       {{ params.db_setup.restore_bucket_path_dir | default('') }}
+
+    {% if params.db_setup.is_compressed_file | default(false) | bool %}
+
+    var_task__db_setup__setup_remote__restore_dest_file: "{{ var_db_compress_file }}"
+
+    {% else %}
+
+    var_task__db_setup__setup_remote__restore_dest_dir: "{{ var_db_dest_dir }}"
+
+    {% endif %}
 
     {% else %}
 
@@ -941,7 +950,9 @@ templates:
     var_task__uploads_setup__setup_task__recursive_mode_dir: "{{ params.uploads_setup.recursive_mode_dir | default('777') }}"
     var_task__uploads_setup__setup_task__recursive_mode_file: "{{ params.uploads_setup.recursive_mode_file | default('666') }}"
 
-    {% if not var_uploads_s3_sync | bool %}
+    {% if (not (var_uploads_s3_sync | bool))
+      or (params.uploads_setup.is_compressed_file | default(false) | bool)
+    %}
 
     {% set var_uploads_tmp_dir = var_uploads_tmp_base_dir + '/'
       + params.uploads_setup.restore_compressed_inner_dir
@@ -975,10 +986,23 @@ templates:
     var_task__uploads_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_uploads"
     var_task__uploads_setup__setup_remote__restore_s3_sync: >-
       {{ params.uploads_setup.restore_s3_sync | bool | ternary('true', 'false') }}
+
+    {% if params.uploads_setup.is_compressed_file | default(false) | bool %}
+
+    var_task__uploads_setup__setup_remote__restore_dest_dir: >-
+      {{ params.uploads_setup.restore_dest_dir | default() }}
+    var_task__uploads_setup__setup_remote__restore_dest_file: >-
+      {{ params.uploads_setup.restore_dest_file | default(var_uploads_compress_file) }}
+
+    {% else %}
+
     var_task__uploads_setup__setup_remote__restore_dest_dir: >-
       {{ params.uploads_setup.restore_dest_dir | default(var_uploads_dest_dir) }}
     var_task__uploads_setup__setup_remote__restore_dest_file: >-
-      {{ params.uploads_setup.restore_dest_file | default('') }}
+      {{ params.uploads_setup.restore_dest_file | default() }}
+
+    {% endif %}
+
     var_task__uploads_setup__setup_remote__restore_bucket_path_dir: >-
       {{ params.uploads_setup.restore_bucket_path_dir | default('') }}
     var_task__uploads_setup__setup_remote__restore_bucket_path_file: >-
