@@ -502,9 +502,9 @@ templates:
 		var_load__db_backup__db_compress_type: "{{ params.db_backup.db_compress_type | default('') }}"
 		var_load__db_backup__compress_pass: "{{ credentials.mediawiki_db.compress_pass | default('') }}"
 
-    var_load__db_main__db_name: "{{ credentials.mediawiki.db.name }}"
-    var_load__db_main__db_user: "{{ credentials.mediawiki.db.user }}"
-    var_load__db_main__db_pass: "{{ credentials.mediawiki.db.password }}"
+    var_load__db_main__db_name: "{{ credentials.mediawiki.db.name | default('') }}"
+    var_load__db_main__db_user: "{{ credentials.mediawiki.db.user | default('') }}"
+    var_load__db_main__db_pass: "{{ credentials.mediawiki.db.password | default('') }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('300') }}"
 
     var_load__db_setup__db_compressed_file_name: "{{ params.db_setup.db_compressed_file_name | default('') }}"
