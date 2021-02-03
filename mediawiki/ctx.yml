@@ -523,7 +523,10 @@ templates:
     var_load__db_setup__restore_bucket_path_dir: "{{ params.db_setup.restore_bucket_path_dir | default('') }}"
     var_load__db_setup__restore_bucket_path_file: "{{ params.db_setup.restore_bucket_path_file | default('') }}"
 		var_load__db_setup__compress_pass: >-
-      {{ credentials.mediawiki_db.restore_compress_pass | default(credentials.mediawiki_db.compress_pass | default('')) }}
+      {{
+        credentials.mediawiki_db.restore_compress_pass
+        | default(credentials.mediawiki_db.compress_pass | default(''))
+      }}
 
     var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
     var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"
@@ -563,150 +566,40 @@ templates:
     var_load__sync_setup__recursive_mode_dir: "{{ params.sync_setup.recursive_mode_dir | default('') }}"
     var_load__sync_setup__recursive_mode_file: "{{ params.sync_setup.recursive_mode_file | default('') }}"
 
+		var_load__uploads_backup__compress_type: "{{ params.uploads_backup.compress_type | default('') }}"
+		var_load__uploads_backup__compressed_file_name: "{{ params.uploads_backup.compressed_file_name | default('') }}"
+		var_load__uploads_backup__backup_bucket_sync_dir: "{{ params.uploads_backup.backup_bucket_sync_dir | default('') }}"
+    var_load__uploads_backup__is_compressed_file: "{{ params.uploads_backup.is_compressed_file | default('') | lower }}"
+    var_load__uploads_backup__recursive_mode: "{{ params.uploads_backup.recursive_mode | default('') }}"
+    var_load__uploads_backup__recursive_mode_dir: "{{ params.uploads_backup.recursive_mode_dir | default('') }}"
+    var_load__uploads_backup__recursive_mode_file: "{{ params.uploads_backup.recursive_mode_file | default('') }}"
+    var_load__uploads_backup__file_to_clear: "{{ params.uploads_backup.file_to_clear | default('') }}"
+    var_load__uploads_backup__dir_to_clear: "{{ params.uploads_backup.dir_to_clear | default('') }}"
+    var_load__uploads_backup__backup_date_format: "{{ params.uploads_backup.backup_date_format | default('') }}"
+    var_load__uploads_backup__backup_time_format: "{{ params.uploads_backup.backup_time_format | default('') }}"
+    var_load__uploads_backup__backup_datetime_format: "{{ params.uploads_backup.backup_datetime_format | default('') }}"
+    var_load__uploads_backup__compress_pass: "{{ credentials.mediawiki_uploads.compress_pass | default('') }}"
 
-
-
-    {% if (var_pod_type in ['app', 'web']) and (not (params.use_s3_storage | bool)) %}
-
-    {% if params.enable_uploads_backup | bool %}
-
-    {% set var_uploads_src_dir = '/var/main/data/mediawiki/uploads' %}
-    {% set var_uploads_tmp_dir = '/tmp/main/tmp/backup/uploads' %}
-    {% set var_uploads_compress_type = params.uploads_backup.compress_type | default('zip') %}
-    {% set var_uploads_compressed_file_name = params.uploads_backup.compressed_file_name
-      | default('uploads.[[ datetime ]].[[ random ]].zip')
-    %}
-    {% set var_uploads_compress_dest_file = var_uploads_tmp_dir + '/' + var_uploads_compressed_file_name %}
-    {% set var_uploads_subtask_cmd_remote = 'backup:remote:default' %}
-    {% set var_uploads_subtask_cmd_s3 = 's3:subtask:s3_uploads' %}
-
-    var_task__uploads_backup__task__type: "backup"
-    var_task__uploads_backup__backup_task__backup_src: "{{ var_uploads_src_dir }}"
-    var_task__uploads_backup__backup_task__subtask_cmd_remote: "{{ var_uploads_subtask_cmd_remote }}"
-    var_task__uploads_backup__backup_task__is_compressed_file: >-
-      {{ params.uploads_backup.is_compressed_file | default('') | lower }}
-
-    {% if params.uploads_backup.is_compressed_file | default(false) | bool %}
-
-    var_task__uploads_backup__backup_task__compress_type: "{{ var_uploads_compress_type }}"
-    var_task__uploads_backup__backup_task__compress_dest_file: "{{ var_uploads_compress_dest_file }}"
-    var_task__uploads_backup__backup_task__compress_pass: >-
-      {{ credentials.mediawiki_uploads.compress_pass | default('') }}
-
-    {% endif %}
-
-    var_task__uploads_backup__backup_task__backup_date_format: "{{ params.uploads_backup.backup_date_format | default('') }}"
-    var_task__uploads_backup__backup_task__backup_time_format: "{{ params.uploads_backup.backup_time_format | default('') }}"
-    var_task__uploads_backup__backup_task__backup_datetime_format: >-
-      {{ params.uploads_backup.backup_datetime_format | default('') }}
-    var_task__uploads_backup__backup_task__recursive_dir: "{{ var_uploads_tmp_dir }}"
-    var_task__uploads_backup__backup_task__recursive_mode: "{{ params.uploads_backup.recursive_mode | default('') }}"
-    var_task__uploads_backup__backup_task__recursive_mode_dir: "{{ params.uploads_backup.recursive_mode_dir | default('') }}"
-    var_task__uploads_backup__backup_task__recursive_mode_file: "{{ params.uploads_backup.recursive_mode_file | default('') }}"
-    var_task__uploads_backup__backup_task__file_to_clear: "{{ params.uploads_backup.file_to_clear | default('') }}"
-    var_task__uploads_backup__backup_task__dir_to_clear: "{{ params.uploads_backup.dir_to_clear | default('') }}"
-    var_task__uploads_backup__backup_remote__backup_bucket_sync_dir:  >-
-      {{ params.uploads_backup.backup_bucket_sync_dir | default('[[ date ]]') }}
-    var_task__uploads_backup__backup_remote__subtask_cmd_s3: "{{ var_uploads_subtask_cmd_s3 }}"
-    var_task__uploads_backup__backup_remote__backup_date_format: "{{ params.uploads_backup.backup_date_format | default('') }}"
-    var_task__uploads_backup__backup_remote__backup_time_format: "{{ params.uploads_backup.backup_time_format | default('') }}"
-    var_task__uploads_backup__backup_remote__backup_datetime_format: >-
-      {{ params.uploads_backup.backup_datetime_format | default('') }}
-
-    {% endif %}
-
-    {% if (params.restore_db | bool) and (params.enable_uploads_setup | bool) %}
-
-    {% set var_uploads_s3_sync = (params.uploads_setup.restore_use_s3 | bool)
-      and (params.uploads_setup.restore_s3_sync | bool)
-    %}
-    {% set var_uploads_dest_dir = '/var/main/data/mediawiki/uploads' %}
-    {% set var_verify_file_to_skip = params.db_setup.verify_file_to_skip | default('/tmp/main/setup/uploads.skip') %}
-    {% set var_uploads_tmp_base_dir = '/tmp/main/tmp/mediawiki' %}
-    {% set var_uploads_compress_type = params.uploads_setup.compress_type | default('zip') %}
-    {% set var_uploads_compressed_file_name = params.uploads_setup.compressed_file_name | default('uploads.zip') %}
-    {% set var_uploads_compress_file = '/tmp/main/tmp/restore/uploads/' + var_uploads_compressed_file_name %}
-
-    var_task__uploads_setup__task__type: "setup"
-    var_task__uploads_setup__setup_task__verify_file_to_skip: "{{ var_verify_file_to_skip }}"
-    var_task__uploads_setup__setup_task__subtask_cmd_remote: "setup:remote:default"
-    var_task__uploads_setup__setup_task__is_compressed_file: >-
-      {{ params.uploads_setup.is_compressed_file | default('') | lower }}
-
-    {% if params.uploads_setup.is_compressed_file | default(false) | bool %}
-
-    var_task__uploads_setup__setup_task__compress_type: "{{ var_uploads_compress_type }}"
-    var_task__uploads_setup__setup_task__compress_src_file: "{{ var_uploads_compress_file }}"
-    var_task__uploads_setup__setup_task__compress_dest_dir: "{{ var_uploads_tmp_base_dir }}"
-    var_task__uploads_setup__setup_task__compress_pass: >-
-      {{ credentials.mediawiki_uploads.compress_pass | default('') }}
-
-    {% endif %}
-
-    var_task__uploads_setup__setup_task__recursive_mode: "{{ params.uploads_setup.recursive_mode | default('') }}"
-    var_task__uploads_setup__setup_task__recursive_mode_dir: "{{ params.uploads_setup.recursive_mode_dir | default('777') }}"
-    var_task__uploads_setup__setup_task__recursive_mode_file: "{{ params.uploads_setup.recursive_mode_file | default('666') }}"
-
-    {% if (not (var_uploads_s3_sync | bool))
-      or (params.uploads_setup.is_compressed_file | default(false) | bool)
-    %}
-
-    {% set var_uploads_tmp_dir = var_uploads_tmp_base_dir + '/'
-      + params.uploads_setup.restore_compressed_inner_dir
-    %}
-
-    var_task__uploads_setup__setup_task__recursive_dir: "{{ var_uploads_tmp_dir }}"
-    var_task__uploads_setup__setup_task__move_src: "{{ var_uploads_tmp_dir }}"
-    var_task__uploads_setup__setup_task__move_dest: "{{ var_uploads_dest_dir }}"
-    var_task__uploads_setup__setup_task__file_to_clear: ""
-    var_task__uploads_setup__setup_task__dir_to_clear: "{{ var_uploads_tmp_dir }}"
-
-    {% else %}
-
-    var_task__uploads_setup__setup_task__recursive_dir: "{{ var_uploads_dest_dir }}"
-
-    {% endif %}
-
-    var_task__uploads_setup__setup_verify__setup_dest_dir_to_verify: "{{ var_uploads_dest_dir }}"
-    var_task__uploads_setup__setup_remote__restore_use_s3: >-
-      {{ params.uploads_setup.restore_use_s3 | default('') | lower }}
-
-    {% if not (params.uploads_setup.restore_use_s3 | bool) %}
-
-    var_task__uploads_setup__setup_remote__restore_dest_file: >-
-      {{ params.uploads_setup.restore_dest_file | default(var_uploads_compress_file) }}
-    var_task__uploads_setup__setup_remote__restore_remote_file: >-
-      {{ params.uploads_setup.restore_remote_file }}
-
-    {% else %}
-
-    var_task__uploads_setup__setup_remote__subtask_cmd_s3: "s3:subtask:s3_uploads"
-    var_task__uploads_setup__setup_remote__restore_s3_sync: >-
-      {{ params.uploads_setup.restore_s3_sync | default('') | lower }}
-
-    {% if params.uploads_setup.is_compressed_file | default(false) | bool %}
-
-    var_task__uploads_setup__setup_remote__restore_dest_dir: >-
-      {{ params.uploads_setup.restore_dest_dir | default() }}
-    var_task__uploads_setup__setup_remote__restore_dest_file: >-
-      {{ params.uploads_setup.restore_dest_file | default(var_uploads_compress_file) }}
-
-    {% else %}
-
-    var_task__uploads_setup__setup_remote__restore_dest_dir: >-
-      {{ params.uploads_setup.restore_dest_dir | default(var_uploads_dest_dir) }}
-    var_task__uploads_setup__setup_remote__restore_dest_file: >-
-      {{ params.uploads_setup.restore_dest_file | default() }}
-
-    {% endif %}
-
-    var_task__uploads_setup__setup_remote__restore_bucket_path_dir: >-
-      {{ params.uploads_setup.restore_bucket_path_dir | default('') }}
-    var_task__uploads_setup__setup_remote__restore_bucket_path_file: >-
-      {{ params.uploads_setup.restore_bucket_path_file | default('') }}
-
-    {% endif %}
-
-    {% endif %}
-
-    {% endif %}
+		var_load__uploads_setup__restore_use_s3: "{{ params.uploads_setup.restore_use_s3 | default('') | lower }}"
+		var_load__uploads_setup__restore_s3_sync: "{{ params.uploads_setup.restore_s3_sync | default('') | lower }}"
+		var_load__uploads_setup__is_compressed_file: "{{ params.uploads_setup.is_compressed_file | default('') | lower }}"
+		var_load__uploads_setup__verify_file_to_skip: "{{ params.uploads_setup.verify_file_to_skip | default('') }}"
+		var_load__uploads_setup__compress_type: "{{ params.uploads_setup.compress_type | default('') }}"
+    var_load__uploads_setup__compressed_file_name: "{{ params.uploads_setup.compressed_file_name | default('') }}"
+    var_load__uploads_setup__recursive_mode: "{{ params.uploads_setup.recursive_mode | default('') }}"
+    var_load__uploads_setup__recursive_mode_dir: "{{ params.uploads_setup.recursive_mode_dir | default('') }}"
+    var_load__uploads_setup__recursive_mode_file: "{{ params.uploads_setup.recursive_mode_file | default('') }}"
+    var_load__uploads_setup__restore_compressed_inner_dir: "{{ params.uploads_setup.restore_compressed_inner_dir | default('') }}"
+    var_load__uploads_setup__recursive_dir: "{{ params.uploads_setup.recursive_dir | default('') }}"
+    var_load__uploads_setup__move_src: "{{ params.uploads_setup.move_src | default('') }}"
+    var_load__uploads_setup__move_dest: "{{ params.uploads_setup.move_dest | default('') }}"
+    var_load__uploads_setup__file_to_clear: "{{ params.uploads_setup.file_to_clear | default('') }}"
+    var_load__uploads_setup__dir_to_clear: "{{ params.uploads_setup.dir_to_clear | default('') }}"
+    var_load__uploads_setup__restore_remote_file: "{{ params.uploads_setup.restore_remote_file | default('') }}"
+    var_load__uploads_setup__restore_bucket_path_dir: "{{ params.uploads_setup.restore_bucket_path_dir | default('') }}"
+    var_load__uploads_setup__restore_bucket_path_file: "{{ params.uploads_setup.restore_bucket_path_file | default('') }}"
+    var_load__uploads_setup__compress_pass: >-
+      {{
+        credentials.mediawiki_uploads.restore_compress_pass
+        | default(credentials.mediawiki_uploads.compress_pass | default(''))
+      }}
