@@ -12,13 +12,22 @@ pod_script_env_file="$POD_SCRIPT_ENV_FILE"
 # shellcheck disable=SC1090
 . "${pod_vars_dir}/vars.sh"
 
+pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
+
 function info {
-	"$pod_script_env_file" "util:info" --info="${*}"
+	"$pod_env_shared_file" "util:info" --info="${*}"
 }
 
 function error {
-	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
+	"$pod_env_shared_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
+
+if [ -z "${var_loaded:-}" ]; then
+	export var_loaded=true
+	# shellcheck disable=SC1090
+	. "$pod_env_shared_file" "load:vars" >&2 || error "[error] load:vars"
+fi
+
 command="${1:-}"
 
 if [ -z "$command" ]; then
@@ -26,8 +35,6 @@ if [ -z "$command" ]; then
 fi
 
 shift;
-
-pod_env_shared_file="$pod_layer_dir/$var_run__general__script_dir/shared.sh"
 
 case "$command" in
 	"clear")
