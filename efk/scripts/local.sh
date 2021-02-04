@@ -37,7 +37,7 @@ case "$command" in
 		;;
 	"clear")
 		"$pod_script_env_file" "local:clear"
-		sudo docker volume rm -f "${var_ctx_full_name}_elasticsearch"
+		sudo docker volume rm -f "${var_run__general__ctx_full_name}_elasticsearch"
 		;;
 	"clear-all")
 		"$pod_script_env_file" "local:clear-all"

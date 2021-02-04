@@ -46,8 +46,8 @@ while getopts ':-:' OPT; do
 done
 shift $((OPTIND-1))
 
-pod_vars_file="$pod_layer_dir/$var_shared__script_dir/vars/mediawiki.sh"
-pod_shared_run_file="$pod_layer_dir/$var_shared__script_dir/main.sh"
+pod_vars_file="$pod_layer_dir/shared/scripts/vars/mediawiki.sh"
+pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"load:vars")

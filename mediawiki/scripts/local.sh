@@ -22,12 +22,6 @@ function error {
 	"$pod_env_shared_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
 }
 
-if [ -z "${var_loaded:-}" ]; then
-	export var_loaded=true
-	# shellcheck disable=SC1090
-	. "$pod_env_shared_file" "load:vars" >&2 || error "[error] load:vars"
-fi
-
 command="${1:-}"
 
 if [ -z "$command" ]; then
@@ -39,8 +33,8 @@ shift;
 case "$command" in
 	"clear")
 		"$pod_script_env_file" "local:clear"
-		sudo docker volume rm -f "${var_ctx_full_name}_mysql"
-		sudo docker volume rm -f "${var_ctx_full_name}_uploads"
+		sudo docker volume rm -f "${var_run__general__ctx_full_name}_mysql"
+		sudo docker volume rm -f "${var_run__general__ctx_full_name}_uploads"
 		;;
 	"clear-all")
 		"$pod_script_env_file" "local:clear-all"

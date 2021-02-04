@@ -297,7 +297,6 @@ templates:
 
     {% endif %}
 
-    var_shared__script_dir: "{{ var_shared_dir }}/scripts"
     var_shared__delete_old__days: "3"
     var_custom__pod_type: "{{ var_pod_type }}"
     var_custom__local: "{{ var_local | bool | ternary('true', 'false') }}"
