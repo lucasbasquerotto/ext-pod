@@ -442,11 +442,6 @@ templates:
     var_load_main__pod_type: "{{ var_pod_type }}"
     var_load_main__local: "{{ var_local | default('') | lower }}"
 
-    var_load_migrate__db_name: "{{ credentials.mediawiki.db.name | default('') }}"
-    var_load_migrate__db_user: "{{ credentials.mediawiki.db.user | default('') }}"
-    var_load_migrate__db_pass: "{{ credentials.mediawiki.db.password | default('') }}"
-    var_load_migrate__db_connect_wait_secs: "{{ params.migrate.db_connect_wait_secs | default('') | default('') }}"
-
     var_load_use__main_network: "true"
     var_load_use__logrotator: "true"
     var_load_use__nginx: "true"
@@ -454,8 +449,9 @@ templates:
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
     var_load_use__varnish: "{{ params.use_varnish | default('') | lower }}"
-    var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
+    var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
+    var_load_use__s3_storage: "{{ params.use_s3_storage | default('') | lower }}"
 
     # Enable Tasks
 
