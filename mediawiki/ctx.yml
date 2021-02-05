@@ -423,9 +423,8 @@ templates:
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
-  mode: '{{ var_local | ternary(0666, 0640) }}'
   params:
-    var_load_script_path: "{{ var_shared_dir }}/scripts/vars/mediawiki.sh"
+    var_load_script_path: "{{ var_shared_dir }}/scripts/vars/mediawiki.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__backup_is_delete_old: "true"
@@ -450,6 +449,7 @@ templates:
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
     var_load_use__varnish: "{{ params.use_varnish | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
+    var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
     var_load_use__s3_storage: "{{ params.use_s3_storage | default('') | lower }}"
 

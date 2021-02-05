@@ -454,9 +454,8 @@ templates:
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
-  mode: '{{ var_local | ternary(0666, 0640) }}'
   params:
-    var_load_script_path: "{{ var_shared_dir }}/scripts/vars/wordpress.sh"
+    var_load_script_path: "{{ var_shared_dir }}/scripts/vars/wordpress.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__backup_is_delete_old: "true"
@@ -486,6 +485,8 @@ templates:
     var_load_use__redis: "{{ params.use_redis | default('') | lower }}"
     var_load_use__memcached: "{{ params.use_memcached | default('') | lower }}"
     var_load_use__w3tc: "{{ params.use_w3tc | default(true) | default('') | lower }}"
+    var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
+    var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
     var_load_use__s3_storage: "{{ params.use_s3_storage | default('') | lower }}"
 

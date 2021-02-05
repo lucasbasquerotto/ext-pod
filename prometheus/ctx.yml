@@ -283,7 +283,6 @@ templates:
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
-  mode: '{{ var_local | ternary(0666, 0640) }}'
   params:
     var_ctx_full_name: "{{ var_ctx_full_name }}"
 
