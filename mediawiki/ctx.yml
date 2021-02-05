@@ -497,6 +497,7 @@ templates:
     var_load__db_backup__file_to_clear: "{{ params.db_backup.file_to_clear | default('') }}"
     var_load__db_backup__dir_to_clear: "{{ params.db_backup.dir_to_clear | default('') }}"
     var_load__db_backup__backup_bucket_sync_dir: "{{ params.db_backup.backup_bucket_sync_dir | default('') }}"
+    var_load__db_backup__is_compressed_file: "{{ params.db_backup.is_compressed_file | default('') | lower }}"
     var_load__db_backup__db_compressed_file_name: "{{ params.db_backup.db_compressed_file_name | default('') }}"
     var_load__db_backup__db_compress_type: "{{ params.db_backup.db_compress_type | default('') }}"
     var_load__db_backup__compress_pass: "{{ credentials.mediawiki_db.compress_pass | default('') }}"
