@@ -404,4 +404,3 @@ templates:
     var_load__sync_setup__recursive_mode: "{{ params.sync_setup.recursive_mode | default('') }}"
     var_load__sync_setup__recursive_mode_dir: "{{ params.sync_setup.recursive_mode_dir | default('') }}"
     var_load__sync_setup__recursive_mode_file: "{{ params.sync_setup.recursive_mode_file | default('') }}"
-

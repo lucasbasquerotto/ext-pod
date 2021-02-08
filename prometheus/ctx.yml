@@ -312,24 +312,13 @@ templates:
 
     # Enable Tasks
 
-    var_load_enable__db_backup: "{{ params.enable_db_backup | default('') | lower }}"
     var_load_enable__logs_backup: "{{ params.enable_logs_backup | default('') | lower }}"
     var_load_enable__sync_backup: "{{ params.enable_sync_backup | default('') | lower }}"
-    var_load_enable__backup_replica: "{{ params.enable_backup_replica | default('') | lower }}"
 
-    var_load_enable__db_setup: "{{ params.enable_db_setup | default('') | lower }}"
     var_load_enable__logs_setup: "{{ params.enable_logs_setup | default('') | lower }}"
     var_load_enable__sync_setup: "{{ params.enable_sync_setup | default('') | lower }}"
 
     # Tasks
-
-    var_load__backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
-    var_load__backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
-
-    var_load__block_ips: "{{ params.block_ips | default('') | lower }}"
-    var_load__block_ips__max_amount: "{{ params.block_ips.max_amount | default('') }}"
-    var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
-    var_load__block_ips__amount_hour: "{{ params.block_ips.amount_hour | default('') }}"
 
     var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
     var_load__certbot__domains: "{{ params.certbot.domains | default('') }}"
@@ -338,51 +327,6 @@ templates:
     var_load__certbot__main_domain: "{{ params.certbot.main_domain | default('') }}"
     var_load__certbot__rsa_key_size: "{{ params.certbot.rsa_key_size | default('') }}"
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
-
-    var_load__db_backup__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
-    var_load__db_backup__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"
-    var_load__db_backup__backup_datetime_format: "{{ params.db_backup.backup_datetime_format | default('') }}"
-    var_load__db_backup__recursive_mode: "{{ params.db_backup.recursive_mode | default('') }}"
-    var_load__db_backup__recursive_mode_dir: "{{ params.db_backup.recursive_mode_dir | default('') }}"
-    var_load__db_backup__recursive_mode_file: "{{ params.db_backup.recursive_mode_file | default('') }}"
-    var_load__db_backup__file_to_clear: "{{ params.db_backup.file_to_clear | default('') }}"
-    var_load__db_backup__dir_to_clear: "{{ params.db_backup.dir_to_clear | default('') }}"
-    var_load__db_backup__backup_bucket_sync_dir: "{{ params.db_backup.backup_bucket_sync_dir | default('') }}"
-    var_load__db_backup__is_compressed_file: "{{ params.db_backup.is_compressed_file | default('') | lower }}"
-    var_load__db_backup__db_compressed_file_name: "{{ params.db_backup.db_compressed_file_name | default('') }}"
-    var_load__db_backup__db_compress_type: "{{ params.db_backup.db_compress_type | default('') }}"
-    var_load__db_backup__compress_pass: "{{ credentials.prometheus_db.compress_pass | default('') }}"
-
-    var_load__db_main__db_host: "{{ params.db_main.host | default('') }}"
-    var_load__db_main__db_port: "{{ params.db_main.port | default('') }}"
-    var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
-
-    var_load__db_setup__db_compressed_file_name: "{{ params.db_setup.db_compressed_file_name | default('') }}"
-    var_load__db_setup__db_file_name: "{{ params.db_setup.db_file_name | default('') }}"
-    var_load__db_setup__verify_file_to_skip: "{{ params.db_setup.verify_file_to_skip | default('') }}"
-    var_load__db_setup__is_compressed_file: "{{ params.db_setup.is_compressed_file | default('') | lower }}"
-    var_load__db_setup__db_compress_type: "{{ params.db_setup.db_compress_type | default('') }}"
-    var_load__db_setup__recursive_mode: "{{ params.db_setup.recursive_mode | default('') }}"
-    var_load__db_setup__recursive_mode_dir: "{{ params.db_setup.recursive_mode_dir | default('') }}"
-    var_load__db_setup__recursive_mode_file: "{{ params.db_setup.recursive_mode_file | default('') }}"
-    var_load__db_setup__file_to_clear: "{{ params.db_setup.file_to_clear | default('') }}"
-    var_load__db_setup__dir_to_clear: "{{ params.db_setup.dir_to_clear | default('') }}"
-    var_load__db_setup__restore_use_s3: "{{ params.db_setup.restore_use_s3 | default('') | lower }}"
-    var_load__db_setup__restore_remote_file: "{{ params.db_setup.restore_remote_file | default('') }}"
-    var_load__db_setup__restore_s3_sync: "{{ params.db_setup.restore_s3_sync | default('') | lower }}"
-    var_load__db_setup__restore_bucket_path_dir: "{{ params.db_setup.restore_bucket_path_dir | default('') }}"
-    var_load__db_setup__restore_bucket_path_file: "{{ params.db_setup.restore_bucket_path_file | default('') }}"
-    var_load__db_setup__compress_pass: >-
-      {{
-        credentials.prometheus_db.restore_compress_pass
-        | default(credentials.prometheus_db.compress_pass | default(''))
-      }}
-
-    var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
-    var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"
-    var_load__log_summary__max_amount: "{{ params.log_summary.max_amount | default('') }}"
-    var_load__log_summary__verify_size_docker_dir: "{{ params.log_summary.verify_size_docker_dir | default('') | lower }}"
-    var_load__log_summary__verify_size_containers: "{{ params.log_summary.verify_size_containers | default('') | lower }}"
 
     var_load__logs_setup__restore_bucket_path_dir: "{{ params.logs_setup.restore_bucket_path_dir | default('') }}"
     var_load__logs_setup__verify_file_to_skip: "{{ params.logs_setup.verify_file_to_skip | default('') }}"
@@ -394,11 +338,6 @@ templates:
     var_load__s3_backup__bucket_path: "{{ params.backup_bucket_path | default('') }}"
     var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
     var_load__s3_backup__endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
-
-    var_load__s3_backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
-    var_load__s3_backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
-    var_load__s3_backup_replica__cli: "{{ params.s3_cli | default('') }}"
-    var_load__s3_backup_replica__endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
 
     var_load__sync_setup__restore_bucket_path_dir: "{{ params.sync_setup.restore_bucket_path_dir | default('') }}"
     var_load__sync_setup__verify_file_to_skip: "{{ params.sync_setup.verify_file_to_skip | default('') }}"

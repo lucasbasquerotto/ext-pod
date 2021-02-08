@@ -237,6 +237,7 @@ services:
       args:
         IMAGE: "{{ params.images.grafana_image }}"
         VERSION: "{{ params.images.grafana_version }}"
+        MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
 
     {% if params.use_fluentd | bool %}
