@@ -365,12 +365,6 @@ templates:
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
   params:
-    var_load__db_main__db_root_user: "{{ credentials.rocketchat.db.root_user }}"
-    var_load__db_main__db_root_pass: "{{ credentials.rocketchat.db.root_password }}"
-    var_load__db_backup__compressed_inner_dir: >-
-      {{ params.db_backup.compressed_inner_dir | default(credentials.rocketchat.db.name, true) }}
-
-
     var_load_script_path: "{{ var_shared_dir }}/scripts/vars/rocketchat.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
@@ -391,7 +385,7 @@ templates:
     var_load_use__main_network: "true"
     var_load_use__logrotator: "true"
     var_load_use__nginx: "true"
-    var_custom__use_mongo: "true"
+    var_load_use__mongo: "true"
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
@@ -447,7 +441,11 @@ templates:
     var_load__db_backup__db_compressed_file_name: "{{ params.db_backup.db_compressed_file_name | default('') }}"
     var_load__db_backup__db_compress_type: "{{ params.db_backup.db_compress_type | default('') }}"
     var_load__db_backup__compress_pass: "{{ credentials.rocketchat_db.compress_pass | default('') }}"
+    var_load__db_backup__compressed_inner_dir: >-
+      {{ params.db_backup.compressed_inner_dir | default(credentials.rocketchat.db.name) }}
 
+    var_load__db_main__db_root_user: "{{ credentials.rocketchat.db.root_user }}"
+    var_load__db_main__db_root_pass: "{{ credentials.rocketchat.db.root_password }}"
     var_load__db_main__db_name: "{{ credentials.rocketchat.db.name | default('') }}"
     var_load__db_main__db_user: "{{ credentials.rocketchat.db.user | default('') }}"
     var_load__db_main__db_pass: "{{ credentials.rocketchat.db.password | default('') }}"
