@@ -1,0 +1,19 @@
+### Transfer (Pod) ###
+
+### Params ###
+
+{{ params | default({}) | to_nice_yaml }}
+
+### Credentials ###
+
+{{ credentials | default({}) | to_nice_yaml }}
+
+### Contents ###
+
+{{ contents | default({}) | to_nice_yaml }}
+
+### Input ###
+
+{{ input | default({}) | to_nice_yaml }}
+
+### End ###

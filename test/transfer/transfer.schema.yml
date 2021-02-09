@@ -1,0 +1,13 @@
+root: "transfer"
+schemas:
+  transfer:
+    type: "dict"
+    props:
+      params:
+        type: "dict"
+      credentials:
+        type: "dict"
+      contents:
+        type: "dict"
+      input:
+        type: "dict"
