@@ -3,3 +3,4 @@
   command: "./run __skip__"
   args:
     chdir: "{{ validator_item.data.input.local_dir }}"
+  changed_when: false

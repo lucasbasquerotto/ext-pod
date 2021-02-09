@@ -3,14 +3,7 @@
 set -eou pipefail
 
 # shellcheck disable=SC2153
-pod_vars_dir="$POD_VARS_DIR"
-# shellcheck disable=SC2153
-pod_layer_dir="$POD_LAYER_DIR"
-# shellcheck disable=SC2153
 pod_script_env_file="$POD_SCRIPT_ENV_FILE"
-
-# shellcheck disable=SC1090
-. "${pod_vars_dir}/vars.sh"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -47,7 +40,7 @@ while getopts ':-:' OPT; do
 done
 shift $((OPTIND-1))
 
-pod_env_shared_exec_file="$pod_layer_dir/$var_run__general__script_dir/shared.exec.sh"
+pod_env_shared_exec_file="$var_run__general__script_dir/shared.exec.sh"
 pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
