@@ -1,0 +1,3 @@
+- name: "{{ validator_title }} - pod task validator (test)"
+  debug:
+    var: validator_item
