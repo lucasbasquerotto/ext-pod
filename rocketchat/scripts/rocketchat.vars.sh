@@ -3,8 +3,8 @@ set -eou pipefail
 
 tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck disable=SC2153
-tmp_pod_layer_dir="$POD_LAYER_DIR"
+# shellcheck disable=SC2154
+tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='rocketchat'
 export var_load_db_service='mongo'

@@ -2,8 +2,7 @@
 # shellcheck disable=SC2154
 set -eou pipefail
 
-# shellcheck disable=SC2153
-pod_script_env_file="$POD_SCRIPT_ENV_FILE"
+pod_script_env_file="$var_pod_script"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"

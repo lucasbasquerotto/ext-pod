@@ -2,11 +2,10 @@
 # shellcheck disable=SC1090,SC2154,SC2153
 set -eou pipefail
 
-pod_vars_dir="$POD_VARS_DIR"
-pod_layer_dir="$POD_LAYER_DIR"
-pod_script_env_file="$POD_SCRIPT_ENV_FILE"
-
-. "${pod_vars_dir}/vars.sh"
+# shellcheck disable=SC2154
+pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
+pod_script_env_file="$var_pod_script"
 
 function error {
 	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
