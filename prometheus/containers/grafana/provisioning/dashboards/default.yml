@@ -1,9 +1,15 @@
 apiVersion: 1
 
 providers:
-  - name: "Prometheus"
+  - name: "default"
     orgId: 1
-    folder: ""
+    folder: "main"
     type: file
     options:
-      path: /etc/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards/main
+  - name: "dynamic"
+    orgId: 1
+    folder: "dynamic"
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards/dynamic
