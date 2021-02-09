@@ -36,7 +36,6 @@ if [ "${var_load_main__pod_type:-}" = 'app' ] || [ "${var_load_main__pod_type:-}
 	tmp_is_web='true'
 fi
 
-export var_custom__use_custom_ssl="${var_load_use__custom_ssl:-}"
 export var_custom__use_s3_storage="${var_load_use__s3_storage:-}"
 export var_custom__use_composer="${var_load_use__composer:-}"
 

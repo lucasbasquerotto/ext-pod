@@ -30,7 +30,6 @@ function tmp_error {
 tmp_errors=()
 
 # specific vars...
-export var_custom__use_custom_ssl="${var_load_use__custom_ssl:-}"
 
 tmp_error_count=${#tmp_errors[@]}
 
