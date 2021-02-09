@@ -7,10 +7,10 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='mediawiki'
-export var_load_db_service='mysql'
-export var_db_backup_type="file:${var_load_db_service:-}"
-export var_db_restore_type="file:${var_load_db_service:-}"
-export var_load_db_backup_is_file='true'
+export var_load_main__db_service='mysql'
+export var_load_main__db_backup_type="file:${var_load_main__db_service:-}"
+export var_load_main__db_restore_type="file:${var_load_main__db_service:-}"
+export var_load_main__db_backup_is_file='true'
 
 export var_load_general__orchestration='compose'
 export var_load_general__toolbox_service='toolbox'

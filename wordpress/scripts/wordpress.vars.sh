@@ -7,10 +7,10 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='wordpress'
-export var_load_db_service='mysql'
-export var_db_backup_type="file:${var_load_db_service:-}"
-export var_db_restore_type="file:${var_load_db_service:-}"
-export var_load_db_backup_is_file='true'
+export var_load_main__db_service='mysql'
+export var_load_main__db_backup_type="file:${var_load_main__db_service:-}"
+export var_load_main__db_restore_type="file:${var_load_main__db_service:-}"
+export var_load_main__db_backup_is_file='true'
 
 export var_load_general__orchestration='compose'
 export var_load_general__toolbox_service='toolbox'
@@ -66,8 +66,8 @@ if [ "$tmp_is_web" = 'true' ]; then
 			tmp_errors+=("var_load_enable__db_setup and var_load_enable__db_setup_new are both true (choose only one)")
 		fi
 
-		if [ -z "${var_load_db_service:-}" ]; then
-			tmp_errors+=("var_load_db_service is not defined (db_setup_new)")
+		if [ -z "${var_load_main__db_service:-}" ]; then
+			tmp_errors+=("var_load_main__db_service is not defined (db_setup_new)")
 		fi
 
 		tmp_default_file_to_skip='/tmp/main/setup/db.skip'
@@ -79,7 +79,7 @@ if [ "$tmp_is_web" = 'true' ]; then
 		export var_task__db_setup_new__setup_task__verify_file_to_skip="$tmp_file_to_skip"
 		export var_task__db_setup_new__setup_task__subtask_cmd_verify='setup:verify:db'
 		export var_task__db_setup_new__setup_verify__task_name='db_main'
-		export var_task__db_setup_new__setup_verify__db_subtask_cmd="db:restore:verify:${var_load_db_service:-}"
+		export var_task__db_setup_new__setup_verify__db_subtask_cmd="db:restore:verify:${var_load_main__db_service:-}"
 		export var_task__db_setup_new__setup_new__admin_email="${var_load__db_setup_new__admin_email:-}"
 		export var_task__db_setup_new__setup_new__admin_password="${var_load__db_setup_new__admin_password:-}"
 		export var_task__db_setup_new__setup_new__admin_user="${var_load__db_setup_new__admin_user:-}"

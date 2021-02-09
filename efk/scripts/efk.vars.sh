@@ -7,8 +7,8 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='efk'
-export var_load_db_service='elasticsearch'
-export var_load_allow_custom_db_service='false'
+export var_load_main__db_service='elasticsearch'
+export var_load_main__allow_custom_db_service='false'
 
 export var_load_general__orchestration='compose'
 export var_load_general__toolbox_service='toolbox'

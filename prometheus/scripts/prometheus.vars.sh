@@ -7,7 +7,7 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='prometheus'
-export var_load_db_service='prometheus'
+export var_load_main__db_service='prometheus'
 
 export var_load_general__orchestration='compose'
 export var_load_general__toolbox_service='toolbox'
