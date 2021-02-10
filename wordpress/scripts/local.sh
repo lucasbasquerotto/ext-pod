@@ -2,6 +2,7 @@
 # shellcheck disable=SC2154
 set -eou pipefail
 
+pod_layer_dir="$var_pod_layer_dir"
 pod_script_env_file="$var_pod_script"
 
 pod_env_shared_file="$var_run__general__script_dir/shared.sh"
