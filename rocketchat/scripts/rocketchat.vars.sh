@@ -9,6 +9,7 @@ tmp_pod_layer_dir="$var_pod_layer_dir"
 export var_load_name='rocketchat'
 export var_load_main__db_service='mongo'
 export var_load_main__db_restore_type='mongo:dir'
+export var_load_main__db_backup_include_src='true'
 
 export var_load_general__orchestration='compose'
 export var_load_general__toolbox_service='toolbox'
