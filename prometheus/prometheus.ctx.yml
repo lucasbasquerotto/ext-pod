@@ -215,6 +215,7 @@ templates:
     conf: {{ params.custom_args.nginx.conf | default({}) | to_json }}
     enable_validate_origin: "{{ params.custom_args.nginx.enable_validate_origin }}"
     main_domain: "{{ params.custom_domain.main_domain }}"
+    main_ssl: "{{ params.use_ssl | default(false) }}"
     prometheus_domain: "{{ params.custom_domain.prometheus_domain }}"
     prometheus_port: "{{ var_prometheus_domain_port }}"
     prometheus_ssl: "{{ params.custom_domain.prometheus_ssl }}"
