@@ -2,7 +2,7 @@
 # shellcheck disable=SC2154
 set -eou pipefail
 
-# shellcheck disable=SC2154
+pod_layer_dir="$var_pod_layer_dir"
 pod_script_env_file="$var_pod_script"
 
 function info {
