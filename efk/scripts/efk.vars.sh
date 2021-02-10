@@ -8,7 +8,7 @@ tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='efk'
 export var_load_main__db_service='elasticsearch'
-export var_load_main__allow_custom_db_service='false'
+export var_load_main__db_backup_include_src='true'
 
 export var_load_general__orchestration='compose'
 export var_load_general__toolbox_service='toolbox'
@@ -50,18 +50,15 @@ if [ "$tmp_is_db" = 'true' ]; then
 			tmp_db_subtask_cmd_local=''
 			tmp_db_subtask_cmd_remote='backup:db'
 			tmp_db_snapshot_type="${var_load__db_backup__snapshot_type:-s3}"
-			tmp_backup_src=''
 		else
 			tmp_db_subtask_cmd_local='backup:db'
 			tmp_db_subtask_cmd_remote=''
 			tmp_db_snapshot_type="${var_load__db_backup__snapshot_type:-fs}"
-			tmp_backup_src="$tmp_db_dir"
 		fi
 
 		export var_task__db_backup__task__type='backup'
 		export var_task__db_backup__backup_task__subtask_cmd_local="$tmp_db_subtask_cmd_local"
 		export var_task__db_backup__backup_task__subtask_cmd_remote="$tmp_db_subtask_cmd_remote"
-		export var_task__db_backup__backup_task__backup_src="$tmp_backup_src"
 		export var_task__db_backup__backup_task__is_compressed_file="$tmp_is_compressed_file"
 
 		if [ "${var_load__db_backup__use_s3:-}" = 'true' ] && [ "$tmp_is_compressed_file" = 'true' ]; then
