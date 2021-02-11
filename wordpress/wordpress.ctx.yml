@@ -1,5 +1,7 @@
 ## general vars - start ###
 
+{% set var_pod_kind = 'wordpress' %}
+
 {% set var_local = params.local | default(false) | bool %}
 {% set var_pod_type = params.type | default('') %}
 
@@ -7,8 +9,6 @@
   {% set error = {} %}
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
-
-{% set var_pod_kind = 'wordpress' %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -216,8 +216,8 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.use_fluentd }}"
-    s3_cli: "{{ params.s3_cli }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
@@ -251,6 +251,7 @@ templates:
 {% endif %}
 ###############################
 
+###############################
 {% if var_pod_type in ['app', 'web'] %}
 
 - src: "{{ var_main_dir }}/templates/wordpress/wp.env"

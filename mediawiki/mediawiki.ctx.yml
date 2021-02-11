@@ -1,5 +1,7 @@
 ## general vars - start ###
 
+{% set var_pod_kind = 'mediawiki' %}
+
 {% set var_local = params.local | default(false) | bool %}
 {% set var_pod_type = params.type | default('') %}
 
@@ -7,8 +9,6 @@
   {% set error = {} %}
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
-
-{% set var_pod_kind = 'mediawiki' %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -62,6 +62,9 @@
   %}
 {% endif %}
 
+{% set var_db_gui_user = '' %}
+{% set var_db_gui_password = '' %}
+
 {% if var_pod_type in ['app', 'web'] %}
   {% set var_db_gui_user = params.db_gui_root_user | default(false) | bool |
     ternary('root', 'viewer')
@@ -72,15 +75,48 @@
   %}
 {% endif %}
 
+{% set var_mysql_host = input.dependencies.mysql.host | default('') %}
+{% set var_mysql_schema = var_mysql_host | urlsplit('scheme') %}
+{% set var_mysql_host = ((var_mysql_host != '') and (var_mysql_schema == ''))
+  | ternary('mysql://' + var_mysql_host, var_mysql_host)
+%}
+{% set var_mysql_hostname = var_mysql_host | urlsplit('hostname') | default('mysql', true) %}
+{% set var_mysql_port = var_mysql_host | urlsplit('port') | default('3306', true) %}
+
+{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+
+{% set var_ctx_full_name = input.identifier %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
+{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
+{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
+
+{% if params.s3_cli == 'awscli' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
+  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
+{% elif params.s3_cli == 'rclone' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
+  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
+{% elif params.s3_cli == 'mc' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
+  {% set var_s3_config_dest = 'env/mc/config.json' %}
+{% endif %}
+
+{% set var_server = (params.custom_domain.main_ssl | default(false) | bool) |
+  ternary('https', 'http') + '://' +
+  (params.custom_domain.main_domain | default(''))
+  + (not ((var_main_domain_port | default('')) in ['80', '443'])) |
+  ternary(':' + (var_main_domain_port | default('')), '')
+%}
+
 ### main ###
 
 env_files:
 
 - when: false
 
-{% if var_pod_type in ['app', 'web'] %}
-
-{% if var_use_custom_ssl | bool %}
+###############################
+{% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
@@ -89,19 +125,18 @@ env_files:
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
 
 {% endif %}
+###############################
+
+###############################
+{% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
 
 {% endif %}
+###############################
 
 templates:
-
-{% set var_ctx_full_name = input.identifier %}
-{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
-{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
-{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
-{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "docker-compose.yml"
@@ -111,45 +146,39 @@ templates:
     pod_type: "{{ var_pod_type }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     use_fluentd: "{{ params.use_fluentd }}"
+    use_varnish: "{{ params.use_varnish | default(false) }}"
+    use_pma: "{{ params.use_pma | default(false) }}"
+    use_adminer: "{{ params.use_adminer | default(false) }}"
+    use_theia: "{{ params.use_theia | default(false) }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    use_filestash: "{{ params.use_filestash | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_redis: "{{ params.use_redis | default(false) }}"
+    use_memcached: "{{ params.use_memcached | default(false) }}"
+    db_host: "{{ var_mysql_hostname }}"
+    db_port: "{{ var_mysql_port }}"
+    db_name: "{{ credentials.wordpress.db.name | default('') }}"
+    db_user: "{{ credentials.wordpress.db.user | default('') }}"
+    db_gui_user: "{{ var_db_gui_user }}"
+    pma_login_cookie_validity: "{{ params.custom_args.pma.login_cookie_validity | default('36000') }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_varnish: "{{ params.use_varnish }}"
-    use_pma: "{{ params.use_pma }}"
-    use_adminer: "{{ params.use_adminer }}"
-    use_theia: "{{ params.use_theia }}"
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-    use_filestash: "{{ params.use_filestash }}"
-    use_custom_ssl: "{{ var_use_custom_ssl }}"
-    use_certbot: "{{ params.use_certbot }}"
-
-    {% endif %}
-
-    {% if var_pod_type in ['app', 'cache'] %}
-
-    use_redis: "{{ params.use_redis }}"
-    use_memcached: "{{ params.use_memcached }}"
-
-    {% endif %}
-
-- src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
+- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
   params:
-    local: "{{ var_local | default(false) }}"
+    local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-    s3_cli: "{{ params.s3_cli }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_certbot: "{{ params.use_certbot }}"
-
-    {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -157,103 +186,109 @@ templates:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
-    data_dir: "{{ var_data_dir }}"
-    local: "{{ var_local | default(false) }}"
     type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd }}"
+    local: "{{ var_local }}"
+    data_dir: "{{ var_data_dir }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
+    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
+    db_root_password: "{{ credentials.mysql.root_password | default('') }}"
+    db_gui_password: "{{ var_db_gui_password }}"
 
-    {% if var_pod_type in ['app', 'web'] %}
+###############################
+{% if params.use_varnish | bool %}
 
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
+- src: "{{ var_main_dir }}/templates/varnish/default.vcl"
+  dest: "env/varnish/default.vcl"
+  schema: "{{ var_main_dir }}/templates/varnish/varnish.schema.yml"
+  params: {}
 
-    {% endif %}
+{% endif %}
+###############################
 
-    db_port: "{{ params.custom_args.mysql.port | default('3306', true) }}"
-    db_name: "{{ credentials.mediawiki.db.name }}"
-    db_user: "{{ credentials.mediawiki.db.user }}"
-    db_password: "{{ credentials.mediawiki.db.password }}"
-
-    {% if var_pod_type in ['app', 'db'] %}
-
-    db_root_password: "{{ credentials.mediawiki.db.root_password }}"
-
-    {% endif %}
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_certbot: "{{ params.use_certbot }}"
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-
-    {% if params.use_minio_gateway | bool %}
-
-    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint }}"
-    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key }}"
-    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key }}"
-
-    {% endif %}
-
-    use_pma: "{{ params.use_pma }}"
-
-    {% if params.use_pma | bool %}
-
-    pma_user: "{{ var_db_gui_user }}"
-    pma_password: "{{ var_db_gui_password }}"
-    pma_login_cookie_validity: >-
-      {{ params.custom_args.pma.login_cookie_validity | default('36000') }}
-
-    {% endif %}
-
-    use_adminer: "{{ params.use_adminer }}"
-
-    {% if params.use_adminer | bool %}
-
-    adminer_user: "{{ var_db_gui_user }}"
-    adminer_password: "{{ var_db_gui_password }}"
-
-    {% endif %}
-
-    {% endif %}
-
-    {% if var_pod_type in ['web'] %}
-
-    {% if var_local | bool %}
-
-    db_host_ip: ""
-
-    {% else %}
-
-    db_host_ip: "{{ input.dependencies.mysql.host }}"
-
-    {% endif %}
-
-    {% endif %}
-
-    {% if params.use_fluentd %}
-
-    fluentd_port: "{{ params.custom_args.fluentd.port }}"
-
-    {% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin
-      | default(
-        (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
-      )
-    %}
-
-    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-
-    {% if var_fluentd_output_plugin == 'elasticsearch' %}
-
-    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host }}"
-
-    {% endif %}
-
-    {% endif %}
-
+###############################
 {% if var_pod_type in ['app', 'web'] %}
 
-{% if not params.custom_args.nginx.custom | default(false) | bool %}
+- src: "{{ var_main_dir }}/templates/mediawiki/LocalSettings.php"
+  dest: "env/mediawiki/LocalSettings.php"
+  mode: "666"
+  params:
+    sitename: "{{ params.mediawiki.sitename | default('') }}"
+    meta_namespace: "{{ params.mediawiki.meta_namespace | default('') }}"
+    server: "{{ var_server }}"
+    logo: "{{ params.mediawiki.logo | default('') }}"
+    emergency_contact: "{{ params.mediawiki.emergency_contact | default('') }}"
+    password_sender: "{{ params.mediawiki.password_sender | default('') }}"
+    db_server: "mysql"
+    db_name: "{{ credentials.mediawiki.db.name | default('') }}"
+    db_user: "{{ credentials.mediawiki.db.user | default('') }}"
+    db_password: "{{ credentials.mediawiki.db.password | default('') }}"
+    lang: "{{ params.mediawiki.lang | default('') }}"
+    secret_key: "{{ credentials.mediawiki.secret_key | default('') }}"
+    authentication_token_version: "{{ params.mediawiki.authentication_token_version | default('') }}"
+    upload_path: "{{ params.mediawiki.upload_path | default('') }}"
+    use_s3_storage: "{{ params.use_s3_storage | default(false) }}"
+    disable_logs: "{{ params.disable_logs | default(false) }}"
+    debug_logs: "{{ params.debug_logs | default(false) }}"
+    use_varnish: "{{ params.use_varnish | default(false) }}"
+    use_redis: "{{ params.use_redis | default(false) }}"
+    use_memcached: "{{ params.use_memcached | default(false) }}"
+    s3_key: ""
+    s3_secret: ""
+    s3_endpoint: "{{ credentials.uploads_bucket.endpoint | default('') }}"
+    s3_region: "{{ credentials.uploads_bucket.region | default('') }}"
+    s3_bucket: "{{ params.uploads_bucket_name | default('') }}"
+    s3_path: "{{ params.uploads_bucket_path | default('') }}"
+
+{% endif %}
+###############################
+
+###############################
+{% if var_pod_type in ['app', 'db'] %}
+
+- src: "{{ var_shared_dir }}/templates/mysql/init.sql"
+  dest: "env/mysql/init.sql"
+  schema: "{{ var_shared_dir }}/templates/mysql/init.mysql.schema.yml"
+  params:
+    viewer_password: "{{ credentials.mediawiki.db.viewer_password | default('') }}"
+    db_name: "{{ credentials.mediawiki.db.name | default('') }}"
+    db_user: "{{ credentials.mediawiki.db.user | default('') }}"
+    db_password: "{{ credentials.mediawiki.db.password | default('') }}"
+
+{% endif %}
+###############################
+
+- src: "{{ var_s3_config_src }}"
+  dest: "{{ var_s3_config_dest }}"
+  schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
+  params:
+    - alias: "backup"
+      endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+      region: "{{ credentials.backup_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.backup_bucket.secret_key | default('') }}"
+    - alias: "uploads"
+      endpoint: "{{ credentials.uploads_bucket.endpoint | default('') }}"
+      region: "{{ credentials.uploads_bucket.region | default('') }}"
+      access_key: "{{ credentials.uploads_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.uploads_bucket.secret_key | default('') }}"
+      when: "{{ var_pod_type in ['app', 'web'] }}"
+    - alias: "backup_replica"
+      endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
+      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_replica_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.backup_replica_bucket.secret_key | default('') }}"
+      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+    - alias: "uploads_replica"
+      endpoint: "{{ credentials.uploads_replica_bucket.endpoint | default('') }}"
+      region: "{{ credentials.uploads_replica_bucket.region | default('') }}"
+      access_key: "{{ credentials.uploads_replica_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.uploads_replica_bucket.secret_key | default('') }}"
+      when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+
+###############################
+{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
 
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
   dest: "env/nginx/nginx.conf"
@@ -267,6 +302,7 @@ templates:
     use_varnish: "{{ params.use_varnish }}"
     use_theia: "{{ params.use_theia }}"
 
+    ###############################
     {% if params.use_theia | bool %}
 
     theia_domain: "{{ params.custom_domain.theia_domain }}"
@@ -274,9 +310,11 @@ templates:
     theia_ssl: "{{ params.custom_domain.theia_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_minio_gateway: "{{ params.use_minio_gateway }}"
 
+    ###############################
     {% if params.use_minio_gateway | bool %}
 
     minio_gateway_domain: "{{ params.custom_domain.minio_gateway_domain }}"
@@ -284,9 +322,11 @@ templates:
     minio_gateway_ssl: "{{ params.custom_domain.minio_gateway_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_filestash: "{{ params.use_filestash }}"
 
+    ###############################
     {% if params.use_filestash | bool %}
 
     filestash_domain: "{{ params.custom_domain.filestash_domain }}"
@@ -294,9 +334,11 @@ templates:
     filestash_ssl: "{{ params.custom_domain.filestash_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_pma: "{{ params.use_pma }}"
 
+    ###############################
     {% if params.use_pma | bool %}
 
     pma_domain: "{{ params.custom_domain.pma_domain }}"
@@ -304,9 +346,11 @@ templates:
     pma_ssl: "{{ params.custom_domain.pma_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_adminer: "{{ params.use_adminer }}"
 
+    ###############################
     {% if params.use_adminer | bool %}
 
     adminer_domain: "{{ params.custom_domain.adminer_domain }}"
@@ -314,112 +358,10 @@ templates:
     adminer_ssl: "{{ params.custom_domain.adminer_ssl }}"
 
     {% endif %}
+    ###############################
 
 {% endif %}
-
-{% if params.use_varnish | bool %}
-
-- src: "{{ var_main_dir }}/templates/varnish/default.vcl"
-  dest: "env/varnish/default.vcl"
-  params: {}
-
-{% endif %}
-
-{% set var_server = (params.custom_domain.main_ssl | bool) |
-  ternary('https', 'http') + '://' +
-  params.custom_domain.main_domain
-  + (not (var_main_domain_port in ['80', '443'])) |
-  ternary(':' + var_main_domain_port, '')
-%}
-
-- src: "{{ var_main_dir }}/templates/mediawiki/LocalSettings.php"
-  dest: "env/mediawiki/LocalSettings.php"
-  mode: "666"
-  params:
-    sitename: "{{ params.mediawiki.sitename }}"
-    meta_namespace: "{{ params.mediawiki.meta_namespace }}"
-    server: "{{ var_server }}"
-    logo: "{{ params.mediawiki.logo }}"
-    emergency_contact: "{{ params.mediawiki.emergency_contact }}"
-    password_sender: "{{ params.mediawiki.password_sender }}"
-    db_server: "mysql"
-    db_name: "{{ credentials.mediawiki.db.name }}"
-    db_user: "{{ credentials.mediawiki.db.user }}"
-    db_password: "{{ credentials.mediawiki.db.password }}"
-    lang: "{{ params.mediawiki.lang }}"
-    secret_key: "{{ credentials.mediawiki.secret_key }}"
-    authentication_token_version: "{{ params.mediawiki.authentication_token_version }}"
-    upload_path: "{{ params.mediawiki.upload_path | default('') }}"
-    use_s3_storage: "{{ params.use_s3_storage }}"
-
-    {% if params.use_s3_storage | bool %}
-
-    s3_key: ""
-    s3_secret: ""
-    s3_endpoint: "{{ credentials.uploads_bucket.endpoint | default('') }}"
-    s3_region: "{{ credentials.uploads_bucket.region | default('') }}"
-    s3_bucket: "{{ params.uploads_bucket_name }}"
-    s3_path: "{{ params.uploads_bucket_path | default('') }}"
-
-    {% endif %}
-
-    disable_logs: "{{ params.disable_logs | default(false) }}"
-    debug_logs: "{{ params.debug_logs | default(false) }}"
-    use_varnish: "{{ params.use_varnish }}"
-    use_redis: "{{ params.use_redis }}"
-    use_memcached: "{{ params.use_memcached }}"
-
-{% endif %}
-
-{% if var_pod_type in ['app', 'db'] %}
-
-- src: "{{ var_shared_dir }}/templates/mysql/init.sql"
-  dest: "env/mysql/init.sql"
-  params:
-    viewer_password: "{{ credentials.mediawiki.db.viewer_password }}"
-    db_name: "{{ credentials.mediawiki.db.name }}"
-    db_user: "{{ credentials.mediawiki.db.user }}"
-    db_password: "{{ credentials.mediawiki.db.password }}"
-
-{% endif %}
-
-{% if params.s3_cli == 'awscli' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
-  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
-{% elif params.s3_cli == 'rclone' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
-  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
-{% elif params.s3_cli == 'mc' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
-  {% set var_s3_config_dest = 'env/mc/config.json' %}
-{% endif %}
-
-- src: "{{ var_s3_config_src }}"
-  dest: "{{ var_s3_config_dest }}"
-  params:
-    - alias: "backup"
-      endpoint: "{{ credentials.backup_bucket.endpoint }}"
-      region: "{{ credentials.backup_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_bucket.access_key }}"
-      secret_key: "{{ credentials.backup_bucket.secret_key }}"
-    - alias: "uploads"
-      endpoint: "{{ credentials.uploads_bucket.endpoint }}"
-      region: "{{ credentials.uploads_bucket.region | default('') }}"
-      access_key: "{{ credentials.uploads_bucket.access_key }}"
-      secret_key: "{{ credentials.uploads_bucket.secret_key }}"
-      when: "{{ var_pod_type in ['app', 'web'] }}"
-    - alias: "backup_replica"
-      endpoint: "{{ credentials.backup_replica_bucket.endpoint }}"
-      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_replica_bucket.access_key }}"
-      secret_key: "{{ credentials.backup_replica_bucket.secret_key }}"
-      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
-    - alias: "uploads_replica"
-      endpoint: "{{ credentials.uploads_replica_bucket.endpoint }}"
-      region: "{{ credentials.uploads_replica_bucket.region | default('') }}"
-      access_key: "{{ credentials.uploads_replica_bucket.access_key }}"
-      secret_key: "{{ credentials.uploads_replica_bucket.secret_key }}"
-      when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+###############################
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
