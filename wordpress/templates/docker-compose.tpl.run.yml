@@ -71,8 +71,6 @@ services:
         VERSION: "{{ params.images.mysql_version }}"
     networks:
     - "shared"
-    extra_hosts:
-    - "mysql:$DB_HOST_IP"
     volumes:
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     - "$DATA_DIR/tmp/tmp/mysql:/tmp/main/tmp/mysql"

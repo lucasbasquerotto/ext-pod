@@ -85,15 +85,28 @@
   %}
 {% endif %}
 
+{% set var_mysql_host = input.dependencies.mysql.host | default('') %}
+{% set var_mysql_schema = var_mysql_host | urlsplit('scheme') %}
+{% set var_mysql_host = ((var_mysql_host != '') and (var_mysql_schema == ''))
+  | ternary('mysql://' + var_mysql_host, var_mysql_host)
+%}
+{% set var_mysql_hostname = var_mysql_host | urlsplit('hostname') | default('mysql', true) %}
+{% set var_mysql_port = var_mysql_host | urlsplit('port') | default('3306', true) %}
+
+{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin
+  | default(
+    (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
+  )
+%}
+
 ### main ###
 
 env_files:
 
 - when: false
 
-{% if var_pod_type in ['app', 'web'] %}
-
-{% if var_use_custom_ssl | bool %}
+###############################
+{% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
@@ -102,11 +115,16 @@ env_files:
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
 
 {% endif %}
+###############################
+
+###############################
+{% if var_pod_type in ['app', 'web'] %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
 
 {% endif %}
+###############################
 
 templates:
 
@@ -125,9 +143,13 @@ templates:
     pod_type: "{{ var_pod_type }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     use_fluentd: "{{ params.use_fluentd }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
+    ###############################
     {% if var_pod_type in ['app', 'web'] %}
 
     use_varnish: "{{ params.use_varnish }}"
@@ -139,20 +161,43 @@ templates:
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_certbot: "{{ params.use_certbot }}"
 
-    {% if var_local | bool %}
+    public_http_port: "{{ params.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.custom_domain.private_https_port }}"
+
+    wordpress_ini_file_type: >-
+      {{
+        (params.custom_args.wordpress.env == 'production')
+        | ternary('production', 'development')
+      }}
+    db_host: "{{ var_mysql_hostname }}"
+    db_port: "{{ var_mysql_port }}"
+    db_name: "{{ credentials.wordpress.db.name }}"
+    db_user: "{{ credentials.wordpress.db.user }}"
+    db_gui_user: "{{ var_db_gui_user }}"
+    pma_login_cookie_validity: >-
+      {{ params.custom_args.pma.login_cookie_validity | default('36000') }}
+
+    {% endif %}
+    ###############################
+
+    ###############################
+    {% if (var_pod_type in ['app', 'web']) and (var_local | bool) %}
 
     use_composer: "{{ var_use_composer }}"
 
     {% endif %}
+    ###############################
 
-    {% endif %}
-
+    ###############################
     {% if var_pod_type in ['app', 'cache'] %}
 
     use_redis: "{{ params.use_redis }}"
     use_memcached: "{{ params.use_memcached }}"
 
     {% endif %}
+    ###############################
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "docker-compose.run.yml"
@@ -165,11 +210,13 @@ templates:
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
+    ###############################
     {% if var_pod_type in ['app', 'web'] %}
 
     use_certbot: "{{ params.use_certbot }}"
 
     {% endif %}
+    ###############################
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -177,109 +224,55 @@ templates:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
-    data_dir: "{{ var_data_dir }}"
-    local: "{{ var_local | default(false) }}"
-    app_dev: "{{ var_app_dev }}"
     type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-    db_port: "{{ params.custom_args.mysql.port | default('3306', true) }}"
-    db_name: "{{ credentials.wordpress.db.name }}"
-    db_user: "{{ credentials.wordpress.db.user }}"
-    db_password: "{{ credentials.wordpress.db.password }}"
+    local: "{{ var_local | default(false) }}"
+    data_dir: "{{ var_data_dir }}"
+    app_dev: "{{ var_app_dev }}"
 
-    {% if var_pod_type in ['app', 'web'] %}
-
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
-    wordpress_ini_file_type: >-
-      {{
-      (params.custom_args.wordpress.env == 'production') |
-      ternary('production', 'development')
-      }}
-    use_certbot: "{{ params.use_certbot }}"
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-
-    {% if var_app_dev | bool %}
+    ###############################
+    {% if (var_pod_type in ['app', 'web']) and (var_app_dev | bool) %}
 
     wp_app_repo_dir: "{{ var_wp_app_repo_dir }}"
 
     {% endif %}
+    ###############################
 
-    {% if params.use_minio_gateway | bool %}
+    ###############################
+    {% if var_pod_type in ['app', 'web'] %}
+
+    use_minio_gateway: "{{ params.use_minio_gateway }}"
+
+    {% endif %}
+    ###############################
+
+    ###############################
+    {% if (var_pod_type in ['app', 'web']) and (params.use_minio_gateway | bool) %}
 
     minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint }}"
     minio_gateway_access_key: "{{ credentials.minio_gateway.access_key }}"
     minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key }}"
 
     {% endif %}
+    ###############################
 
-    use_pma: "{{ params.use_pma }}"
-
-    {% if params.use_pma | bool %}
-
-    pma_user: "{{ var_db_gui_user }}"
-    pma_password: "{{ var_db_gui_password }}"
-    pma_login_cookie_validity: >-
-      {{ params.custom_args.pma.login_cookie_validity | default('36000') }}
-
-    {% endif %}
-
-    use_adminer: "{{ params.use_adminer }}"
-
-    {% if params.use_adminer | bool %}
-
-    adminer_user: "{{ var_db_gui_user }}"
-    adminer_password: "{{ var_db_gui_password }}"
-
-    {% endif %}
-
-    {% endif %}
-
+    ###############################
     {% if var_pod_type in ['app', 'db'] %}
 
-    mysql_root_password: "{{ credentials.mysql.root_password }}"
+    db_root_password: "{{ credentials.mysql.root_password }}"
 
     {% endif %}
+    ###############################
 
-    {% if var_pod_type in ['web'] %}
+    ###############################
+    {% if var_pod_type in ['app', 'web'] %}
 
-    {% if not var_local %}
-
-    mysql_host_ip: ""
-
-    {% else %}
-
-    mysql_host_ip: "{{ input.dependencies.mysql.host }}"
+    db_gui_password: "{{ var_db_gui_password }}"
 
     {% endif %}
+    ###############################
 
-    {% endif %}
-
-    {% if params.use_fluentd | bool %}
-
-    fluentd_port: "{{ params.custom_args.fluentd.port }}"
-
-    {% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin
-      | default(
-        (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
-      )
-    %}
-
-    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-
-    {% if var_fluentd_output_plugin == 'elasticsearch' %}
-
-    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host }}"
-
-    {% endif %}
-
-    {% endif %}
-
-{% if var_pod_type in ['app', 'web'] %}
-
-{% if not params.custom_args.nginx.custom | default(false) | bool %}
+###############################
+{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
 
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
   dest: "env/nginx/nginx.conf"
@@ -293,6 +286,7 @@ templates:
     use_varnish: "{{ params.use_varnish }}"
     use_theia: "{{ params.use_theia }}"
 
+    ###############################
     {% if params.use_theia | bool %}
 
     theia_domain: "{{ params.custom_domain.theia_domain }}"
@@ -300,9 +294,11 @@ templates:
     theia_ssl: "{{ params.custom_domain.theia_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_minio_gateway: "{{ params.use_minio_gateway }}"
 
+    ###############################
     {% if params.use_minio_gateway | bool %}
 
     minio_gateway_domain: "{{ params.custom_domain.minio_gateway_domain }}"
@@ -310,9 +306,11 @@ templates:
     minio_gateway_ssl: "{{ params.custom_domain.minio_gateway_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_filestash: "{{ params.use_filestash }}"
 
+    ###############################
     {% if params.use_filestash | bool %}
 
     filestash_domain: "{{ params.custom_domain.filestash_domain }}"
@@ -320,9 +318,11 @@ templates:
     filestash_ssl: "{{ params.custom_domain.filestash_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_pma: "{{ params.use_pma }}"
 
+    ###############################
     {% if params.use_pma | bool %}
 
     pma_domain: "{{ params.custom_domain.pma_domain }}"
@@ -330,9 +330,11 @@ templates:
     pma_ssl: "{{ params.custom_domain.pma_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_adminer: "{{ params.use_adminer }}"
 
+    ###############################
     {% if params.use_adminer | bool %}
 
     adminer_domain: "{{ params.custom_domain.adminer_domain }}"
@@ -340,16 +342,20 @@ templates:
     adminer_ssl: "{{ params.custom_domain.adminer_ssl }}"
 
     {% endif %}
+    ###############################
 
 {% endif %}
+###############################
 
-{% if params.use_varnish | bool %}
+###############################
+{% if (var_pod_type in ['app', 'web']) and (params.use_varnish | bool) %}
 
 - src: "{{ var_main_dir }}/templates/varnish/default.vcl"
   dest: "env/varnish/default.vcl"
   params: {}
 
 {% endif %}
+###############################
 
 {% set var_main_domain = params.custom_domain.main_domain %}
 {% set var_main_external_port = var_main_domain_port %}
@@ -359,12 +365,14 @@ templates:
   | ternary('', ':' + (var_main_external_port | string)))
 %}
 
+{% if var_pod_type in ['app', 'web'] %}
+
 - src: "{{ var_main_dir }}/templates/wordpress/wp.env"
   dest: "env/wordpress/.env"
   params:
     env: "{{ params.custom_args.wordpress.env }}"
-    db_host: "mysql"
-    db_port: "{{ params.custom_args.mysql.port }}"
+    db_host: "{{ var_mysql_hostname }}"
+    db_port: "{{ var_mysql_port }}"
     db_name: "{{ credentials.wordpress.db.name }}"
     db_user: "{{ credentials.wordpress.db.user }}"
     db_password: "{{ credentials.wordpress.db.password }}"
@@ -383,6 +391,7 @@ templates:
     use_w3tc: "{{ params.use_w3tc | default(true) }}"
     use_s3_uploads: "{{ params.use_s3_storage }}"
 
+    ###############################
     {% if params.use_s3_storage | bool %}
 
     s3_uploads_bucket: >-
@@ -399,9 +408,12 @@ templates:
     s3_provider: "{{ credentials.uploads_bucket.provider | default('') }}"
 
     {% endif %}
+    ###############################
 
 {% endif %}
+###############################
 
+###############################
 {% if var_pod_type in ['app', 'db'] %}
 
 - src: "{{ var_shared_dir }}/templates/mysql/init.sql"
@@ -413,6 +425,7 @@ templates:
     db_password: "{{ credentials.wordpress.db.password }}"
 
 {% endif %}
+###############################
 
 {% if params.s3_cli == 'awscli' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
