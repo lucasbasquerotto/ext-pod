@@ -91,6 +91,9 @@
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
+{% set var_s3_config_src = '' %}
+{% set var_s3_config_dest = '' %}
+
 {% if params.s3_cli == 'awscli' %}
   {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
   {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
@@ -156,6 +159,10 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_redis: "{{ params.use_redis | default(false) }}"
     use_memcached: "{{ params.use_memcached | default(false) }}"
+    public_http_port: "{{ params.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.custom_domain.private_https_port }}"
     db_host: "{{ var_mysql_hostname }}"
     db_port: "{{ var_mysql_port }}"
     db_name: "{{ credentials.wordpress.db.name | default('') }}"
@@ -193,7 +200,7 @@ templates:
     minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
     minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
     minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
-    db_root_password: "{{ credentials.mysql.root_password | default('') }}"
+    db_root_password: "{{ credentials.mediawiki.db.root_password | default('') }}"
     db_gui_password: "{{ var_db_gui_password }}"
 
 ###############################
