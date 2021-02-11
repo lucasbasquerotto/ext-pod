@@ -1,0 +1,30 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      local:
+        type: "bool"
+        non_empty: true
+      main_dir:
+        type: "str"
+        non_empty: true
+      pod_type:
+        type: "str"
+        non_empty: true
+        choices: ["app", "web", "cache", "db"]
+      use_fluentd:
+        type: "bool"
+      use_certbot:
+        type: "bool"
+      s3_cli:
+        type: "str"
+        non_empty: true
+        choices: ["awscli", "mc", "rclone"]
+      images:
+        type: "dict"
+        required: true
+      memory:
+        type: "dict"
+        required: true
+

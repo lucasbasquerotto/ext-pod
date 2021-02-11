@@ -30,9 +30,7 @@ networks:
 
 services:
 
-  {% if params.pod_type in ['app', 'web'] %}
-
-  {% if params.use_certbot | bool %}
+  {% if (params.pod_type in ['app', 'web']) and (params.use_certbot | bool) %}
 
   certbot:
     container_name: "${CTX_PREFIX_RUN}certbot"
@@ -53,8 +51,6 @@ services:
     mem_limit: "{{ params.memory.certbot }}"
 
     {% endif %}
-
-  {% endif %}
 
   {% endif %}
 

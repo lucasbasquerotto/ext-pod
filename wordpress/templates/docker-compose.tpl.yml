@@ -246,9 +246,9 @@ services:
     - "$DATA_DIR/tmp/tmp/phpmyadmin:/tmp/main/tmp/phpmyadmin"
     logging: *mainlog
 
-    {% if (params.memory.phpmyadmin | default('')) != '' %}
+    {% if (params.memory.pma | default('')) != '' %}
 
-    mem_limit: "{{ params.memory.phpmyadmin }}"
+    mem_limit: "{{ params.memory.pma }}"
 
     {% endif %}
 

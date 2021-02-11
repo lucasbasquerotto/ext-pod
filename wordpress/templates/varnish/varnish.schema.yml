@@ -1,0 +1,5 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props: {}

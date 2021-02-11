@@ -37,6 +37,8 @@
   and (params.use_composer | default(false) | bool)
 %}
 
+{% set var_wp_app_repo_dir = '' %}
+
 {% if var_app_dev | bool %}
   {% set var_wp_app_repo_dir_name = params.custom_args.wordpress.app_repo_dir %}
   {% set var_wp_app_repo_dir = input.extra_repos_dir_relpath + '/' + var_wp_app_repo_dir_name %}
@@ -76,6 +78,9 @@
   %}
 {% endif %}
 
+{% set var_db_gui_user = '' %}
+{% set var_db_gui_password = '' %}
+
 {% if var_pod_type in ['app', 'web'] %}
   {% set var_db_gui_user = params.db_gui_root_user | default(false) | bool |
     ternary('root', 'viewer')
@@ -93,11 +98,44 @@
 {% set var_mysql_hostname = var_mysql_host | urlsplit('hostname') | default('mysql', true) %}
 {% set var_mysql_port = var_mysql_host | urlsplit('port') | default('3306', true) %}
 
-{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin
-  | default(
-    (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
-  )
+{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+
+{% set var_wordpress_ini_file_type = ((params.custom_args.wordpress.env | default('')) == 'production')
+  | ternary('production', 'development')
 %}
+
+{% set var_ctx_full_name = input.identifier %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
+{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
+{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
+
+{% set var_main_domain = params.custom_domain.main_domain | default('') %}
+{% set var_main_external_port = var_main_domain_port %}
+{% set var_main_external_host = (params.custom_domain.main_ssl | default(false) | bool | ternary('https', 'http'))
+  + '://' + var_main_domain
+  + (((var_main_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_main_external_port | string)))
+%}
+
+{% set var_s3_uploads_bucket = params.uploads_bucket_name | default('')
+  + ((params.uploads_bucket_path | default('')) != '')
+    | ternary('/' + (params.uploads_bucket_path | default('')), '')
+%}
+
+{% set var_s3_config_src = '' %}
+{% set var_s3_config_dest = '' %}
+
+{% if params.s3_cli == 'awscli' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
+  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
+{% elif params.s3_cli == 'rclone' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
+  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
+{% elif params.s3_cli == 'mc' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
+  {% set var_s3_config_dest = 'env/mc/config.json' %}
+{% endif %}
 
 ### main ###
 
@@ -118,7 +156,7 @@ env_files:
 ###############################
 
 ###############################
-{% if var_pod_type in ['app', 'web'] %}
+{% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
@@ -128,148 +166,171 @@ env_files:
 
 templates:
 
-{% set var_ctx_full_name = input.identifier %}
-{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
-{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
-{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
-{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
-
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "docker-compose.yml"
+  schema:
+    - "{{ var_main_dir }}/templates/docker-compose.schema.yml"
+    - "{{ var_main_dir }}/templates/images.schema.yml"
   params:
-    local: "{{ var_local | default(false) }}"
+    local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     app_dev: "{{ var_app_dev }}"
     pod_type: "{{ var_pod_type }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     use_fluentd: "{{ params.use_fluentd }}"
+    use_varnish: "{{ params.use_varnish | default(false) }}"
+    use_pma: "{{ params.use_pma | default(false) }}"
+    use_adminer: "{{ params.use_adminer | default(false) }}"
+    use_theia: "{{ params.use_theia | default(false) }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    use_filestash: "{{ params.use_filestash | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_redis: "{{ params.use_redis| default(false) }}"
+    use_memcached: "{{ params.use_memcached| default(false) }}"
+    use_composer: "{{ var_use_composer }}"
+    public_http_port: "{{ params.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.custom_domain.private_https_port }}"
+    wordpress_ini_file_type: "{{ var_wordpress_ini_file_type }}"
+    db_host: "{{ var_mysql_hostname }}"
+    db_port: "{{ var_mysql_port }}"
+    db_name: "{{ credentials.wordpress.db.name | default('') }}"
+    db_user: "{{ credentials.wordpress.db.user | default('') }}"
+    db_gui_user: "{{ var_db_gui_user }}"
+    pma_login_cookie_validity: "{{ params.custom_args.pma.login_cookie_validity | default('36000') }}"
     fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
-    ###############################
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_varnish: "{{ params.use_varnish }}"
-    use_pma: "{{ params.use_pma }}"
-    use_adminer: "{{ params.use_adminer }}"
-    use_theia: "{{ params.use_theia }}"
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-    use_filestash: "{{ params.use_filestash }}"
-    use_custom_ssl: "{{ var_use_custom_ssl }}"
-    use_certbot: "{{ params.use_certbot }}"
-
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
-
-    wordpress_ini_file_type: >-
-      {{
-        (params.custom_args.wordpress.env == 'production')
-        | ternary('production', 'development')
-      }}
-    db_host: "{{ var_mysql_hostname }}"
-    db_port: "{{ var_mysql_port }}"
-    db_name: "{{ credentials.wordpress.db.name }}"
-    db_user: "{{ credentials.wordpress.db.user }}"
-    db_gui_user: "{{ var_db_gui_user }}"
-    pma_login_cookie_validity: >-
-      {{ params.custom_args.pma.login_cookie_validity | default('36000') }}
-
-    {% endif %}
-    ###############################
-
-    ###############################
-    {% if (var_pod_type in ['app', 'web']) and (var_local | bool) %}
-
-    use_composer: "{{ var_use_composer }}"
-
-    {% endif %}
-    ###############################
-
-    ###############################
-    {% if var_pod_type in ['app', 'cache'] %}
-
-    use_redis: "{{ params.use_redis }}"
-    use_memcached: "{{ params.use_memcached }}"
-
-    {% endif %}
-    ###############################
-
-- src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
+- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
+  schema:
+    - "{{ var_main_dir }}/templates/docker-compose.run.schema.yml"
+    - "{{ var_main_dir }}/templates/images.schema.yml"
   params:
-    local: "{{ var_local | default(false) }}"
+    local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
     use_fluentd: "{{ params.use_fluentd }}"
     s3_cli: "{{ params.s3_cli }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
-    ###############################
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_certbot: "{{ params.use_certbot }}"
-
-    {% endif %}
-    ###############################
-
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
+  schema: "{{ var_main_dir }}/templates/docker-compose.env.schema.yml"
   params:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     type: "{{ var_pod_type }}"
-    local: "{{ var_local | default(false) }}"
+    local: "{{ var_local }}"
     data_dir: "{{ var_data_dir }}"
     app_dev: "{{ var_app_dev }}"
-
-    ###############################
-    {% if (var_pod_type in ['app', 'web']) and (var_app_dev | bool) %}
-
     wp_app_repo_dir: "{{ var_wp_app_repo_dir }}"
-
-    {% endif %}
-    ###############################
-
-    ###############################
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-
-    {% endif %}
-    ###############################
-
-    ###############################
-    {% if (var_pod_type in ['app', 'web']) and (params.use_minio_gateway | bool) %}
-
-    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint }}"
-    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key }}"
-    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key }}"
-
-    {% endif %}
-    ###############################
-
-    ###############################
-    {% if var_pod_type in ['app', 'db'] %}
-
-    db_root_password: "{{ credentials.mysql.root_password }}"
-
-    {% endif %}
-    ###############################
-
-    ###############################
-    {% if var_pod_type in ['app', 'web'] %}
-
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
+    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
+    db_root_password: "{{ credentials.mysql.root_password | default('') }}"
     db_gui_password: "{{ var_db_gui_password }}"
 
-    {% endif %}
-    ###############################
+###############################
+{% if (var_pod_type in ['app', 'web']) and (params.use_varnish | bool) %}
+
+- src: "{{ var_main_dir }}/templates/varnish/default.vcl"
+  dest: "env/varnish/default.vcl"
+  schema: "{{ var_main_dir }}/templates/varnish/varnish.schema.yml"
+  params: {}
+
+{% endif %}
+###############################
+
+{% if var_pod_type in ['app', 'web'] %}
+
+- src: "{{ var_main_dir }}/templates/wordpress/wp.env"
+  dest: "env/wordpress/.env"
+  schema: "{{ var_main_dir }}/templates/wordpress/wp.env.schema.yml"
+  params:
+    env: "{{ params.custom_args.wordpress.env | default('') }}"
+    db_host: "{{ var_mysql_hostname }}"
+    db_port: "{{ var_mysql_port }}"
+    db_name: "{{ credentials.wordpress.db.name | default('') }}"
+    db_user: "{{ credentials.wordpress.db.user | default('') }}"
+    db_password: "{{ credentials.wordpress.db.password | default('') }}"
+    home: "{{ var_main_external_host }}"
+    auth_key: "{{ credentials.wordpress.config.auth_key | default('') }}"
+    secure_auth_key: "{{ credentials.wordpress.config.secure_auth_key | default('') }}"
+    logged_in_key: "{{ credentials.wordpress.config.logged_in_key | default('') }}"
+    nonce_key: "{{ credentials.wordpress.config.nonce_key | default('') }}"
+    auth_salt: "{{ credentials.wordpress.config.auth_salt | default('') }}"
+    secure_auth_salt: "{{ credentials.wordpress.config.secure_auth_salt | default('') }}"
+    logged_in_salt: "{{ credentials.wordpress.config.logged_in_salt | default('') }}"
+    nonce_salt: "{{ credentials.wordpress.config.nonce_salt | default('') }}"
+    table_prefix: "{{ params.custom_args.wordpress.table_prefix | default('wp_') }}"
+    wplang: "{{ params.custom_args.wordpress.lang }}"
+    debug: "{{ params.custom_args.wordpress.debug | default(false) | lower }}"
+    use_w3tc: "{{ params.use_w3tc | default(true) }}"
+    use_s3_storage: "{{ params.use_s3_storage | default('') }}"
+    s3_uploads_bucket: "{{ var_s3_uploads_bucket }}"
+    s3_uploads_region: "{{ credentials.uploads_bucket.region | default('') }}"
+    s3_uploads_key: "{{ credentials.uploads_bucket.access_key | default('') }}"
+    s3_uploads_secret: "{{ credentials.uploads_bucket.secret_key | default('') }}"
+    s3_uploads_bucket_url: "{{ params.uploads_bucket_name_cdn_url | default('') }}"
+    s3_uploads_endpoint: "{{ credentials.uploads_bucket.endpoint | default('') }}"
+    s3_use_path_style_endpoint: "{{ credentials.uploads_bucket.path_style | default(false) }}"
+    s3_provider: "{{ credentials.uploads_bucket.provider | default('') }}"
+
+{% endif %}
+###############################
+
+###############################
+{% if var_pod_type in ['app', 'db'] %}
+
+- src: "{{ var_shared_dir }}/templates/mysql/init.sql"
+  dest: "env/mysql/init.sql"
+  schema: "{{ var_shared_dir }}/templates/mysql/init.mysql.schema.yml"
+  params:
+    viewer_password: "{{ credentials.mysql.viewer_password | default('') }}"
+    db_name: "{{ credentials.wordpress.db.name | default('') }}"
+    db_user: "{{ credentials.wordpress.db.user | default('') }}"
+    db_password: "{{ credentials.wordpress.db.password | default('') }}"
+
+{% endif %}
+###############################
+
+- src: "{{ var_s3_config_src }}"
+  dest: "{{ var_s3_config_dest }}"
+  schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
+  params:
+    - alias: "backup"
+      endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+      region: "{{ credentials.backup_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.backup_bucket.secret_key | default('') }}"
+    - alias: "uploads"
+      endpoint: "{{ credentials.uploads_bucket.endpoint | default('') }}"
+      region: "{{ credentials.uploads_bucket.region | default('') }}"
+      access_key: "{{ credentials.uploads_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.uploads_bucket.secret_key | default('') }}"
+      when: "{{ var_pod_type in ['app', 'web'] }}"
+    - alias: "backup_replica"
+      endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
+      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_replica_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.backup_replica_bucket.secret_key | default('') }}"
+      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+    - alias: "uploads_replica"
+      endpoint: "{{ credentials.uploads_replica_bucket.endpoint | default('') }}"
+      region: "{{ credentials.uploads_replica_bucket.region | default('') }}"
+      access_key: "{{ credentials.uploads_replica_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.uploads_replica_bucket.secret_key | default('') }}"
+      when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 ###############################
 {% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
@@ -346,124 +407,6 @@ templates:
 
 {% endif %}
 ###############################
-
-###############################
-{% if (var_pod_type in ['app', 'web']) and (params.use_varnish | bool) %}
-
-- src: "{{ var_main_dir }}/templates/varnish/default.vcl"
-  dest: "env/varnish/default.vcl"
-  params: {}
-
-{% endif %}
-###############################
-
-{% set var_main_domain = params.custom_domain.main_domain %}
-{% set var_main_external_port = var_main_domain_port %}
-{% set var_main_external_host = (params.custom_domain.main_ssl | bool | ternary('https', 'http'))
-  + '://' + var_main_domain
-  + (((var_main_external_port | string) in ['80', '443'])
-  | ternary('', ':' + (var_main_external_port | string)))
-%}
-
-{% if var_pod_type in ['app', 'web'] %}
-
-- src: "{{ var_main_dir }}/templates/wordpress/wp.env"
-  dest: "env/wordpress/.env"
-  params:
-    env: "{{ params.custom_args.wordpress.env }}"
-    db_host: "{{ var_mysql_hostname }}"
-    db_port: "{{ var_mysql_port }}"
-    db_name: "{{ credentials.wordpress.db.name }}"
-    db_user: "{{ credentials.wordpress.db.user }}"
-    db_password: "{{ credentials.wordpress.db.password }}"
-    home: "{{ var_main_external_host }}"
-    auth_key: "{{ credentials.wordpress.config.auth_key }}"
-    secure_auth_key: "{{ credentials.wordpress.config.secure_auth_key }}"
-    logged_in_key: "{{ credentials.wordpress.config.logged_in_key }}"
-    nonce_key: "{{ credentials.wordpress.config.nonce_key }}"
-    auth_salt: "{{ credentials.wordpress.config.auth_salt }}"
-    secure_auth_salt: "{{ credentials.wordpress.config.secure_auth_salt }}"
-    logged_in_salt: "{{ credentials.wordpress.config.logged_in_salt }}"
-    nonce_salt: "{{ credentials.wordpress.config.nonce_salt }}"
-    table_prefix: "{{ params.custom_args.wordpress.table_prefix | default('wp_') }}"
-    wplang: "{{ params.custom_args.wordpress.lang }}"
-    debug: "{{ params.custom_args.wordpress.debug | default(false) | lower }}"
-    use_w3tc: "{{ params.use_w3tc | default(true) }}"
-    use_s3_uploads: "{{ params.use_s3_storage }}"
-
-    ###############################
-    {% if params.use_s3_storage | bool %}
-
-    s3_uploads_bucket: >-
-      {{ params.uploads_bucket_name }}{{
-        ((params.uploads_bucket_path | default('')) != '')
-        | ternary('/' + params.uploads_bucket_path, '')
-      }}"
-    s3_uploads_region: "{{ credentials.uploads_bucket.region | default('') }}"
-    s3_uploads_key: "{{ credentials.uploads_bucket.access_key }}"
-    s3_uploads_secret: "{{ credentials.uploads_bucket.secret_key }}"
-    s3_uploads_bucket_url: "{{ params.uploads_bucket_name_cdn_url | default('') }}"
-    s3_uploads_endpoint: "{{ credentials.uploads_bucket.endpoint }}"
-    s3_use_path_style_endpoint: "{{ credentials.uploads_bucket.path_style | default(false) }}"
-    s3_provider: "{{ credentials.uploads_bucket.provider | default('') }}"
-
-    {% endif %}
-    ###############################
-
-{% endif %}
-###############################
-
-###############################
-{% if var_pod_type in ['app', 'db'] %}
-
-- src: "{{ var_shared_dir }}/templates/mysql/init.sql"
-  dest: "env/mysql/init.sql"
-  params:
-    viewer_password: "{{ credentials.mysql.viewer_password }}"
-    db_name: "{{ credentials.wordpress.db.name }}"
-    db_user: "{{ credentials.wordpress.db.user }}"
-    db_password: "{{ credentials.wordpress.db.password }}"
-
-{% endif %}
-###############################
-
-{% if params.s3_cli == 'awscli' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
-  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
-{% elif params.s3_cli == 'rclone' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
-  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
-{% elif params.s3_cli == 'mc' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
-  {% set var_s3_config_dest = 'env/mc/config.json' %}
-{% endif %}
-
-- src: "{{ var_s3_config_src }}"
-  dest: "{{ var_s3_config_dest }}"
-  params:
-    - alias: "backup"
-      endpoint: "{{ credentials.backup_bucket.endpoint }}"
-      region: "{{ credentials.backup_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_bucket.access_key }}"
-      secret_key: "{{ credentials.backup_bucket.secret_key }}"
-    - alias: "uploads"
-      endpoint: "{{ credentials.uploads_bucket.endpoint }}"
-      region: "{{ credentials.uploads_bucket.region | default('') }}"
-      access_key: "{{ credentials.uploads_bucket.access_key }}"
-      secret_key: "{{ credentials.uploads_bucket.secret_key }}"
-      when: "{{ var_pod_type in ['app', 'web'] }}"
-    - alias: "backup_replica"
-      endpoint: "{{ credentials.backup_replica_bucket.endpoint }}"
-      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_replica_bucket.access_key }}"
-      secret_key: "{{ credentials.backup_replica_bucket.secret_key }}"
-      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
-    - alias: "uploads_replica"
-      endpoint: "{{ credentials.uploads_replica_bucket.endpoint }}"
-      region: "{{ credentials.uploads_replica_bucket.region | default('') }}"
-      access_key: "{{ credentials.uploads_replica_bucket.access_key }}"
-      secret_key: "{{ credentials.uploads_replica_bucket.secret_key }}"
-      when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"

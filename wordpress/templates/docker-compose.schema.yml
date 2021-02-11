@@ -1,0 +1,104 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      local:
+        type: "bool"
+        non_empty: true
+      main_dir:
+        type: "str"
+        non_empty: true
+      app_dev:
+        type: "str"
+        non_empty: true
+      pod_type:
+        type: "str"
+        non_empty: true
+        choices: ["app", "web", "cache", "db"]
+      named_volumes:
+        type: "str"
+        non_empty: true
+      use_fluentd:
+        type: "str"
+        non_empty: true
+      use_varnish:
+        type: "bool"
+        non_empty: true
+      use_pma:
+        type: "bool"
+        non_empty: true
+      use_adminer:
+        type: "bool"
+        non_empty: true
+      use_theia:
+        type: "bool"
+        non_empty: true
+      use_minio_gateway:
+        type: "bool"
+        non_empty: true
+      use_filestash:
+        type: "bool"
+        non_empty: true
+      use_custom_ssl:
+        type: "bool"
+        non_empty: true
+      use_certbot:
+        type: "bool"
+        non_empty: true
+      use_redis:
+        type: "bool"
+        non_empty: true
+      use_memcached:
+        type: "bool"
+        non_empty: true
+      use_composer:
+        type: "bool"
+        non_empty: true
+      public_http_port:
+        type: "str"
+        non_empty: true
+      public_https_port:
+        type: "str"
+        non_empty: true
+      private_http_port:
+        type: "str"
+        non_empty: true
+      private_https_port:
+        type: "str"
+        non_empty: true
+      wordpress_ini_file_type:
+        type: "str"
+        non_empty: true
+      db_host:
+        type: "str"
+        non_empty: true
+      db_port:
+        type: "str"
+        non_empty: true
+      db_name:
+        type: "str"
+        non_empty: true
+      db_user:
+        type: "str"
+        non_empty: true
+      db_gui_user:
+        type: "str"
+        non_empty: true
+      pma_login_cookie_validity:
+        type: "str"
+        non_empty: true
+      fluentd_port:
+        type: "str"
+        non_empty: true
+      fluentd_output_plugin:
+        type: "str"
+        non_empty: true
+      elasticsearch_host_ip:
+        type: "str"
+      images:
+        type: "dict"
+        required: true
+      memory:
+        type: "dict"
+        required: true
