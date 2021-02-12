@@ -67,6 +67,8 @@
   %}
 {% endif %}
 
+{% set var_storage_type = '' %}
+
 {% if var_pod_type in ['app', 'web'] %}
   {% set var_storage_type = params.use_s3_storage | bool | ternary(
       'AmazonS3',
@@ -165,10 +167,9 @@ templates:
     hubot_room: "{{ credentials.hubot.room | default('') }}"
     hubot_user: "{{ credentials.hubot.user | default('') }}"
     hubot_bot_name: "{{ credentials.hubot.bot_name | default('') }}"
-    rocketchat_fileupload_storage_type: "{{ var_storage_type }}"
     rocketchat:
       mail_url: "{{ credentials.rocketchat.mail_url | default('smtp://smtp.email') }}"
-      storage_type: "{{ var_storage_type | default('') }}"
+      storage_type: "{{ var_storage_type }}"
       fileupload_s3_bucketurl: "{{ params.custom_args.rocketchat.uploads_bucket_endpoint | default('') }}"
       fileupload_s3_bucket: "{{ params.uploads_bucket_name | default('') }}"
       fileupload_s3_region: "{{ params.custom_args.rocketchat.uploads_bucket_region | default('') }}"
@@ -202,16 +203,18 @@ templates:
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_bot: "{{ params.use_bot | default(false) }}"
     use_mongo_express: "{{ params.use_mongo_express | default(false) }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     mongo_express_pass: "{{ var_db_gui_password | default('') }}"
     minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
     minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
     minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
+    rocketchat_fileupload_storage_type: "{{ var_storage_type }}"
+    rocketchat_fileupload_s3_access_key: "{{ credentials.uploads_bucket.access_key | default('') }}"
+    rocketchat_fileupload_s3_secret_key: "{{ credentials.uploads_bucket.secret_key | default('') }}"
     db_password: "{{ credentials.rocketchat.db.password | default('') }}"
     db_oplog_password: "{{ credentials.rocketchat.db.oploguser_password | default('') }}"
     db_root_pass: "{{ credentials.rocketchat.db.root_password | default('') }}"
     hubot_password: "{{ credentials.hubot.password | default('') }}"
-    rocketchat_fileupload_s3_access_key: "{{ credentials.uploads_bucket.access_key | default('') }}"
-    rocketchat_fileupload_s3_secret_key: "{{ credentials.uploads_bucket.secret_key | default('') }}"
     db_gui_password: "{{ var_db_gui_password }}"
 
 ###############################
