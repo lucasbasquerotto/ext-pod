@@ -276,7 +276,6 @@ services:
         IMAGE: "{{ params.images.elasticsearch_image }}"
         VERSION: "{{ params.images.elasticsearch_version }}"
         MAIN_DIR: "{{ params.main_dir }}"
-        S3_ENDPOINT: "{{ params.backup_bucket_endpoint }}"
         S3_ACCESS_KEY: $S3_ACCESS_KEY
         S3_SECRET_KEY: $S3_SECRET_KEY
     restart: "unless-stopped"
@@ -290,6 +289,7 @@ services:
 
     environment:
       cluster.initial_master_nodes: elasticsearch
+      s3.client.my_alternate_name.endpoint: "{{ params.backup_bucket_endpoint }}"
       ES_JAVA_OPTS: "{{ params.elasticsearch_java_opts }}"
 
     {% if not (params.internal_elasticsearch | bool) %}

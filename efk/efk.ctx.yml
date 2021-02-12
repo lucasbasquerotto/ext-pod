@@ -286,7 +286,6 @@ templates:
     var_load__db_backup__s3_snapshot: "{{ params.db_backup.s3_snapshot | default('') | lower }}"
     var_load__db_backup__backup_bucket_sync_dir: "{{ params.db_backup.backup_bucket_sync_dir | default('') }}"
     var_load__db_backup__is_compressed_file: "{{ params.db_backup.is_compressed_file | default('') }}"
-    var_load__db_backup__snapshot_type: "{{ params.db_backup.snapshot_type | default('') }}"
     var_load__db_backup__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
     var_load__db_backup__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"
     var_load__db_backup__backup_datetime_format: "{{ params.db_backup.backup_datetime_format | default('') }}"

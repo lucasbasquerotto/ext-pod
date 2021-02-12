@@ -49,11 +49,11 @@ if [ "$tmp_is_db" = 'true' ]; then
 		if [ "${var_load__db_backup__s3_snapshot:-}" = 'true' ]; then
 			tmp_db_subtask_cmd_local=''
 			tmp_db_subtask_cmd_remote='backup:db'
-			tmp_db_snapshot_type="${var_load__db_backup__snapshot_type:-s3}"
+			tmp_db_snapshot_type='s3'
 		else
 			tmp_db_subtask_cmd_local='backup:db'
-			tmp_db_subtask_cmd_remote=''
-			tmp_db_snapshot_type="${var_load__db_backup__snapshot_type:-fs}"
+			tmp_db_subtask_cmd_remote='backup:remote:default'
+			tmp_db_snapshot_type='fs'
 		fi
 
 		export var_task__db_backup__task__type='backup'
