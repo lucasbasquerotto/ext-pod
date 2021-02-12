@@ -54,15 +54,36 @@
   %}
 {% endif %}
 
+{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+
+{% set var_ctx_full_name = input.identifier %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
+{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
+{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
+
+{% set var_s3_config_src = '' %}
+{% set var_s3_config_dest = '' %}
+
+{% if params.s3_cli == 'awscli' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
+  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
+{% elif params.s3_cli == 'rclone' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
+  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
+{% elif params.s3_cli == 'mc' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
+  {% set var_s3_config_dest = 'env/mc/config.json' %}
+{% endif %}
+
 ### main ###
 
 env_files:
 
 - when: false
 
-{% if var_pod_type in ['app', 'web'] %}
-
-{% if var_use_custom_ssl | bool %}
+###############################
+{% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
@@ -71,19 +92,18 @@ env_files:
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
 
 {% endif %}
+###############################
+
+###############################
+{% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
 
 {% endif %}
+###############################
 
 templates:
-
-{% set var_ctx_full_name = input.identifier %}
-{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
-{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
-{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
-{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "docker-compose.yml"
@@ -92,66 +112,42 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-
-    {% if params.use_fluentd | bool %}
-
-    fluentd_port: "{{ params.custom_args.fluentd.port }}"
-
-    {% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin
-      | default(
-        (var_pod_type in ['app']) | ternary('file', 'elasticsearch')
-      )
-    %}
-
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    use_nginx: "{{ params.use_nginx | default(false) }}"
+    use_theia: "{{ params.use_theia | default(false) }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    use_filestash: "{{ params.use_filestash | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_node_exporter: "{{ params.use_node_exporter | default(false) }}"
+    use_cadvisor: "{{ params.use_cadvisor | default(false) }}"
+    public_http_port: "{{ params.custom_domain.public_http_port | default('') }}"
+    public_https_port: "{{ params.custom_domain.public_https_port | default('') }}"
+    private_http_port: "{{ params.custom_domain.private_http_port | default('') }}"
+    private_https_port: "{{ params.custom_domain.private_https_port | default('') }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-
-    {% if var_fluentd_output_plugin == 'elasticsearch' %}
-
-    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host }}"
-
-    {% endif %}
-
-    {% endif %}
-
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
-    use_node_exporter: "{{ params.use_node_exporter }}"
-    use_cadvisor: "{{ params.use_cadvisor }}"
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_nginx: "{{ params.use_nginx }}"
-    use_theia: "{{ params.use_theia }}"
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-    use_filestash: "{{ params.use_filestash }}"
-    use_custom_ssl: "{{ var_use_custom_ssl }}"
-    use_certbot: "{{ params.use_certbot }}"
-
-    {% endif %}
+    grafana_port: "{{ params.custom_args.grafana.port | default('3000') }}"
+    grafana_server_domain: "{{ credentials.grafana.server_domain | default('') }}"
+    grafana_smtp_enabled: "{{ credentials.grafana.smtp_enabled | default('') }}"
+    grafana_smtp_host: "{{ credentials.grafana.smtp_host | default('') }}"
+    grafana_smtp_user: "{{ credentials.grafana.smtp_user | default('') }}"
+    grafana_smtp_from_address: "{{ credentials.grafana.smtp_from_address | default('') }}"
+    images: {{ params.custom_images | default({}) | to_json }}
+    memory: {{ params.custom_memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "docker-compose.run.yml"
   params:
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-    s3_cli: "{{ params.s3_cli }}"
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
-
-    {% if params.use_fluentd | bool %}
-
-    fluentd_port: "{{ params.custom_args.fluentd.port }}"
-
-    {% endif %}
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_certbot: "{{ params.use_certbot }}"
-
-    {% endif %}
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
+    images: {{ params.custom_images | default({}) | to_json }}
+    memory: {{ params.custom_memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -159,55 +155,34 @@ templates:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
-    data_dir: "{{ var_data_dir }}"
-    local: "{{ var_local | default(false) }}"
     type: "{{ var_pod_type }}"
-    use_nginx: "{{ params.use_nginx }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    {% if params.use_nginx | bool %}
-
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
-
-    {% else %}
-
-    grafana_port: "{{ params.custom_args.grafana.port }}"
-
-    {% endif %}
-
+    local: "{{ var_local }}"
+    data_dir: "{{ var_data_dir }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
+    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
     grafana_security_admin_password: "{{ credentials.grafana.security_admin_password }}"
-    grafana_server_domain: "{{ credentials.grafana.server_domain }}"
-    grafana_smtp_enabled: "{{ credentials.grafana.smtp_enabled }}"
-    grafana_smtp_host: "{{ credentials.grafana.smtp_host }}"
-    grafana_smtp_user: "{{ credentials.grafana.smtp_user }}"
     grafana_smtp_password: "{{ credentials.grafana.smtp_password }}"
-    grafana_smtp_from_address: "{{ credentials.grafana.smtp_from_address }}"
 
-    {% endif %}
+- src: "{{ var_s3_config_src }}"
+  dest: "{{ var_s3_config_dest }}"
+  schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
+  params:
+    - alias: "backup"
+      endpoint: "{{ credentials.backup_bucket.endpoint }}"
+      region: "{{ credentials.backup_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_bucket.access_key }}"
+      secret_key: "{{ credentials.backup_bucket.secret_key }}"
+    - alias: "backup_replica"
+      endpoint: "{{ credentials.backup_replica_bucket.endpoint }}"
+      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_replica_bucket.access_key }}"
+      secret_key: "{{ credentials.backup_replica_bucket.secret_key }}"
+      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_certbot: "{{ params.use_certbot }}"
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-
-    {% if params.use_minio_gateway | bool %}
-
-    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint }}"
-    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key }}"
-    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key }}"
-
-    {% endif %}
-
-    {% endif %}
-
-{% if var_pod_type in ['app', 'web'] %}
-
-{% if not params.custom_args.nginx.custom | default(false) | bool %}
+###############################
+{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
 
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
   dest: "env/nginx/nginx.conf"
@@ -224,6 +199,7 @@ templates:
     grafana_ssl: "{{ params.custom_domain.grafana_ssl }}"
     use_theia: "{{ params.use_theia }}"
 
+    ###############################
     {% if params.use_theia | bool %}
 
     theia_domain: "{{ params.custom_domain.theia_domain }}"
@@ -231,9 +207,11 @@ templates:
     theia_ssl: "{{ params.custom_domain.theia_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_minio_gateway: "{{ params.use_minio_gateway }}"
 
+    ###############################
     {% if params.use_minio_gateway | bool %}
 
     minio_gateway_domain: "{{ params.custom_domain.minio_gateway_domain }}"
@@ -241,9 +219,11 @@ templates:
     minio_gateway_ssl: "{{ params.custom_domain.minio_gateway_ssl }}"
 
     {% endif %}
+    ###############################
 
     use_filestash: "{{ params.use_filestash }}"
 
+    ###############################
     {% if params.use_filestash | bool %}
 
     filestash_domain: "{{ params.custom_domain.filestash_domain }}"
@@ -251,36 +231,10 @@ templates:
     filestash_ssl: "{{ params.custom_domain.filestash_ssl }}"
 
     {% endif %}
+    ###############################
 
 {% endif %}
-
-{% endif %}
-
-{% if params.s3_cli == 'awscli' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
-  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
-{% elif params.s3_cli == 'rclone' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
-  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
-{% elif params.s3_cli == 'mc' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
-  {% set var_s3_config_dest = 'env/mc/config.json' %}
-{% endif %}
-
-- src: "{{ var_s3_config_src }}"
-  dest: "{{ var_s3_config_dest }}"
-  params:
-    - alias: "backup"
-      endpoint: "{{ credentials.backup_bucket.endpoint }}"
-      region: "{{ credentials.backup_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_bucket.access_key }}"
-      secret_key: "{{ credentials.backup_bucket.secret_key }}"
-    - alias: "backup_replica"
-      endpoint: "{{ credentials.backup_replica_bucket.endpoint }}"
-      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_replica_bucket.access_key }}"
-      secret_key: "{{ credentials.backup_replica_bucket.secret_key }}"
-      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+###############################
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"

@@ -69,10 +69,10 @@ services:
     {% endif %}
 
     ports:
-    - "$PUBLIC_HTTP_PORT:80"
-    - "$PUBLIC_HTTPS_PORT:443"
-    - "$PRIVATE_HTTP_PORT:9080"
-    - "$PRIVATE_HTTPS_PORT:9443"
+    - "{{ params.public_http_port }}:80"
+    - "{{ params.public_https_port }}:443"
+    - "{{ params.private_http_port }}:9080"
+    - "{{ params.private_https_port }}:9443"
     networks:
     - "shared"
     volumes:
@@ -250,7 +250,7 @@ services:
     {% if not (params.use_nginx | bool) %}
 
     ports:
-    - "3000:3000"
+    - "{{ params.grafana_port }}:3000"
 
     {% endif %}
 
@@ -272,12 +272,12 @@ services:
     environment:
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_SECURITY_ADMIN_PASSWORD
-      - GF_SERVER_DOMAIN=$GRAFANA_SERVER_DOMAIN
-      - GF_SMTP_ENABLED=$GRAFANA_SMTP_ENABLED
-      - GF_SMTP_HOST=$GRAFANA_SMTP_HOST
-      - GF_SMTP_USER=$GRAFANA_SMTP_USER
+      - GF_SERVER_DOMAIN={{ params.grafana_server_domain }}
+      - GF_SMTP_ENABLED={{ params.grafana_smtp_enabled }}
+      - GF_SMTP_HOST={{ params.grafana_smtp_host }}
+      - GF_SMTP_USER={{ params.grafana_smtp_user }}
       - GF_SMTP_PASSWORD=$GRAFANA_SMTP_PASSWORD
-      - GF_SMTP_FROM_ADDRESS=$GRAFANA_SMTP_FROM_ADDRESS
+      - GF_SMTP_FROM_ADDRESS={{ params.grafana_smtp_from_address }}
     logging: *mainlog
 
     {% if (params.memory.grafana | default('')) != '' %}

@@ -212,9 +212,9 @@ templates:
     - "{{ var_main_dir }}/templates/docker-compose.run.schema.yml"
     - "{{ var_main_dir }}/templates/images.schema.yml"
   params:
+    pod_type: "{{ var_pod_type }}"
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
-    pod_type: "{{ var_pod_type }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
