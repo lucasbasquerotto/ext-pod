@@ -279,7 +279,7 @@ templates:
 
     var_load__db_backup__repository_name: "{{ params.db_backup.repository_name | default('') }}"
     var_load__db_backup__snapshot_name: "{{ params.db_backup.snapshot_name | default('') }}"
-    var_load__db_backup__use_s3: "{{ params.db_backup.use_s3 | default('') }}"
+    var_load__db_backup__s3_snapshot: "{{ params.db_backup.s3_snapshot | default('') | lower }}"
     var_load__db_backup__is_compressed_file: "{{ params.db_backup.is_compressed_file | default('') }}"
     var_load__db_backup__snapshot_type: "{{ params.db_backup.snapshot_type | default('') }}"
     var_load__db_backup__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"

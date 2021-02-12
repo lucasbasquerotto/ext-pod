@@ -46,7 +46,7 @@ if [ "$tmp_is_db" = 'true' ]; then
 
 		tmp_is_compressed_file="${var_load__db_backup__is_compressed_file:-}"
 
-		if [ "${var_load__db_backup__use_s3:-}" = 'true' ]; then
+		if [ "${var_load__db_backup__s3_snapshot:-}" = 'true' ]; then
 			tmp_db_subtask_cmd_local=''
 			tmp_db_subtask_cmd_remote='backup:db'
 			tmp_db_snapshot_type="${var_load__db_backup__snapshot_type:-s3}"
@@ -61,8 +61,8 @@ if [ "$tmp_is_db" = 'true' ]; then
 		export var_task__db_backup__backup_task__subtask_cmd_remote="$tmp_db_subtask_cmd_remote"
 		export var_task__db_backup__backup_task__is_compressed_file="$tmp_is_compressed_file"
 
-		if [ "${var_load__db_backup__use_s3:-}" = 'true' ] && [ "$tmp_is_compressed_file" = 'true' ]; then
-			tmp_errors+=("db_backup - use_s3 and is_compressed_file are both true")
+		if [ "${var_load__db_backup__s3_snapshot:-}" = 'true' ] && [ "$tmp_is_compressed_file" = 'true' ]; then
+			tmp_errors+=("db_backup - s3_snapshot and is_compressed_file are both true")
 		elif [ "$tmp_is_compressed_file" = 'true' ]; then
 			tmp_compress_type="${var_load__db_backup__db_compress_type:-zip}"
 			tmp_default_compress_file_name='efk.[[ datetime ]].[[ random ]].zip'
@@ -91,6 +91,20 @@ if [ "$tmp_is_db" = 'true' ]; then
 		export var_task__db_backup__backup_db__repository_name="$tmp_db_repository_name"
 		export var_task__db_backup__backup_db__snapshot_name="$tmp_db_snapshot_name"
 		export var_task__db_backup__backup_db__snapshot_type="$tmp_db_snapshot_type"
+
+		if [ "${var_load__db_backup__s3_snapshot:-}" != 'true' ]; then
+			tmp_default_sync_dir='[[ date ]]'
+
+			# if [ -z "${var_load__s3_backup__bucket_name:-}" ]; then
+			# 	tmp_errors+=("[shared] var_load__s3_backup__bucket_name is not defined (db_backup)")
+			# fi
+
+			# export var_task__db_backup__backup_remote__subtask_cmd_s3='s3:subtask:s3_backup'
+			# export var_task__db_backup__backup_remote__backup_bucket_sync_dir="${var_load__db_backup__backup_bucket_sync_dir:-$tmp_default_sync_dir}"
+			# export var_task__db_backup__backup_remote__backup_date_format="${var_load__db_backup__backup_date_format:-}"
+			# export var_task__db_backup__backup_remote__backup_time_format="${var_load__db_backup__backup_time_format:-}"
+			# export var_task__db_backup__backup_remote__backup_datetime_format="${var_load__db_backup__backup_datetime_format:-}"
+		fi
 	fi
 
 
