@@ -1,14 +1,14 @@
 ## general vars - start ###
 
+{% set var_pod_kind = 'efk' %}
+
 {% set var_local = params.local | default(false) | bool %}
 {% set var_pod_type = params.type | default('') %}
 
-{% if not (var_pod_type in ['app']) %}
+{% if not (var_pod_type in ['app', 'web', 'db']) %}
   {% set error = {} %}
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
-
-{% set var_pod_kind = 'efk' %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
