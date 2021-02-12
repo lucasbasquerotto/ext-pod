@@ -13,10 +13,12 @@ schemas:
         type: "str"
         non_empty: true
         choices: ["app", "web", "cache", "db"]
-      use_fluentd:
-        type: "bool"
       use_certbot:
         type: "bool"
+      use_fluentd:
+        type: "bool"
+      fluentd_port:
+        type: "str"
       s3_cli:
         type: "str"
         non_empty: true
@@ -27,4 +29,3 @@ schemas:
       memory:
         type: "dict"
         required: true
-
