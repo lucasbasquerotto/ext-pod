@@ -91,14 +91,13 @@ case "$command" in
 	"migrate:db:table:count")
 		db_service="mysql"
 		db_cmd=""
-		db_host="mysql"
-		db_port="3306"
+		db_host="$var_run__migrate__db_host"
+		db_port="$var_run__migrate__db_port"
 		db_remote=""
 
-		if [ "$var_custom__pod_type" != "app" ]; then
+		if [ "$var_custom__pod_type" != "app" ] && [ "$var_custom__pod_type" != "db" ]; then
 			db_service="mysql_cli"
 			db_cmd="run"
-			db_port="$var_run__migrate__db_port"
 			db_remote="true"
 		fi
 

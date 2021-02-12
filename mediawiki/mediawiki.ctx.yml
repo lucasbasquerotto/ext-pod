@@ -448,6 +448,8 @@ templates:
     var_load__db_backup__db_compress_type: "{{ params.db_backup.db_compress_type | default('') }}"
     var_load__db_backup__compress_pass: "{{ credentials.mediawiki_db.compress_pass | default('') }}"
 
+    var_load__db_main__db_host: "{{ var_mysql_host }}"
+    var_load__db_main__db_port: "{{ var_mysql_port }}"
     var_load__db_main__db_name: "{{ credentials.mediawiki.db.name | default('') }}"
     var_load__db_main__db_user: "{{ credentials.mediawiki.db.user | default('') }}"
     var_load__db_main__db_pass: "{{ credentials.mediawiki.db.password | default('') }}"
