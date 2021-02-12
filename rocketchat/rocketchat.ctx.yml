@@ -81,7 +81,7 @@
   | ternary('mongo://' + var_mongo_host, var_mongo_host)
 %}
 {% set var_mongo_hostname = var_mongo_host | urlsplit('hostname') | default('mongo', true) %}
-{% set var_mongo_port = var_mongo_host | urlsplit('port') | default('3306', true) %}
+{% set var_mongo_port = var_mongo_host | urlsplit('port') | default('27017', true) %}
 
 {% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
 
@@ -183,8 +183,9 @@ templates:
     local: "{{ var_local  }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}

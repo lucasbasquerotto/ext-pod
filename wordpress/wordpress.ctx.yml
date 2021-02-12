@@ -215,8 +215,9 @@ templates:
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
