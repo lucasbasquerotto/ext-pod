@@ -276,6 +276,9 @@ services:
         IMAGE: "{{ params.images.elasticsearch_image }}"
         VERSION: "{{ params.images.elasticsearch_version }}"
         MAIN_DIR: "{{ params.main_dir }}"
+        S3_ENDPOINT: "{{ params.backup_bucket_endpoint }}"
+        S3_ACCESS_KEY: $S3_ACCESS_KEY
+        S3_SECRET_KEY: $S3_SECRET_KEY
     restart: "unless-stopped"
 
     {% if params.use_fluentd | bool %}
