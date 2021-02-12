@@ -60,15 +60,20 @@
 
 {% endif %}
 
+{% set var_ctx_full_name = input.identifier %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
+{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
+{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
+
 ### main ###
 
 env_files:
 
 - when: false
 
-{% if var_pod_type in ['app', 'web'] %}
-
-{% if var_use_custom_ssl | bool %}
+###############################
+{% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
@@ -77,65 +82,55 @@ env_files:
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
 
 {% endif %}
+###############################
+
+###############################
+{% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/conf/.htpasswd"
 
 {% endif %}
+###############################
 
 templates:
-
-{% set var_ctx_full_name = input.identifier %}
-{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
-{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
-{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
-{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "docker-compose.yml"
   params:
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-    internal_elasticsearch: "{{ params.internal_elasticsearch | default('false') }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    use_nginx: "{{ params.use_nginx | default(false) }}"
+    use_theia: "{{ params.use_theia | default(false) }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    use_filestash: "{{ params.use_filestash | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    public_http_port: "{{ params.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.custom_domain.private_https_port }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+    internal_elasticsearch: "{{ params.internal_elasticsearch | default(false) }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_nginx: "{{ params.use_nginx }}"
-    use_theia: "{{ params.use_theia }}"
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-    use_filestash: "{{ params.use_filestash }}"
-    use_custom_ssl: "{{ var_use_custom_ssl }}"
-    use_certbot: "{{ params.use_certbot }}"
-
-    {% endif %}
-
-    {% if params.use_fluentd %}
-
-    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-
-    {% endif %}
-
-- src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
+- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
   params:
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-    s3_cli: "{{ params.s3_cli }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_certbot: "{{ params.use_certbot }}"
-
-    {% endif %}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -143,42 +138,15 @@ templates:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
     ctx_prefix_run: "{{ var_ctx_prefix_run }}"
-    data_dir: "{{ var_data_dir }}"
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     type: "{{ var_pod_type }}"
-    use_fluentd: "{{ params.use_fluentd }}"
-
-    {% if var_pod_type in ['app', 'web'] %}
-
-    use_nginx: "{{ params.use_nginx }}"
-
-    {% if params.use_nginx | bool %}
-
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
-
-    {% else %}
-
-    kibana_port: "{{ params.custom_args.kibana.port }}"
-
-    {% endif %}
-
-    {% endif %}
-
-    {% if var_pod_type in ['app', 'db'] %}
-
-    elasticsearch_java_opts: "{{ params.custom_args.elasticsearch.java_opts }}"
-    internal_elasticsearch: "{{ params.internal_elasticsearch | default('false') }}"
-
-    {% if not (params.internal_elasticsearch | default('false') | bool) %}
-
-    elasticsearch_port: "{{ params.custom_args.elasticsearch.port }}"
-
-    {% endif %}
-
-    {% endif %}
+    local: "{{ var_local }}"
+    data_dir: "{{ var_data_dir }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    use_nginx: "{{ params.use_nginx | default(false) }}"
+    kibana_port: "{{ params.custom_args.kibana.port | default('') }}"
+    elasticsearch_java_opts: "{{ params.custom_args.elasticsearch.java_opts | default('') }}"
+    internal_elasticsearch: "{{ params.internal_elasticsearch | default(false) }}"
+    elasticsearch_port: "{{ params.custom_args.elasticsearch.port | default('') }}"
 
     {% if var_pod_type in ['app', 'web'] %}
 

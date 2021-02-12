@@ -178,7 +178,7 @@ templates:
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 
-- src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
+- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
   params:
     local: "{{ var_local  }}"
