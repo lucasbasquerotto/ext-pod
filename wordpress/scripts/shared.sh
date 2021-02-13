@@ -31,6 +31,7 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		task_info ) arg_task_info="${OPTARG:-}";;
 		task_name ) arg_task_name="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
@@ -39,6 +40,10 @@ while getopts ':-:' OPT; do
 	esac
 done
 shift $((OPTIND-1))
+
+title=''
+[ -n "${arg_task_info:-}" ] && title="${arg_task_info:-} > "
+title="${title}${command}"
 
 pod_env_shared_exec_file="$var_run__general__script_dir/shared.exec.sh"
 pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
@@ -89,43 +94,42 @@ case "$command" in
 	"setup:new")
 		prefix="var_task__${arg_task_name}__setup_new_"
 
-		url="${prefix}_url"
-		title="${prefix}_title"
-		admin_user="${prefix}_admin_user"
-		admin_password="${prefix}_admin_password"
-		admin_email="${prefix}_admin_email"
-		restore_seed="${prefix}_restore_seed"
-		local_seed_data="${prefix}_local_seed_data"
-		remote_seed_data="${prefix}_remote_seed_data"
+		param_url="${prefix}_url"
+		param_title="${prefix}_title"
+		param_admin_user="${prefix}_admin_user"
+		param_admin_password="${prefix}_admin_password"
+		param_admin_email="${prefix}_admin_email"
+		param_restore_seed="${prefix}_restore_seed"
+		param_local_seed_data="${prefix}_local_seed_data"
+		param_remote_seed_data="${prefix}_remote_seed_data"
 
-		opts=()
+		opts=( "--task_info=$title" )
 
-		opts+=( "--setup_url=${!url}" )
-		opts+=( "--setup_title=${!title}" )
-		opts+=( "--setup_admin_user=${!admin_user}" )
-		opts+=( "--setup_admin_password=${!admin_password}" )
-		opts+=( "--setup_admin_email=${!admin_email}" )
-
-		opts+=( "--setup_restore_seed=${!restore_seed:-}" )
-		opts+=( "--setup_local_seed_data=${!local_seed_data:-}" )
-		opts+=( "--setup_remote_seed_data=${!remote_seed_data:-}" )
+		opts+=( "--setup_url=${!param_url}" )
+		opts+=( "--setup_title=${!param_title}" )
+		opts+=( "--setup_admin_user=${!param_admin_user}" )
+		opts+=( "--setup_admin_password=${!param_admin_password}" )
+		opts+=( "--setup_admin_email=${!param_admin_email}" )
+		opts+=( "--setup_restore_seed=${!param_restore_seed:-}" )
+		opts+=( "--setup_local_seed_data=${!param_local_seed_data:-}" )
+		opts+=( "--setup_remote_seed_data=${!param_remote_seed_data:-}" )
 
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;
 	"action:exec:actions")
-		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_register.entropy" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.memory_overview" --task_info="$title" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.memory_details" --task_info="$title" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_register.entropy" --task_info="$title" > /dev/null 2>&1 ||:
 
 		if [ "${var_custom__use_nginx:-}" = "true" ]; then
-			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "shared:action:nginx_reload" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "shared:action:block_ips" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" --task_info="$title" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:nginx_reload" --task_info="$title" > /dev/null 2>&1 ||:
+			"$pod_script_env_file" "shared:action:block_ips" --task_info="$title" > /dev/null 2>&1 ||:
 		fi
 
-		"$pod_script_env_file" "shared:action:logrotate" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_summary" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:logrotate" --task_info="$title" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:log_summary" --task_info="$title" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:backup" --task_info="$title" > /dev/null 2>&1 ||:
 		;;
 	"action:exec:log_summary")
         days_ago="${var_custom__log_summary__days_ago:-}"
@@ -135,22 +139,23 @@ case "$command" in
         max_amount="${arg_max_amount:-$max_amount}"
         max_amount="${max_amount:-100}"
 
-		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
-		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+		"$pod_script_env_file" "shared:log:memory_overview:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
+		"$pod_script_env_file" "shared:log:entropy:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
 			if [ "${var_custom__use_nginx:-}" = "true" ]; then
-				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
-				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
+				"$pod_script_env_file" "shared:log:nginx:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
+				"$pod_script_env_file" "shared:log:nginx:summary:connections" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
 		fi
 
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
-			"$pod_script_env_file" "shared:log:mysql_slow:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+			"$pod_script_env_file" "shared:log:mysql_slow:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 		fi
 
-		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"
+		"$pod_script_env_file" "shared:log:file_descriptors:summary" --task_info="$title" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:disk:summary" \
+			--task_info="$title" \
 			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
 			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
 		;;

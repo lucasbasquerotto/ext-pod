@@ -94,17 +94,15 @@ if [ "$tmp_is_db" = 'true' ]; then
 		export var_task__db_backup__backup_db__snapshot_name="$tmp_db_snapshot_name"
 		export var_task__db_backup__backup_db__snapshot_type="$tmp_db_snapshot_type"
 		export var_task__db_backup__backup_db__bucket_name="${var_load__s3_backup__bucket_name:-}"
-		export var_task__db_backup__backup_db__bucket_path="${var_load__s3_backup__bucket_path:-}"
+		export var_task__db_backup__backup_db__bucket_path="${var_load__db_backup__backup_bucket_sync_dir:-}"
 
 		if [ "${var_load__db_backup__s3_snapshot:-}" != 'true' ]; then
-			tmp_default_sync_dir='[[ date ]]'
-
 			if [ -z "${var_load__s3_backup__bucket_name:-}" ]; then
 				tmp_errors+=("[shared] var_load__s3_backup__bucket_name is not defined (db_backup)")
 			fi
 
 			export var_task__db_backup__backup_remote__subtask_cmd_s3='s3:subtask:s3_backup'
-			export var_task__db_backup__backup_remote__backup_bucket_sync_dir="${var_load__db_backup__backup_bucket_sync_dir:-$tmp_default_sync_dir}"
+			export var_task__db_backup__backup_remote__backup_bucket_sync_dir="${var_load__db_backup__backup_bucket_sync_dir:-}"
 			export var_task__db_backup__backup_remote__backup_date_format="${var_load__db_backup__backup_date_format:-}"
 			export var_task__db_backup__backup_remote__backup_time_format="${var_load__db_backup__backup_time_format:-}"
 			export var_task__db_backup__backup_remote__backup_datetime_format="${var_load__db_backup__backup_datetime_format:-}"
