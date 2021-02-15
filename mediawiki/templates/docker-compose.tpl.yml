@@ -527,7 +527,7 @@ services:
     {% if params.pod_type in ['db'] %}
 
     ports:
-    - "3306:3306"
+    - "{{ params.db_port }}:3306"
 
     {% endif %}
 
