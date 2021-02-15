@@ -127,6 +127,7 @@ templates:
     private_https_port: "{{ params.custom_domain.private_https_port | default('') }}"
     fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+    elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     grafana_port: "{{ params.custom_args.grafana.port | default('3000') }}"
     grafana_server_domain: "{{ credentials.grafana.server_domain | default('') }}"
     grafana_smtp_enabled: "{{ credentials.grafana.smtp_enabled | default('') }}"

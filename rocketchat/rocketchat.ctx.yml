@@ -166,7 +166,7 @@ templates:
     db_gui_user: "{{ var_db_gui_user }}"
     fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host | default('') }}"
+    elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     hubot_room: "{{ credentials.hubot.room | default('') }}"
     hubot_user: "{{ credentials.hubot.user | default('') }}"
     hubot_bot_name: "{{ credentials.hubot.bot_name | default('') }}"

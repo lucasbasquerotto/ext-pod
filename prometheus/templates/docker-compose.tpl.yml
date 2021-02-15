@@ -473,10 +473,11 @@ services:
     networks:
     - "log"
 
-    {% if (params.elasticsearch_host_ip | default('')) != '' %}
+    {% if params.fluentd_output_plugin == 'elasticsearch' %}
 
-    extra_hosts:
-    - "elasticsearch:{{ params.elasticsearch_host_ip }}"
+    environment:
+      ELASTICSEARCH_HOSTNAME: "{{ params.elasticsearch_host | urlsplit('hostname') }}"
+      ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
 
     {% endif %}
 

@@ -171,7 +171,7 @@ templates:
     pma_login_cookie_validity: "{{ params.custom_args.pma.login_cookie_validity | default('36000') }}"
     fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-    elasticsearch_host_ip: "{{ input.dependencies.elasticsearch.host | default('') }}"
+    elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     images: {{ params.custom_images | to_json }}
     memory: {{ params.custom_memory | to_json }}
 

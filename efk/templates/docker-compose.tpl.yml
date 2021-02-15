@@ -392,10 +392,19 @@ services:
     networks:
     - "log"
 
-    {% if params.pod_type == 'web' %}
+    {% if (params.pod_type == 'db') and (params.fluentd_output_plugin == 'elasticsearch') %}
 
-    extra_hosts:
-    - "elasticsearch:$DB_HOST_IP"
+    environment:
+      ELASTICSEARCH_HOSTNAME: "elasticsearch"
+      ELASTICSEARCH_PORT: "9200"
+
+    {% endif %}
+
+    {% if (params.pod_type != 'db') and (params.fluentd_output_plugin == 'elasticsearch') %}
+
+    environment:
+      ELASTICSEARCH_HOSTNAME: "{{ params.elasticsearch_host | urlsplit('hostname') }}"
+      ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
 
     {% endif %}
 

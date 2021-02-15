@@ -124,6 +124,7 @@ templates:
     kibana_port: "{{ params.custom_args.kibana.port | default('') }}"
     elasticsearch_java_opts: "{{ params.custom_args.elasticsearch.java_opts | default('') }}"
     elasticsearch_port: "{{ params.custom_args.elasticsearch.port | default('') }}"
+    elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     internal_elasticsearch: "{{ params.internal_elasticsearch | default(false) }}"
     backup_bucket_endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
     images: {{ params.custom_images | to_json }}

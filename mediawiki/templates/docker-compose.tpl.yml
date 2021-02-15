@@ -614,6 +614,15 @@ services:
     - "{{ params.fluentd_port }}:24224/udp"
     networks:
     - "log"
+
+    {% if params.fluentd_output_plugin == 'elasticsearch' %}
+
+    environment:
+      ELASTICSEARCH_HOSTNAME: "{{ params.elasticsearch_host | urlsplit('hostname') }}"
+      ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
+
+    {% endif %}
+
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
