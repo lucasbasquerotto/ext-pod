@@ -92,7 +92,7 @@ schemas:
       fluentd_output_plugin:
         type: "str"
         non_empty: true
-      elasticsearch_host_ip:
+      elasticsearch_host:
         type: "str"
       images:
         type: "dict"
