@@ -73,10 +73,6 @@ schemas:
         type: "str"
       certbot_version:
         type: "str"
-      mysql_image:
-        type: "str"
-      mysql_version:
-        type: "str"
       logrotator_image:
         type: "str"
       logrotator_version:

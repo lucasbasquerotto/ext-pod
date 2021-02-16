@@ -460,7 +460,7 @@ templates:
     var_load_enable__sync_backup: "{{ params.enable_sync_backup | default('') | lower }}"
     var_load_enable__backup_replica: "{{ params.enable_backup_replica | default('') | lower }}"
 
-    var_load_enable__db_setup: "{{ params.enable_db_setup_new | default('') | lower }}"
+    var_load_enable__db_setup_new: "{{ params.enable_db_setup_new | default('') | lower }}"
     var_load_enable__db_setup: "{{ params.enable_db_setup | default('') | lower }}"
     var_load_enable__uploads_setup: "{{ params.enable_uploads_setup | default('') | lower }}"
     var_load_enable__logs_setup: "{{ params.enable_logs_setup | default('') | lower }}"
