@@ -30,6 +30,7 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"			# if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		task_info ) arg_task_info="${OPTARG:-}";;
 		setup_url ) arg_setup_url="${OPTARG:-}";;
 		setup_title ) arg_setup_title="${OPTARG:-}";;
 		setup_admin_user ) arg_setup_admin_user="${OPTARG:-}";;
@@ -74,7 +75,7 @@ case "$command" in
 				error "$command - seed_data not provided"
 			else
 				info "$command - migrate..."
-				"$pod_script_env_file" migrate
+				"$pod_script_env_file" migrate --task_info="${arg_task_info:-}"
 
 				if [ -n "$arg_setup_local_seed_data" ]; then
 					info "$command - import local seed data"
