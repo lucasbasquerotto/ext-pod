@@ -306,7 +306,6 @@ templates:
     var_load__db_main__db_pass: "{{ credentials.efk.db.password | default('') }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
 
-    var_load__db_setup__snapshot_name: "{{ params.db_setup.snapshot_name | default('') }}"
     var_load__db_setup__use_s3: "{{ params.db_setup.use_s3 | default('') }}"
     var_load__db_setup__repository_name: "{{ params.db_setup.repository_name | default('') }}"
     var_load__db_setup__snapshot_name: "{{ params.db_setup.snapshot_name | default('') }}"
