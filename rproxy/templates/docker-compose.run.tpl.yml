@@ -1,0 +1,105 @@
+version: "2.4"
+
+x-logging:
+
+  {% if params.use_fluentd | bool %}
+
+  mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "{% raw %}docker.{{.Name}}{% endraw %}"
+      fluentd-address: "localhost:{{ params.fluentd_port }}"
+  jsonlog: &jsonlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+  {% else %}
+
+  mainlog: &mainlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+  {% endif %}
+
+networks:
+  shared:
+    external: true
+    name: "${CTX_NAME}-network"
+
+services:
+
+  {% if (params.pod_type in ['app', 'web']) and (params.use_certbot | bool) %}
+
+  certbot:
+    container_name: "${CTX_PREFIX_RUN}certbot"
+    hostname: "certbot"
+    build:
+      context: .
+      dockerfile: "shared/containers/certbot/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.certbot_image }}"
+        VERSION: "{{ params.images.certbot_version }}"
+    volumes:
+    - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
+    - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
+    logging: *mainlog
+
+    {% if (params.memory.certbot | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.certbot }}"
+
+    {% endif %}
+
+  {% endif %}
+
+  logrotator:
+    container_name: "${CTX_PREFIX_RUN}logrotator"
+    hostname: "logrotator"
+    build:
+      context: .
+      dockerfile: "shared/containers/python3/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.logrotator_image }}"
+        VERSION: "{{ params.images.logrotator_version }}"
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: python3 /bin/logrotate.py /tmp/main/log /var/log/main/rotated
+
+    {% if (params.memory.logrotator | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.logrotator }}"
+
+    {% endif %}
+
+  s3_cli:
+    container_name: "${CTX_PREFIX_RUN}s3_cli"
+    hostname: "s3_cli"
+    build:
+      context: .
+      dockerfile: "shared/containers/{{ params.s3_cli }}/Dockerfile"
+      args:
+        IMAGE: "{{ params.images[params.s3_cli + '_image'] }}"
+        VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
+    restart: "unless-stopped"
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+
+    {% if (params.memory.s3_cli | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.s3_cli }}"
+
+    {% endif %}

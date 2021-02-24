@@ -1,0 +1,210 @@
+version: '2.4'
+
+x-logging:
+
+  {% if params.use_fluentd | bool %}
+
+  mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "{% raw %}docker.{{.Name}}{% endraw %}"
+      fluentd-address: "localhost:{{ params.fluentd_port }}"
+  jsonlog: &jsonlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+  {% else %}
+
+  mainlog: &mainlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+  {% endif %}
+
+networks:
+
+  {% if params.use_fluentd | bool %}
+
+  log:
+    driver: "bridge"
+
+  {% endif %}
+
+  shared:
+    external: true
+    name: "${CTX_NAME}-network"
+
+services:
+
+  nginx:
+    container_name: "${CTX_PREFIX_MAIN}nginx"
+    hostname: "nginx"
+    build:
+      context: .
+      dockerfile: "shared/containers/nginx/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.nginx_image }}"
+        VERSION: "{{ params.images.nginx_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    ports:
+    - "{{ params.public_http_port }}:80"
+    - "{{ params.public_https_port }}:443"
+    - "{{ params.private_http_port }}:9080"
+    - "{{ params.private_https_port }}:9443"
+    networks:
+    - "shared"
+    volumes:
+
+    {% if params.use_custom_ssl | default(false) | bool %}
+
+    - "./env/nginx/ssl:/etc/ssl:ro"
+
+    {% elif params.use_certbot | default(false) | bool %}
+
+    - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
+
+    {% endif %}
+
+    - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
+    - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
+    - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
+    - "$DATA_DIR/tmp/tmp/nginx:/tmp/main/tmp/nginx"
+    logging: *mainlog
+
+    {% if (params.memory.nginx | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.nginx }}"
+
+    {% endif %}
+
+  {% if params.use_theia | bool %}
+
+  theia:
+    container_name: "${CTX_PREFIX_MAIN}theia"
+    hostname: "theia"
+    build:
+      context: .
+      dockerfile: "shared/containers/theia/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.theia_image }}"
+        VERSION: "{{ params.images.theia_version }}"
+    restart: "unless-stopped"
+    user: root
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/.git:/home/project/.git:ro"
+    - "$DATA_DIR:/home/project/data:ro"
+    - "$DATA_DIR/sync:/home/project/sync:cached"
+    - "$DATA_DIR/action:/home/project/action:cached"
+
+    {% if params.local | bool %}
+
+    - "$DATA_DIR/log:/home/project/log:cached"
+    - "$DATA_DIR/tmp:/home/project/tmp:cached"
+
+    {% endif %}
+
+    - "$DATA_DIR/tmp/theia:/tmp/main/theia"
+    - "$DATA_DIR/tmp/tmp/theia:/tmp/main/tmp/theia"
+    logging: *mainlog
+
+    {% if (params.memory.theia | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.theia }}"
+
+    {% endif %}
+
+  {% endif %}
+
+  toolbox:
+    container_name: "${CTX_PREFIX_MAIN}toolbox"
+    hostname: "toolbox"
+    build:
+      context: .
+      dockerfile: "shared/containers/toolbox/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.toolbox_image }}"
+        VERSION: "{{ params.images.toolbox_version }}"
+    restart: "unless-stopped"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+
+    {% if (params.memory.toolbox | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.toolbox }}"
+
+    {% endif %}
+
+  {% if params.use_fluentd | bool %}
+
+  fluentd:
+    container_name: "${CTX_PREFIX_MAIN}fluentd"
+    hostname: "fluentd"
+    build:
+      context: .
+      dockerfile: "shared/containers/fluentd/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.fluentd_image }}"
+        VERSION: "{{ params.images.fluentd_version }}"
+        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
+    restart: "unless-stopped"
+    ports:
+    - "{{ params.fluentd_port }}:24224"
+    - "{{ params.fluentd_port }}:24224/udp"
+    networks:
+    - "log"
+
+    {% if params.fluentd_output_plugin == 'elasticsearch' %}
+
+    environment:
+      ELASTICSEARCH_HOSTNAME: "{{ params.elasticsearch_host | urlsplit('hostname') }}"
+      ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
+
+    {% endif %}
+
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
+    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
+    logging: *jsonlog
+
+    {% if (params.memory.fluentd | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.fluentd }}"
+
+    {% endif %}
+
+  {% endif %}

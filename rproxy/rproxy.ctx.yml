@@ -1,0 +1,226 @@
+## general vars - start ###
+
+{% set var_pod_kind = 'rproxy' %}
+
+{% set var_local = params.local | default(false) | bool %}
+
+{% set var_main_base_dir = params.custom_dir %}
+{% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
+{% set var_main_base_dir_container = (var_local and (params.custom_dir_sync | default(false) | bool))
+  | ternary(var_main_base_dir + '-sync', var_main_base_dir)
+%}
+{% set var_main_dir_container = var_main_base_dir_container + '/' + var_pod_kind %}
+{% set var_shared_dir = 'shared' %}
+
+{% set var_data_dir = input.data_dir %}
+
+{% set var_ctx_full_name = input.identifier %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
+{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
+{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
+
+{% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}
+{% set var_custom_ssl_fullchain = params.custom_ssl.fullchain | default('') %}
+{% set var_custom_ssl_privkey = params.custom_ssl.privkey | default('') %}
+{% set var_use_custom_ssl = (var_custom_ssl_main_domain != '')
+  and (var_custom_ssl_fullchain != '')
+  and (var_custom_ssl_privkey != '')
+%}
+
+{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+
+{% set var_s3_config_src = '' %}
+{% set var_s3_config_dest = '' %}
+
+{% if params.s3_cli == 'awscli' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
+  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
+{% elif params.s3_cli == 'rclone' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
+  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
+{% elif params.s3_cli == 'mc' %}
+  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
+  {% set var_s3_config_dest = 'env/mc/config.json' %}
+{% endif %}
+
+### main ###
+
+env_files:
+
+- when: false
+
+###############################
+{% if var_use_custom_ssl | bool %}
+
+- src: "{{ var_custom_ssl_fullchain }}"
+  dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+
+- src: "{{ var_custom_ssl_privkey }}"
+  dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+
+{% endif %}
+###############################
+
+###############################
+{% if (params.auth_file | default('')) != '' %}
+
+- src: "{{ params.auth_file }}"
+  dest: "env/nginx/conf/.htpasswd"
+
+{% endif %}
+###############################
+
+templates:
+
+- src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
+  dest: "docker-compose.yml"
+  params:
+    local: "{{ var_local | default(false) }}"
+    main_dir: "{{ var_main_dir_container }}"
+    use_fluentd: "{{ params.use_fluentd }}"
+    use_theia: "{{ params.use_theia | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    public_http_port: "{{ params.custom_domain.public_http_port }}"
+    public_https_port: "{{ params.custom_domain.public_https_port }}"
+    private_http_port: "{{ params.custom_domain.private_http_port }}"
+    private_https_port: "{{ params.custom_domain.private_https_port }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+    elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
+    images: {{ params.custom_images | to_json }}
+    memory: {{ params.custom_memory | to_json }}
+
+- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
+  dest: "docker-compose.run.yml"
+  params:
+    pod_type: "{{ var_pod_type }}"
+    local: "{{ var_local }}"
+    main_dir: "{{ var_main_dir_container }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
+    images: {{ params.custom_images | to_json }}
+    memory: {{ params.custom_memory | to_json }}
+
+- src: "{{ var_main_dir }}/templates/docker-compose.env"
+  dest: ".env"
+  params:
+    ctx_full_name: "{{ var_ctx_full_name }}"
+    ctx_prefix_main: "{{ var_ctx_prefix_main }}"
+    ctx_prefix_run: "{{ var_ctx_prefix_run }}"
+    data_dir: "{{ var_data_dir }}"
+
+- src: "{{ var_s3_config_src }}"
+  dest: "{{ var_s3_config_dest }}"
+  schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
+  params:
+    - alias: "backup"
+      endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+      region: "{{ credentials.backup_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.backup_bucket.secret_key | default('') }}"
+    - alias: "backup_replica"
+      endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
+      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
+      access_key: "{{ credentials.backup_replica_bucket.access_key | default('') }}"
+      secret_key: "{{ credentials.backup_replica_bucket.secret_key | default('') }}"
+      when: "{{params.enable_backup_replica | bool }}"
+
+###############################
+{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
+
+- src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
+  dest: "env/nginx/nginx.conf"
+  params:
+    conf: {{ params.custom_args.nginx.conf | default({}) | to_json }}
+    enable_validate_origin: "{{ params.custom_args.nginx.enable_validate_origin }}"
+    main_domain: "{{ params.custom_domain.main_domain }}"
+    main_port: "{{ var_main_domain_port }}"
+    main_ssl: "{{ params.custom_domain.main_ssl }}"
+    main: "{{ params.custom_args.nginx.main | default({}) }}"
+
+{% endif %}
+###############################
+
+- src: "main/vars/vars.tpl.sh"
+  dest: "vars.sh"
+  params:
+    var_load_script_path: "{{ var_main_dir }}/scripts/rproxy.vars.sh"
+
+    var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
+    var_load_general__main_base_dir: "{{ var_main_base_dir }}"
+    var_load_general__main_base_dir_container: "{{ var_main_base_dir_container }}"
+    var_load_general__backup_is_delete_old: "true"
+
+    var_load_main__data_dir: "{{ input.data_dir }}"
+    var_load_main__pod_type: "web"
+    var_load_main__local: "{{ var_local | default('') | lower }}"
+
+    var_load_shared__delete_old__days: "3"
+
+    var_load_use__main_network: "true"
+    var_load_use__logrotator: "true"
+    var_load_use__nginx: "true"
+    var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
+    var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
+    var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
+    var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
+    var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
+
+    # Enable Tasks
+
+    var_load_enable__logs_backup: "{{ params.enable_logs_backup | default('') | lower }}"
+    var_load_enable__sync_backup: "{{ params.enable_sync_backup | default('') | lower }}"
+    var_load_enable__backup_replica: "{{ params.enable_backup_replica | default('') | lower }}"
+
+    var_load_enable__logs_setup: "{{ params.enable_logs_setup | default('') | lower }}"
+    var_load_enable__sync_setup: "{{ params.enable_sync_setup | default('') | lower }}"
+
+    # Tasks
+
+    var_load__backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
+    var_load__backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
+
+    var_load__block_ips: "{{ params.block_ips | default('') | lower }}"
+    var_load__block_ips__max_amount: "{{ params.block_ips.max_amount | default('') }}"
+    var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
+    var_load__block_ips__amount_hour: "{{ params.block_ips.amount_hour | default('') }}"
+
+    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
+    var_load__certbot__domains: "{{ params.certbot.domains | default('') }}"
+    var_load__certbot__email: "{{ params.certbot.email | default('') }}"
+    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
+    var_load__certbot__main_domain: "{{ params.certbot.main_domain | default('') }}"
+    var_load__certbot__rsa_key_size: "{{ params.certbot.rsa_key_size | default('') }}"
+    var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
+
+    var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
+    var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"
+    var_load__log_summary__max_amount: "{{ params.log_summary.max_amount | default('') }}"
+    var_load__log_summary__verify_size_docker_dir: "{{ params.log_summary.verify_size_docker_dir | default('') | lower }}"
+    var_load__log_summary__verify_size_containers: "{{ params.log_summary.verify_size_containers | default('') | lower }}"
+
+    var_load__logs_setup__restore_bucket_path_dir: "{{ params.logs_setup.restore_bucket_path_dir | default('') }}"
+    var_load__logs_setup__verify_file_to_skip: "{{ params.logs_setup.verify_file_to_skip | default('') }}"
+    var_load__logs_setup__recursive_mode: "{{ params.logs_setup.recursive_mode | default('') }}"
+    var_load__logs_setup__recursive_mode_dir: "{{ params.logs_setup.recursive_mode_dir | default('') }}"
+    var_load__logs_setup__recursive_mode_file: "{{ params.logs_setup.recursive_mode_file | default('') }}"
+
+    var_load__s3_backup__bucket_name: "{{ params.backup_bucket_name | default('') }}"
+    var_load__s3_backup__bucket_path: "{{ params.backup_bucket_path | default('') }}"
+    var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
+    var_load__s3_backup__endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+
+    var_load__s3_backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
+    var_load__s3_backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
+    var_load__s3_backup_replica__cli: "{{ params.s3_cli | default('') }}"
+    var_load__s3_backup_replica__endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
+
+    var_load__sync_setup__restore_bucket_path_dir: "{{ params.sync_setup.restore_bucket_path_dir | default('') }}"
+    var_load__sync_setup__verify_file_to_skip: "{{ params.sync_setup.verify_file_to_skip | default('') }}"
+    var_load__sync_setup__recursive_mode: "{{ params.sync_setup.recursive_mode | default('') }}"
+    var_load__sync_setup__recursive_mode_dir: "{{ params.sync_setup.recursive_mode_dir | default('') }}"
+    var_load__sync_setup__recursive_mode_file: "{{ params.sync_setup.recursive_mode_file | default('') }}"

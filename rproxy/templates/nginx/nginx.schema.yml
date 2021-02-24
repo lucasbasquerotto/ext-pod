@@ -1,0 +1,147 @@
+root: "nginx_schema"
+schemas:
+  nginx_schema:
+    type: "dict"
+    props:
+      main_domain:
+        type: "str"
+        non_empty: true
+        description: >-
+          the main domain for the webservice; used when defining the path to ssl files,
+          as well as for redirecting from www.main-domain to main-domain
+      conf:
+        schema: "conf"
+        description: "general nginx configuration and values to replace defaults in the template"
+      services:
+        type: "list"
+        elem_schema: "service"
+        required: true
+        description: "list with services that will translate in server sections in the file"
+  conf:
+    type: "dict"
+    props:
+      ssl:
+        type: "bool"
+        description: "when true, listen on secure ports: 443 (remote) / 8443 (local) and 9443 (private)"
+      enable_validate_origin:
+        type: "bool"
+        description: >-
+          validates the origin when doing non-GET requests, blocking requests from different origins
+          (uses the http origin header)
+      proxy_cache_valid:
+        type: "str"
+        description: "used when the location doesn't specify a value when using cache; defaults to 1h"
+      expires:
+        type: "str"
+        description: "used when the location doesn't specify a value when using cache; defaults to 1h"
+      resolver:
+        type: "str"
+        description: "defaults to 127.0.0.11"
+      resolver_time:
+        type: "str"
+        description: "defaults to 30s"
+      worker_process:
+        type: "int"
+        description: "defaults to 1"
+      worker_connections:
+        type: "int"
+        description: "defaults to 512"
+      log_format:
+        type: "str"
+        description: >-
+          defaults to (one-line):
+
+          $remote_addr
+          $sent_http_x_user_id
+          $upstream_response_time
+          $status
+          $remote_user
+          [$time_local]
+          "$host"
+          "$request"
+          $body_bytes_sent
+          "$http_referer"
+          "$http_user_agent"
+          $request_time
+      limit_req_zone_rate:
+        type: "str"
+        description: "defaults to 3r/s"
+      bg_limit_req_zone_rate:
+        type: "str"
+        description: "defaults to 3r/s"
+      web_cache_size:
+        type: "str"
+        description: "defaults to 20m"
+      web_cache_max_size:
+        type: "str"
+        description: "defaults to 200m"
+      web_cache_inactive:
+        type: "str"
+        description: "defaults to 30m"
+      proxy_connect_timeout:
+        type: "str"
+        description: "defaults to 30"
+      proxy_send_timeout:
+        type: "str"
+        description: "defaults to 60"
+      proxy_read_timeout:
+        type: "str"
+        description: "defaults to 60"
+      send_timeout:
+        type: "str"
+        description: "defaults to 60"
+      client_body_timeout:
+        type: "str"
+        description: "defaults to 5s"
+      client_header_timeout:
+        type: "str"
+        description: "defaults to 5s"
+      map_hash_max_size:
+        type: "str"
+        description: "defaults to 1024"
+      map_hash_bucket_size:
+        type: "str"
+        description: "defaults to 128"
+  service:
+    type: "dict"
+    props:
+      name:
+        type: "str"
+        non_empty: true
+        description: "service name (has only a labeling function)"
+      when:
+        type: "bool"
+        description: "when false, the service is ignored; defaults to true"
+      domain:
+        type: "str"
+        non_empty: true
+        description: "domain in which the requests are received"
+      port:
+        type: "str"
+        description: "port in which the requests are received in the service"
+      service:
+        type: "str"
+        description: >-
+          the service endpoint (used when the data field in the locations is empty),
+          proxying requests to the specified endpoint
+      ssl:
+        type: "bool"
+        description: "when true, expects a secure connection (https); defaults to false"
+      upgrade:
+        type: "bool"
+        description: "when true, expects a secure connection (https); defaults to false"
+      private:
+        type: "bool"
+        description: "when true, uses the private ports; defaults to false"
+      use_basic_auth:
+        type: "bool"
+        description: "when true, expects a secure connection (https); defaults to false"
+
+
+  {% set var_arg_domain = args.domain | default('') %}
+  {% set var_arg_port = args.port | default('') %}
+  {% set var_arg_listen = args.listen | default('') %}
+  {% set var_arg_ssl = args.ssl | default(false) %}
+  {% set var_arg_upgrade = args.upgrade | default(false) %}
+  {% set var_arg_private = args.private | default(false) %}
+  {% set var_arg_use_basic_auth = args.use_basic_auth | default(false) %}
