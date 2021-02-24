@@ -301,9 +301,53 @@ templates:
 - src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
   dest: "env/nginx/nginx.conf"
   params:
-    conf: {{ params.custom_args.nginx.conf | default({}) | to_json }}
-    enable_validate_origin: "{{ params.custom_args.nginx.enable_validate_origin }}"
     main_domain: "{{ params.custom_domain.main_domain }}"
+    conf: {{ params.custom_args.nginx.conf | default({ 'ssl': params.use_ssl | default(false) }) | to_json }}
+    ports:
+      public_http_port: "{{ params.custom_domain.public_http_port }}"
+      public_https_port: "{{ params.custom_domain.public_https_port }}"
+      private_http_port: "{{ params.custom_domain.private_http_port }}"
+      private_https_port: "{{ params.custom_domain.private_https_port }}"
+    services:
+      - name: "mediawiki"
+        domain: "{{ params.custom_domain.main_domain }}"
+        service: "{{ params.use_varnish | default(false) | bool | ternary('http://varnish:80', 'http://mediawiki:80') }}"
+      - name: "private"
+        domain: "{{ params.custom_domain.main_domain }}"
+        private: true
+        location_info_list:
+          - location: "= /nginx/basic_status"
+            data: "stub_status;"
+          - location: "/"
+            data: "return 404;"
+      - name: "theia"
+        when: "{{ params.use_theia | default(false) }}"
+        domain: "{{ params.custom_domain.theia_domain | default('') }}"
+        service: "http://theia:3000"
+        upgrade: true
+        private: true
+      - name: "minio_gateway"
+        when: "{{ params.use_minio_gateway | default(false) }}"
+        domain: "{{ params.custom_domain.minio_gateway_domain | default('') }}"
+        service: "http://minio_gateway:9000"
+        private: true
+      - name: "filestash"
+        when: "{{ params.use_filestash | default(false) }}"
+        domain: "{{ params.custom_domain.filestash_domain | default('') }}"
+        service: "http://filestash:8334"
+        private: true
+      - name: "phpmyadmin"
+        when: "{{ params.use_pma | default(false) }}"
+        domain: "{{ params.custom_domain.pma_domain | default('') }}"
+        service: "http://phpmyadmin:80"
+        private: true
+      - name: "adminer"
+        when: "{{ params.use_adminer | default(false) }}"
+        domain: "{{ params.custom_domain.adminer_domain | default('') }}"
+        service: "http://adminer:8080"
+        private: true
+
+    enable_validate_origin: "{{ params.custom_args.nginx.enable_validate_origin }}"
     main_port: "{{ var_main_domain_port }}"
     main_ssl: "{{ params.custom_domain.main_ssl }}"
     main: "{{ params.custom_args.nginx.main | default({}) }}"
