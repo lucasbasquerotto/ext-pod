@@ -71,11 +71,16 @@
   {% set var_s3_config_dest = 'env/mc/config.json' %}
 {% endif %}
 
-{% set var_server = (params.use_ssl | default(false) | bool) |
-  ternary('https', 'http') + '://' +
-  (params.main_domain | default(''))
-  + (not ((var_main_domain_port | default('')) in ['80', '443'])) |
-  ternary(':' + (var_main_domain_port | default('')), '')
+{% set var_mediawiki_domain = params.domains.mediawiki | default('') %}
+{% set var_mediawiki_external_port = params.use_ssl | default(false) | bool | ternary(
+    params.ports.public_https_port | default(''),
+    params.ports.public_http_port | default('')
+  )
+%}
+{% set var_mediawiki_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
+  + '://' + var_mediawiki_domain
+  + (((var_mediawiki_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_mediawiki_external_port | string)))
 %}
 
 ### main ###
@@ -100,7 +105,7 @@ env_files:
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
-  dest: "env/nginx/conf/.htpasswd"
+  dest: "env/nginx/auth/.htpasswd"
 
 {% endif %}
 ###############################
@@ -190,7 +195,7 @@ templates:
   params:
     sitename: "{{ params.mediawiki.sitename | default('') }}"
     meta_namespace: "{{ params.mediawiki.meta_namespace | default('') }}"
-    server: "{{ var_server }}"
+    server: "{{ var_mediawiki_external_host }}"
     logo: "{{ params.mediawiki.logo | default('') }}"
     emergency_contact: "{{ params.mediawiki.emergency_contact | default('') }}"
     password_sender: "{{ params.mediawiki.password_sender | default('') }}"

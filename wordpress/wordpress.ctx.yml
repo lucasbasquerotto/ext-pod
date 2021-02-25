@@ -76,7 +76,7 @@
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
-{% set var_wp_domain = params.domains.wordpress | default('') %}
+{% set var_wp_domain = params.domains.wp | default('') %}
 {% set var_wp_external_port = params.use_ssl | default(false) | bool | ternary(
     params.ports.public_https_port | default(''),
     params.ports.public_http_port | default('')
@@ -129,7 +129,7 @@ env_files:
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
-  dest: "env/nginx/conf/.htpasswd"
+  dest: "env/nginx/auth/.htpasswd"
 
 {% endif %}
 ###############################
@@ -325,7 +325,7 @@ templates:
       private_https_port: "{{ params.ports.private_https_port }}"
     services:
       - name: "wordpress"
-        domain: "{{ params.domains.wordpress }}"
+        domain: "{{ params.domains.wp }}"
         service: "{{ var_wordpress_service }}"
       - name: "private"
         domain: "{{ params.domains.private }}"

@@ -104,7 +104,7 @@ env_files:
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
-  dest: "env/nginx/conf/.htpasswd"
+  dest: "env/nginx/auth/.htpasswd"
 
 {% endif %}
 ###############################
