@@ -179,11 +179,14 @@ templates:
 ###############################
 {% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
 
-- src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
+{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+
+- src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   dest: "env/nginx/nginx.conf"
+  schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.custom_domain.main_domain }}"
-    conf: {{ params.custom_args.nginx.conf | default({ 'ssl': params.use_ssl | default(false) }) | to_json }}
+    conf: {{ params.custom_args.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports:
       public_http_port: "{{ params.custom_domain.public_http_port }}"
       public_https_port: "{{ params.custom_domain.public_https_port }}"
@@ -195,14 +198,6 @@ templates:
         service: "http://kibana:5601"
         upgrade: true
         private: true
-      - name: "private"
-        domain: "{{ params.custom_domain.main_domain }}"
-        private: true
-        location_info_list:
-          - location: "= /nginx/basic_status"
-            data: "stub_status;"
-          - location: "/"
-            data: "return 404;"
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
         domain: "{{ params.custom_domain.theia_domain | default('') }}"

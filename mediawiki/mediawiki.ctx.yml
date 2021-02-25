@@ -298,11 +298,17 @@ templates:
 ###############################
 {% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
 
-- src: "{{ var_main_dir }}/templates/nginx/nginx.conf"
+{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_mediawiki_service = params.use_varnish | default(false) | bool
+  | ternary('http://varnish:80', 'http://mediawiki:80')
+%}
+
+- src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   dest: "env/nginx/nginx.conf"
+  schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.custom_domain.main_domain }}"
-    conf: {{ params.custom_args.nginx.conf | default({ 'ssl': params.use_ssl | default(false) }) | to_json }}
+    conf: {{ params.custom_args.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports:
       public_http_port: "{{ params.custom_domain.public_http_port }}"
       public_https_port: "{{ params.custom_domain.public_https_port }}"
@@ -311,7 +317,7 @@ templates:
     services:
       - name: "mediawiki"
         domain: "{{ params.custom_domain.main_domain }}"
-        service: "{{ params.use_varnish | default(false) | bool | ternary('http://varnish:80', 'http://mediawiki:80') }}"
+        service: "{{ var_mediawiki_service }}"
       - name: "private"
         domain: "{{ params.custom_domain.main_domain }}"
         private: true
@@ -346,71 +352,6 @@ templates:
         domain: "{{ params.custom_domain.adminer_domain | default('') }}"
         service: "http://adminer:8080"
         private: true
-
-    enable_validate_origin: "{{ params.custom_args.nginx.enable_validate_origin }}"
-    main_port: "{{ var_main_domain_port }}"
-    main_ssl: "{{ params.custom_domain.main_ssl }}"
-    main: "{{ params.custom_args.nginx.main | default({}) }}"
-    use_varnish: "{{ params.use_varnish }}"
-    use_theia: "{{ params.use_theia }}"
-
-    ###############################
-    {% if params.use_theia | bool %}
-
-    theia_domain: "{{ params.custom_domain.theia_domain }}"
-    theia_port: "{{ var_theia_domain_port }}"
-    theia_ssl: "{{ params.custom_domain.theia_ssl }}"
-
-    {% endif %}
-    ###############################
-
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-
-    ###############################
-    {% if params.use_minio_gateway | bool %}
-
-    minio_gateway_domain: "{{ params.custom_domain.minio_gateway_domain }}"
-    minio_gateway_port: "{{ var_minio_gateway_domain_port }}"
-    minio_gateway_ssl: "{{ params.custom_domain.minio_gateway_ssl }}"
-
-    {% endif %}
-    ###############################
-
-    use_filestash: "{{ params.use_filestash }}"
-
-    ###############################
-    {% if params.use_filestash | bool %}
-
-    filestash_domain: "{{ params.custom_domain.filestash_domain }}"
-    filestash_port: "{{ var_filestash_domain_port }}"
-    filestash_ssl: "{{ params.custom_domain.filestash_ssl }}"
-
-    {% endif %}
-    ###############################
-
-    use_pma: "{{ params.use_pma }}"
-
-    ###############################
-    {% if params.use_pma | bool %}
-
-    pma_domain: "{{ params.custom_domain.pma_domain }}"
-    pma_port: "{{ var_pma_domain_port }}"
-    pma_ssl: "{{ params.custom_domain.pma_ssl }}"
-
-    {% endif %}
-    ###############################
-
-    use_adminer: "{{ params.use_adminer }}"
-
-    ###############################
-    {% if params.use_adminer | bool %}
-
-    adminer_domain: "{{ params.custom_domain.adminer_domain }}"
-    adminer_port: "{{ var_adminer_domain_port }}"
-    adminer_ssl: "{{ params.custom_domain.adminer_ssl }}"
-
-    {% endif %}
-    ###############################
 
 {% endif %}
 ###############################
