@@ -135,6 +135,46 @@ services:
 
   {% endif %}
 
+  {% if params.use_minio_gateway | bool %}
+
+  minio_gateway:
+    container_name: "${CTX_PREFIX_MAIN}minio_gateway"
+    hostname: "minio_gateway"
+    build:
+      context: .
+      dockerfile: "shared/containers/minio-gateway/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.minio_gateway_image }}"
+        VERSION: "{{ params.images.minio_gateway_version }}"
+    restart: "unless-stopped"
+    environment:
+      MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
+      MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
+
+    {% if params.use_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/minio_gateway:/data"
+    - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
+    - "$DATA_DIR/tmp/tmp/minio_gateway:/tmp/main/tmp/minio_gateway"
+    logging: *mainlog
+    command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
+
+    {% if (params.memory.minio_gateway | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.minio_gateway }}"
+
+    {% endif %}
+
+  {% endif %}
+
   toolbox:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
     hostname: "toolbox"

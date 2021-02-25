@@ -76,12 +76,16 @@
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
-{% set var_main_domain = params.main_domain | default('') %}
-{% set var_main_external_port = var_main_domain_port %}
-{% set var_main_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
-  + '://' + var_main_domain
-  + (((var_main_external_port | string) in ['80', '443'])
-  | ternary('', ':' + (var_main_external_port | string)))
+{% set var_wp_domain = params.domains.wordpress | default('') %}
+{% set var_wp_external_port = params.use_ssl | default(false) | bool | ternary(
+    params.ports.public_https_port | default(''),
+    params.ports.public_http_port | default('')
+  )
+%}
+{% set var_wp_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
+  + '://' + var_wp_domain
+  + (((var_wp_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_wp_external_port | string)))
 %}
 
 {% set var_s3_uploads_bucket = params.uploads_bucket_name | default('')
@@ -231,7 +235,7 @@ templates:
     db_name: "{{ credentials.wordpress.db.name | default('') }}"
     db_user: "{{ credentials.wordpress.db.user | default('') }}"
     db_password: "{{ credentials.wordpress.db.password | default('') }}"
-    home: "{{ var_main_external_host }}"
+    home: "{{ var_wp_external_host }}"
     auth_key: "{{ credentials.wordpress.config.auth_key | default('') }}"
     secure_auth_key: "{{ credentials.wordpress.config.secure_auth_key | default('') }}"
     logged_in_key: "{{ credentials.wordpress.config.logged_in_key | default('') }}"
@@ -322,7 +326,7 @@ templates:
     services:
       - name: "wordpress"
         domain: "{{ params.domains.wordpress }}"
-        service: "{{ var_wordpress_service  }}"
+        service: "{{ var_wordpress_service }}"
       - name: "private"
         domain: "{{ params.domains.private }}"
         private: true
@@ -485,7 +489,7 @@ templates:
     var_load__db_setup_new__remote_seed_data: "{{ params.db_setup_new.remote_seed_data | default('') }}"
     var_load__db_setup_new__restore_seed: "{{ params.db_setup_new.restore_seed | default('') | lower }}"
     var_load__db_setup_new__title: "{{ params.db_setup_new.title | default('') }}"
-    var_load__db_setup_new__url: "{{ params.db_setup_new.url | default('') }}"
+    var_load__db_setup_new__url: "{{ var_wp_external_host }}"
 
     var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
     var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"
