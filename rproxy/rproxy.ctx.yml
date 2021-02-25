@@ -1,14 +1,9 @@
 ## general vars - start ###
 
-{% set var_pod_kind = 'efk' %}
+{% set var_pod_kind = 'rproxy' %}
 
 {% set var_local = params.local | default(false) | bool %}
-{% set var_pod_type = params.type | default('') %}
-
-{% if not (var_pod_type in ['app', 'web', 'db']) %}
-  {% set error = {} %}
-  {{ error['error.pod_type.invalid.' + var_pod_type] }}
-{% endif %}
+{% set var_pod_type = 'web' %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -57,7 +52,7 @@ env_files:
 - when: false
 
 ###############################
-{% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
+{% if var_use_custom_ssl | bool %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
   dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
@@ -69,7 +64,7 @@ env_files:
 ###############################
 
 ###############################
-{% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
+{% if (params.auth_file | default('')) != '' %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/auth/.htpasswd"
@@ -87,10 +82,9 @@ templates:
     pod_type: "{{ var_pod_type }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
-    use_nginx: "{{ params.use_nginx | default(false) }}"
+    use_nginx: true
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
-    use_filestash: "{{ params.use_filestash | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     public_http_port: "{{ params.ports.public_http_port }}"
@@ -134,9 +128,6 @@ templates:
     minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
     minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
     minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
-    s3_snapshot: "{{ params.db_backup.s3_snapshot | default(false) }}"
-    s3_access_key: "{{ credentials.backup_bucket.access_key | default('') }}"
-    s3_secret_key: "{{ credentials.backup_bucket.secret_key | default('') }}"
 
 - src: "{{ var_s3_config_src }}"
   dest: "{{ var_s3_config_dest }}"
@@ -155,7 +146,7 @@ templates:
       when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 ###############################
-{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
+{% if not (params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 
@@ -165,33 +156,8 @@ templates:
   params:
     main_domain: "{{ params.main_domain }}"
     conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
-    ports:
-      public_http_port: "{{ params.ports.public_http_port }}"
-      public_https_port: "{{ params.ports.public_https_port }}"
-      private_http_port: "{{ params.ports.private_http_port }}"
-      private_https_port: "{{ params.ports.private_https_port }}"
-    services:
-      - name: "kibana"
-        domain: "{{ params.domains.kibana }}"
-        service: "http://kibana:5601"
-        upgrade: true
-        private: true
-      - name: "theia"
-        when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.domains.theia | default('') }}"
-        service: "http://theia:3000"
-        upgrade: true
-        private: true
-      - name: "minio_gateway"
-        when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.domains.minio_gateway | default('') }}"
-        service: "http://minio_gateway:9000"
-        private: true
-      - name: "filestash"
-        when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.domains.filestash | default('') }}"
-        service: "http://filestash:8334"
-        private: true
+    ports: {{ params.ports | default({}) | to_json }}
+    services: {{ params.rproxy_services | default([]) | to_json }}
 
 {% endif %}
 ###############################
@@ -199,7 +165,7 @@ templates:
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
   params:
-    var_load_script_path: "{{ var_main_dir }}/scripts/efk.vars.sh"
+    var_load_script_path: "{{ var_main_dir }}/scripts/rproxy.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__main_base_dir: "{{ var_main_base_dir }}"
@@ -223,12 +189,10 @@ templates:
 
     # Enable Tasks
 
-    var_load_enable__custom_db_backup: "{{ params.enable_db_backup | default('') | lower }}"
     var_load_enable__logs_backup: "{{ params.enable_logs_backup | default('') | lower }}"
     var_load_enable__sync_backup: "{{ params.enable_sync_backup | default('') | lower }}"
     var_load_enable__backup_replica: "{{ params.enable_backup_replica | default('') | lower }}"
 
-    var_load_enable__custom_db_setup: "{{ params.enable_db_setup | default('') | lower }}"
     var_load_enable__logs_setup: "{{ params.enable_logs_setup | default('') | lower }}"
     var_load_enable__sync_setup: "{{ params.enable_sync_setup | default('') | lower }}"
 
@@ -249,44 +213,6 @@ templates:
     var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
     var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
-
-    var_load__db_backup__repository_name: "{{ params.db_backup.repository_name | default('') }}"
-    var_load__db_backup__snapshot_name: "{{ params.db_backup.snapshot_name | default('') }}"
-    var_load__db_backup__s3_snapshot: "{{ params.db_backup.s3_snapshot | default('') | lower }}"
-    var_load__db_backup__backup_bucket_sync_dir: "{{ params.db_backup.backup_bucket_sync_dir | default('') }}"
-    var_load__db_backup__is_compressed_file: "{{ params.db_backup.is_compressed_file | default('') }}"
-    var_load__db_backup__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
-    var_load__db_backup__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"
-    var_load__db_backup__backup_datetime_format: "{{ params.db_backup.backup_datetime_format | default('') }}"
-    var_load__db_backup__recursive_dir: "{{ params.db_backup.recursive_dir | default('') }}"
-    var_load__db_backup__recursive_mode: "{{ params.db_backup.recursive_mode | default('') }}"
-    var_load__db_backup__recursive_mode_dir: "{{ params.db_backup.recursive_mode_dir | default('') }}"
-    var_load__db_backup__recursive_mode_file: "{{ params.db_backup.recursive_mode_file | default('') }}"
-    var_load__db_backup__file_to_clear: "{{ params.db_backup.file_to_clear | default('') }}"
-    var_load__db_backup__dir_to_clear: "{{ params.db_backup.dir_to_clear | default('') }}"
-    var_load__db_backup__db_compress_type: "{{ params.db_backup.db_compress_type | default('') }}"
-    var_load__db_backup__db_compress_file_name: "{{ params.db_backup.db_compress_file_name | default('') }}"
-    var_load__db_backup__compress_pass: "{{ credentials.efk_db.compress_pass | default('') }}"
-
-    var_load__db_main__db_host: "{{ params.db_main.host | default('') }}"
-    var_load__db_main__db_port: "{{ params.db_main.port | default('') }}"
-    var_load__db_main__db_user: "{{ credentials.efk.db.user | default('') }}"
-    var_load__db_main__db_pass: "{{ credentials.efk.db.password | default('') }}"
-    var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
-
-    var_load__db_setup__use_s3: "{{ params.db_setup.use_s3 | default('') }}"
-    var_load__db_setup__repository_name: "{{ params.db_setup.repository_name | default('') }}"
-    var_load__db_setup__snapshot_name: "{{ params.db_setup.snapshot_name | default('') }}"
-    var_load__db_setup__index_prefix: "{{ params.db_setup.index_prefix | default('') }}"
-    var_load__db_setup__restore_remote_file: "{{ params.db_setup.restore_remote_file | default('') }}"
-    var_load__db_setup__snapshot_type: "{{ params.db_setup.snapshot_type | default('') }}"
-    var_load__db_setup__db_compress_type: "{{ params.db_setup.db_compress_type | default('') }}"
-    var_load__db_setup__db_compress_file_name: "{{ params.db_setup.db_compress_file_name | default('') }}"
-    var_load__db_setup__compress_pass: >-
-      {{
-        credentials.efk_db.restore_compress_pass
-        | default(credentials.efk_db.compress_pass | default(''))
-      }}
 
     var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
     var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"

@@ -280,11 +280,7 @@ templates:
   params:
     main_domain: "{{ params.main_domain }}"
     conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
-    ports:
-      public_http_port: "{{ params.ports.public_http_port }}"
-      public_https_port: "{{ params.ports.public_https_port }}"
-      private_http_port: "{{ params.ports.private_http_port }}"
-      private_https_port: "{{ params.ports.private_https_port }}"
+    ports: {{ params.ports | default({}) | to_json }}
     services:
       - name: "mediawiki"
         domain: "{{ params.domains.mediawiki }}"
