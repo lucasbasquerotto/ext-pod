@@ -28,29 +28,7 @@
   and (var_custom_ssl_privkey != '')
 %}
 
-{% set var_kibana_domain_port = params.custom_domain.kibana_ssl | bool |
-  ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-%}
-
-{% if params.use_theia | bool %}
-  {% set var_theia_domain_port = params.custom_domain.theia_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_minio_gateway | bool %}
-  {% set var_minio_gateway_domain_port = params.custom_domain.minio_gateway_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_filestash | bool %}
-  {% set var_filestash_domain_port = params.custom_domain.filestash_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
 
 {% set var_ctx_full_name = input.identifier %}
 {% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
@@ -115,20 +93,20 @@ templates:
     use_filestash: "{{ params.use_filestash | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    public_http_port: "{{ params.ports.public_http_port }}"
+    public_https_port: "{{ params.ports.public_https_port }}"
+    private_http_port: "{{ params.ports.private_http_port }}"
+    private_https_port: "{{ params.ports.private_https_port }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-    kibana_port: "{{ params.custom_args.kibana.port | default('') }}"
-    elasticsearch_java_opts: "{{ params.custom_args.elasticsearch.java_opts | default('') }}"
-    elasticsearch_port: "{{ params.custom_args.elasticsearch.port | default('') }}"
+    kibana_port: "{{ params.services.kibana.port | default('') }}"
+    elasticsearch_java_opts: "{{ params.services.elasticsearch.java_opts | default('') }}"
+    elasticsearch_port: "{{ params.services.elasticsearch.port | default('') }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     internal_elasticsearch: "{{ params.internal_elasticsearch | default(false) }}"
     backup_bucket_endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
@@ -138,10 +116,10 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -177,7 +155,7 @@ templates:
       when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 ###############################
-{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
+{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 
@@ -185,33 +163,33 @@ templates:
   dest: "env/nginx/nginx.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
-    main_domain: "{{ params.custom_domain.main_domain }}"
-    conf: {{ params.custom_args.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    main_domain: "{{ params.main_domain }}"
+    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports:
-      public_http_port: "{{ params.custom_domain.public_http_port }}"
-      public_https_port: "{{ params.custom_domain.public_https_port }}"
-      private_http_port: "{{ params.custom_domain.private_http_port }}"
-      private_https_port: "{{ params.custom_domain.private_https_port }}"
+      public_http_port: "{{ params.ports.public_http_port }}"
+      public_https_port: "{{ params.ports.public_https_port }}"
+      private_http_port: "{{ params.ports.private_http_port }}"
+      private_https_port: "{{ params.ports.private_https_port }}"
     services:
       - name: "kibana"
-        domain: "{{ params.custom_domain.main_domain }}"
+        domain: "{{ params.domains.kibana }}"
         service: "http://kibana:5601"
         upgrade: true
         private: true
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.custom_domain.theia_domain | default('') }}"
+        domain: "{{ params.domains.theia | default('') }}"
         service: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.custom_domain.minio_gateway_domain | default('') }}"
+        domain: "{{ params.domains.minio_gateway | default('') }}"
         service: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.custom_domain.filestash_domain | default('') }}"
+        domain: "{{ params.domains.filestash | default('') }}"
         service: "http://filestash:8334"
         private: true
 
@@ -264,13 +242,13 @@ templates:
     var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
     var_load__block_ips__amount_hour: "{{ params.block_ips.amount_hour | default('') }}"
 
-    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
-    var_load__certbot__domains: "{{ params.certbot.domains | default('') }}"
+    var_load__certbot__main_domain: "{{ params.main_domain | default('') }}"
+    var_load__certbot__domains: "{{ params.domains | default({}) | dict2items | map(attribute='value') | join(' ') }}"
     var_load__certbot__email: "{{ params.certbot.email | default('') }}"
-    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
-    var_load__certbot__main_domain: "{{ params.certbot.main_domain | default('') }}"
     var_load__certbot__rsa_key_size: "{{ params.certbot.rsa_key_size | default('') }}"
+    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
+    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
 
     var_load__db_backup__repository_name: "{{ params.db_backup.repository_name | default('') }}"
     var_load__db_backup__snapshot_name: "{{ params.db_backup.snapshot_name | default('') }}"

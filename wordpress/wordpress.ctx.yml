@@ -40,42 +40,8 @@
 {% set var_wp_app_repo_dir = '' %}
 
 {% if var_app_dev | bool %}
-  {% set var_wp_app_repo_dir_name = params.custom_args.wordpress.app_repo_dir %}
+  {% set var_wp_app_repo_dir_name = params.app_repo_dir %}
   {% set var_wp_app_repo_dir = input.extra_repos_dir_relpath + '/' + var_wp_app_repo_dir_name %}
-{% endif %}
-
-{% set var_main_domain_port = params.custom_domain.main_ssl | bool |
-  ternary(params.custom_domain.public_https_port, params.custom_domain.public_http_port)
-%}
-
-{% if params.use_pma | bool %}
-  {% set var_pma_domain_port = params.custom_domain.pma_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_adminer | bool %}
-  {% set var_adminer_domain_port = params.custom_domain.adminer_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_theia | bool %}
-  {% set var_theia_domain_port = params.custom_domain.theia_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_minio_gateway | bool %}
-  {% set var_minio_gateway_domain_port = params.custom_domain.minio_gateway_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_filestash | bool %}
-  {% set var_filestash_domain_port = params.custom_domain.filestash_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
 {% endif %}
 
 {% set var_db_gui_user = '' %}
@@ -98,9 +64,9 @@
 {% set var_mysql_hostname = var_mysql_host | urlsplit('hostname') | default('mysql', true) %}
 {% set var_mysql_port = var_mysql_host | urlsplit('port') | default('3306', true) %}
 
-{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
 
-{% set var_wordpress_ini_file_type = ((params.custom_args.wordpress.env | default('')) == 'production')
+{% set var_wordpress_ini_file_type = ((params.wp_env | default('')) == 'production')
   | ternary('production', 'development')
 %}
 
@@ -110,9 +76,9 @@
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 
-{% set var_main_domain = params.custom_domain.main_domain | default('') %}
+{% set var_main_domain = params.main_domain | default('') %}
 {% set var_main_external_port = var_main_domain_port %}
-{% set var_main_external_host = (params.custom_domain.main_ssl | default(false) | bool | ternary('https', 'http'))
+{% set var_main_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
   + '://' + var_main_domain
   + (((var_main_external_port | string) in ['80', '443'])
   | ternary('', ':' + (var_main_external_port | string)))
@@ -189,22 +155,22 @@ templates:
     use_redis: "{{ params.use_redis| default(false) }}"
     use_memcached: "{{ params.use_memcached| default(false) }}"
     use_composer: "{{ var_use_composer }}"
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
+    public_http_port: "{{ params.ports.public_http_port }}"
+    public_https_port: "{{ params.ports.public_https_port }}"
+    private_http_port: "{{ params.ports.private_http_port }}"
+    private_https_port: "{{ params.ports.private_https_port }}"
     wordpress_ini_file_type: "{{ var_wordpress_ini_file_type }}"
     db_host: "{{ var_mysql_hostname }}"
     db_port: "{{ var_mysql_port }}"
     db_name: "{{ credentials.wordpress.db.name | default('') }}"
     db_user: "{{ credentials.wordpress.db.user | default('') }}"
     db_gui_user: "{{ var_db_gui_user }}"
-    pma_login_cookie_validity: "{{ params.custom_args.pma.login_cookie_validity | default('36000') }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    pma_login_cookie_validity: "{{ params.services.pma.login_cookie_validity | default('36000') }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
@@ -217,10 +183,10 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -259,7 +225,7 @@ templates:
   dest: "env/wordpress/.env"
   schema: "{{ var_main_dir }}/templates/wordpress/wp.env.schema.yml"
   params:
-    env: "{{ params.custom_args.wordpress.env | default('') }}"
+    env: "{{ params.wp_env | default('') }}"
     db_host: "{{ var_mysql_hostname }}"
     db_port: "{{ var_mysql_port }}"
     db_name: "{{ credentials.wordpress.db.name | default('') }}"
@@ -274,9 +240,9 @@ templates:
     secure_auth_salt: "{{ credentials.wordpress.config.secure_auth_salt | default('') }}"
     logged_in_salt: "{{ credentials.wordpress.config.logged_in_salt | default('') }}"
     nonce_salt: "{{ credentials.wordpress.config.nonce_salt | default('') }}"
-    table_prefix: "{{ params.custom_args.wordpress.table_prefix | default('wp_') }}"
-    wplang: "{{ params.custom_args.wordpress.lang }}"
-    debug: "{{ params.custom_args.wordpress.debug | default(false) | lower }}"
+    table_prefix: "{{ params.services.wordpress.table_prefix | default('wp_') }}"
+    wplang: "{{ params.services.wordpress.lang }}"
+    debug: "{{ params.services.wordpress.debug | default(false) | lower }}"
     use_w3tc: "{{ params.use_w3tc | default(true) }}"
     use_s3_storage: "{{ params.use_s3_storage | default('') }}"
     s3_uploads_bucket: "{{ var_s3_uploads_bucket }}"
@@ -335,7 +301,7 @@ templates:
       when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 ###############################
-{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
+{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 {% set var_wordpress_service = params.use_varnish | default(false) | bool
@@ -346,19 +312,19 @@ templates:
   dest: "env/nginx/nginx.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
-    main_domain: "{{ params.custom_domain.main_domain }}"
-    conf: {{ params.custom_args.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    main_domain: "{{ params.main_domain }}"
+    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports:
-      public_http_port: "{{ params.custom_domain.public_http_port }}"
-      public_https_port: "{{ params.custom_domain.public_https_port }}"
-      private_http_port: "{{ params.custom_domain.private_http_port }}"
-      private_https_port: "{{ params.custom_domain.private_https_port }}"
+      public_http_port: "{{ params.ports.public_http_port }}"
+      public_https_port: "{{ params.ports.public_https_port }}"
+      private_http_port: "{{ params.ports.private_http_port }}"
+      private_https_port: "{{ params.ports.private_https_port }}"
     services:
       - name: "wordpress"
-        domain: "{{ params.custom_domain.main_domain }}"
+        domain: "{{ params.domains.wordpress }}"
         service: "{{ var_wordpress_service  }}"
       - name: "private"
-        domain: "{{ params.custom_domain.main_domain }}"
+        domain: "{{ params.domains.private }}"
         private: true
         location_info_list:
           - location: "= /nginx/basic_status"
@@ -367,28 +333,28 @@ templates:
             data: "return 404;"
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.custom_domain.theia_domain | default('') }}"
+        domain: "{{ params.domains.theia | default('') }}"
         service: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.custom_domain.minio_gateway_domain | default('') }}"
+        domain: "{{ params.domains.minio_gateway | default('') }}"
         service: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.custom_domain.filestash_domain | default('') }}"
+        domain: "{{ params.domains.filestash | default('') }}"
         service: "http://filestash:8334"
         private: true
       - name: "phpmyadmin"
         when: "{{ params.use_pma | default(false) }}"
-        domain: "{{ params.custom_domain.pma_domain | default('') }}"
+        domain: "{{ params.domains.phpmyadmin | default('') }}"
         service: "http://phpmyadmin:80"
         private: true
       - name: "adminer"
         when: "{{ params.use_adminer | default(false) }}"
-        domain: "{{ params.custom_domain.adminer_domain | default('') }}"
+        domain: "{{ params.domains.adminer | default('') }}"
         service: "http://adminer:8080"
         private: true
 

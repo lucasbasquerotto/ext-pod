@@ -29,34 +29,6 @@
   and (var_custom_ssl_privkey != '')
 %}
 
-{% set var_main_domain_port = params.custom_domain.main_ssl | bool |
-  ternary(params.custom_domain.public_https_port, params.custom_domain.public_http_port)
-%}
-
-{% if params.use_mongo_express | bool %}
-  {% set var_me_domain_port = params.custom_domain.me_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_theia | bool %}
-  {% set var_theia_domain_port = params.custom_domain.theia_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_minio_gateway | bool %}
-  {% set var_minio_gateway_domain_port = params.custom_domain.minio_gateway_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_filestash | bool %}
-  {% set var_filestash_domain_port = params.custom_domain.filestash_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
 {% set var_db_gui_user = '' %}
 {% set var_db_gui_password = '' %}
 
@@ -75,7 +47,7 @@
 {% if var_pod_type in ['app', 'web'] %}
   {% set var_storage_type = params.use_s3_storage | bool | ternary(
       'AmazonS3',
-      params.custom_args.rocketchat.storage_type | default('FileSystem')
+      params.services.rocketchat.storage_type | default('FileSystem')
     )
   %}
 {% endif %}
@@ -88,7 +60,7 @@
 {% set var_mongo_hostname = var_mongo_host | urlsplit('hostname') | default('mongo', true) %}
 {% set var_mongo_port = var_mongo_host | urlsplit('port') | default('27017', true) %}
 
-{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
 
 {% set var_ctx_full_name = input.identifier %}
 {% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
@@ -154,17 +126,17 @@ templates:
     use_bot: "{{ params.use_bot | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
-    public_http_port: "{{ params.custom_domain.public_http_port }}"
-    public_https_port: "{{ params.custom_domain.public_https_port }}"
-    private_http_port: "{{ params.custom_domain.private_http_port }}"
-    private_https_port: "{{ params.custom_domain.private_https_port }}"
+    public_http_port: "{{ params.ports.public_http_port }}"
+    public_https_port: "{{ params.ports.public_https_port }}"
+    private_http_port: "{{ params.ports.private_http_port }}"
+    private_https_port: "{{ params.ports.private_https_port }}"
     db_host: "{{ var_mongo_hostname }}"
     db_port: "{{ var_mongo_port }}"
     db_name: "{{ credentials.rocketchat.db.name | default('') }}"
     db_user: "{{ credentials.rocketchat.db.user | default('') }}"
     db_root_user: "{{ credentials.rocketchat.db.root_user | default('') }}"
     db_gui_user: "{{ var_db_gui_user }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     hubot_room: "{{ credentials.hubot.room | default('') }}"
@@ -173,13 +145,13 @@ templates:
     rocketchat:
       mail_url: "{{ credentials.rocketchat.mail_url | default('smtp://smtp.email') }}"
       storage_type: "{{ var_storage_type }}"
-      fileupload_s3_bucketurl: "{{ params.custom_args.rocketchat.uploads_bucket_endpoint | default('') }}"
+      fileupload_s3_bucketurl: "{{ params.services.rocketchat.uploads_bucket_endpoint | default('') }}"
       fileupload_s3_bucket: "{{ params.uploads_bucket_name | default('') }}"
-      fileupload_s3_region: "{{ params.custom_args.rocketchat.uploads_bucket_region | default('') }}"
-      fileupload_s3_acl: "{{ params.custom_args.rocketchat.uploads_bucket_acl | default('') }}"
-      fileupload_s3_cdn: "{{ params.custom_args.rocketchat.s3_cdn | default('') }}"
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
+      fileupload_s3_region: "{{ params.services.rocketchat.uploads_bucket_region | default('') }}"
+      fileupload_s3_acl: "{{ params.services.rocketchat.uploads_bucket_acl | default('') }}"
+      fileupload_s3_cdn: "{{ params.services.rocketchat.s3_cdn | default('') }}"
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
@@ -189,10 +161,10 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
-    images: {{ params.custom_images | to_json }}
-    memory: {{ params.custom_memory | to_json }}
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -265,7 +237,7 @@ templates:
       when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 ###############################
-{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
+{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 
@@ -273,19 +245,19 @@ templates:
   dest: "env/nginx/nginx.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
-    main_domain: "{{ params.custom_domain.main_domain }}"
-    conf: {{ params.custom_args.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    main_domain: "{{ params.main_domain }}"
+    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports:
-      public_http_port: "{{ params.custom_domain.public_http_port }}"
-      public_https_port: "{{ params.custom_domain.public_https_port }}"
-      private_http_port: "{{ params.custom_domain.private_http_port }}"
-      private_https_port: "{{ params.custom_domain.private_https_port }}"
+      public_http_port: "{{ params.ports.public_http_port }}"
+      public_https_port: "{{ params.ports.public_https_port }}"
+      private_http_port: "{{ params.ports.private_http_port }}"
+      private_https_port: "{{ params.ports.private_https_port }}"
     services:
       - name: "rocketchat"
-        domain: "{{ params.custom_domain.main_domain }}"
+        domain: "{{ params.domains.rocketchat }}"
         service: "http://rocketchat:3000"
       - name: "private"
-        domain: "{{ params.custom_domain.main_domain }}"
+        domain: "{{ params.domains.private }}"
         private: true
         location_info_list:
           - location: "= /nginx/basic_status"
@@ -294,23 +266,23 @@ templates:
             data: "return 404;"
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.custom_domain.theia_domain | default('') }}"
+        domain: "{{ params.domains.theia | default('') }}"
         service: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.custom_domain.minio_gateway_domain | default('') }}"
+        domain: "{{ params.domains.minio_gateway | default('') }}"
         service: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.custom_domain.filestash_domain | default('') }}"
+        domain: "{{ params.domains.filestash | default('') }}"
         service: "http://filestash:8334"
         private: true
       - name: "mongo_express"
         when: "{{ params.use_mongo_express | default(false) }}"
-        domain: "{{ params.custom_domain.me_domain | default('') }}"
+        domain: "{{ params.domains.me | default('') }}"
         service: "http://mongo_express:8081"
         private: true
 
@@ -371,13 +343,13 @@ templates:
     var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
     var_load__block_ips__amount_hour: "{{ params.block_ips.amount_hour | default('') }}"
 
-    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
-    var_load__certbot__domains: "{{ params.certbot.domains | default('') }}"
+    var_load__certbot__main_domain: "{{ params.main_domain | default('') }}"
+    var_load__certbot__domains: "{{ params.domains | default({}) | dict2items | map(attribute='value') | join(' ') }}"
     var_load__certbot__email: "{{ params.certbot.email | default('') }}"
-    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
-    var_load__certbot__main_domain: "{{ params.certbot.main_domain | default('') }}"
     var_load__certbot__rsa_key_size: "{{ params.certbot.rsa_key_size | default('') }}"
+    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
+    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
 
     var_load__db_backup__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
     var_load__db_backup__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"

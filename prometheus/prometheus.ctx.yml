@@ -28,33 +28,7 @@
   and (var_custom_ssl_privkey != '')
 %}
 
-{% set var_prometheus_domain_port = params.custom_domain.prometheus_ssl | bool |
-  ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-%}
-
-{% set var_grafana_domain_port = params.custom_domain.grafana_ssl | bool |
-  ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-%}
-
-{% if params.use_theia | bool %}
-  {% set var_theia_domain_port = params.custom_domain.theia_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_minio_gateway | bool %}
-  {% set var_minio_gateway_domain_port = params.custom_domain.minio_gateway_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% if params.use_filestash | bool %}
-  {% set var_filestash_domain_port = params.custom_domain.filestash_ssl | bool |
-    ternary(params.custom_domain.private_https_port, params.custom_domain.private_http_port)
-  %}
-{% endif %}
-
-{% set var_fluentd_output_plugin = params.custom_args.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
 
 {% set var_ctx_full_name = input.identifier %}
 {% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
@@ -121,21 +95,21 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_node_exporter: "{{ params.use_node_exporter | default(false) }}"
     use_cadvisor: "{{ params.use_cadvisor | default(false) }}"
-    public_http_port: "{{ params.custom_domain.public_http_port | default('') }}"
-    public_https_port: "{{ params.custom_domain.public_https_port | default('') }}"
-    private_http_port: "{{ params.custom_domain.private_http_port | default('') }}"
-    private_https_port: "{{ params.custom_domain.private_https_port | default('') }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    public_http_port: "{{ params.ports.public_http_port | default('') }}"
+    public_https_port: "{{ params.ports.public_https_port | default('') }}"
+    private_http_port: "{{ params.ports.private_http_port | default('') }}"
+    private_https_port: "{{ params.ports.private_https_port | default('') }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
-    grafana_port: "{{ params.custom_args.grafana.port | default('3000') }}"
+    grafana_port: "{{ params.services.grafana.port | default('3000') }}"
     grafana_server_domain: "{{ credentials.grafana.server_domain | default('') }}"
     grafana_smtp_enabled: "{{ credentials.grafana.smtp_enabled | default('') }}"
     grafana_smtp_host: "{{ credentials.grafana.smtp_host | default('') }}"
     grafana_smtp_user: "{{ credentials.grafana.smtp_user | default('') }}"
     grafana_smtp_from_address: "{{ credentials.grafana.smtp_from_address | default('') }}"
-    images: {{ params.custom_images | default({}) | to_json }}
-    memory: {{ params.custom_memory | default({}) | to_json }}
+    images: {{ params.images | default({}) | to_json }}
+    memory: {{ params.memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "docker-compose.run.yml"
@@ -145,10 +119,10 @@ templates:
     pod_type: "{{ var_pod_type }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
-    fluentd_port: "{{ params.custom_args.fluentd.port | default('24224') }}"
+    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
-    images: {{ params.custom_images | default({}) | to_json }}
-    memory: {{ params.custom_memory | default({}) | to_json }}
+    images: {{ params.images | default({}) | to_json }}
+    memory: {{ params.memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -183,7 +157,7 @@ templates:
       when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 ###############################
-{% if (var_pod_type in ['app', 'web']) and (not params.custom_args.nginx.custom | default(false) | bool) %}
+{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 
@@ -191,38 +165,38 @@ templates:
   dest: "env/nginx/nginx.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
-    main_domain: "{{ params.custom_domain.main_domain }}"
-    conf: {{ params.custom_args.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    main_domain: "{{ params.main_domain }}"
+    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports:
-      public_http_port: "{{ params.custom_domain.public_http_port }}"
-      public_https_port: "{{ params.custom_domain.public_https_port }}"
-      private_http_port: "{{ params.custom_domain.private_http_port }}"
-      private_https_port: "{{ params.custom_domain.private_https_port }}"
+      public_http_port: "{{ params.ports.public_http_port }}"
+      public_https_port: "{{ params.ports.public_https_port }}"
+      private_http_port: "{{ params.ports.private_http_port }}"
+      private_https_port: "{{ params.ports.private_https_port }}"
     services:
-      - name: "prometheus"
-        domain: "{{ params.custom_domain.prometheus_domain }}"
-        service: "http://prometheus:9090"
+      - name: "grafana"
+        domain: "{{ params.domains.grafana }}"
+        service: "http://grafana:3000"
         upgrade: true
         private: true
-      - name: "grafana"
-        domain: "{{ params.custom_domain.grafana_domain }}"
-        service: "http://grafana:3000"
+      - name: "prometheus"
+        domain: "{{ params.domains.prometheus }}"
+        service: "http://prometheus:9090"
         upgrade: true
         private: true
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.custom_domain.theia_domain | default('') }}"
+        domain: "{{ params.domains.theia | default('') }}"
         service: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.custom_domain.minio_gateway_domain | default('') }}"
+        domain: "{{ params.domains.minio_gateway | default('') }}"
         service: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.custom_domain.filestash_domain | default('') }}"
+        domain: "{{ params.domains.filestash | default('') }}"
         service: "http://filestash:8334"
         private: true
 
@@ -264,13 +238,13 @@ templates:
 
     # Tasks
 
-    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
-    var_load__certbot__domains: "{{ params.certbot.domains | default('') }}"
+    var_load__certbot__main_domain: "{{ params.main_domain | default('') }}"
+    var_load__certbot__domains: "{{ params.domains | default({}) | dict2items | map(attribute='value') | join(' ') }}"
     var_load__certbot__email: "{{ params.certbot.email | default('') }}"
-    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
-    var_load__certbot__main_domain: "{{ params.certbot.main_domain | default('') }}"
     var_load__certbot__rsa_key_size: "{{ params.certbot.rsa_key_size | default('') }}"
+    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
+    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
 
     var_load__logs_setup__restore_bucket_path_dir: "{{ params.logs_setup.restore_bucket_path_dir | default('') }}"
     var_load__logs_setup__verify_file_to_skip: "{{ params.logs_setup.verify_file_to_skip | default('') }}"
