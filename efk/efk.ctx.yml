@@ -215,47 +215,6 @@ templates:
         service: "http://filestash:8334"
         private: true
 
-    enable_validate_origin: "{{ params.custom_args.nginx.enable_validate_origin }}"
-    main_ssl: "{{ params.use_ssl | default(false) }}"
-    kibana_domain: "{{ params.custom_domain.kibana_domain }}"
-    kibana_port: "{{ var_kibana_domain_port }}"
-    kibana_ssl: "{{ params.custom_domain.kibana_ssl }}"
-    use_theia: "{{ params.use_theia }}"
-
-    ###############################
-    {% if params.use_theia | bool %}
-
-    theia_domain: "{{ params.custom_domain.theia_domain }}"
-    theia_port: "{{ var_theia_domain_port }}"
-    theia_ssl: "{{ params.custom_domain.theia_ssl }}"
-
-    {% endif %}
-    ###############################
-
-    use_minio_gateway: "{{ params.use_minio_gateway }}"
-
-    ###############################
-    {% if params.use_minio_gateway | bool %}
-
-    minio_gateway_domain: "{{ params.custom_domain.minio_gateway_domain }}"
-    minio_gateway_port: "{{ var_minio_gateway_domain_port }}"
-    minio_gateway_ssl: "{{ params.custom_domain.minio_gateway_ssl }}"
-
-    {% endif %}
-    ###############################
-
-    use_filestash: "{{ params.use_filestash }}"
-
-    ###############################
-    {% if params.use_filestash | bool %}
-
-    filestash_domain: "{{ params.custom_domain.filestash_domain }}"
-    filestash_port: "{{ var_filestash_domain_port }}"
-    filestash_ssl: "{{ params.custom_domain.filestash_ssl }}"
-
-    {% endif %}
-    ###############################
-
 {% endif %}
 ###############################
 
