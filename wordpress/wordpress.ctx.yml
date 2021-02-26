@@ -344,6 +344,7 @@ templates:
     main_domain: "{{ params.main_domain }}"
     conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
+    domains: {{ params.domains | default({}) | to_json }}
     services:
       - name: "wordpress"
         domain: "{{ params.domains.wp }}"
