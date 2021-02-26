@@ -26,7 +26,7 @@ x-logging:
 networks:
   shared:
     external: true
-    name: "${CTX_NAME}-network"
+    name: "{{ params.shared_network }}"
 
 services:
 

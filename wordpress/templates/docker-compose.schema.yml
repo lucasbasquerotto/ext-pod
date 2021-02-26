@@ -16,11 +16,20 @@ schemas:
         type: "str"
         non_empty: true
         choices: ["app", "web", "cache", "db"]
+      shared_network:
+        type: "str"
+        non_empty: true
       named_volumes:
         type: "str"
         non_empty: true
+      internal:
+        type: "bool"
+        non_empty: true
       use_fluentd:
-        type: "str"
+        type: "bool"
+        non_empty: true
+      use_internal_fluentd:
+        type: "bool"
         non_empty: true
       use_varnish:
         type: "bool"
@@ -55,18 +64,6 @@ schemas:
       use_composer:
         type: "bool"
         non_empty: true
-      public_http_port:
-        type: "str"
-        non_empty: true
-      public_https_port:
-        type: "str"
-        non_empty: true
-      private_http_port:
-        type: "str"
-        non_empty: true
-      private_https_port:
-        type: "str"
-        non_empty: true
       wordpress_ini_file_type:
         type: "str"
         non_empty: true
@@ -94,9 +91,27 @@ schemas:
         non_empty: true
       elasticsearch_host:
         type: "str"
+      ports:
+        schema: "ports"
+        non_empty: true
       images:
         type: "dict"
         required: true
       memory:
         type: "dict"
         required: true
+  ports:
+    type: "dict"
+    props:
+      public_http_port:
+        type: "str"
+        non_empty: true
+      public_https_port:
+        type: "str"
+        non_empty: true
+      private_http_port:
+        type: "str"
+        non_empty: true
+      private_https_port:
+        type: "str"
+        non_empty: true

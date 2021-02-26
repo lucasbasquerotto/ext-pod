@@ -27,14 +27,38 @@
   and (var_custom_ssl_fullchain != '')
   and (var_custom_ssl_privkey != '')
 %}
-
-{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
+{% set var_ports = (params.ports is defined) | ternary(
+    params.ports | default({}),
+    var_local | ternary(
+      {
+        'public_http_port': '8080',
+        'public_https_port': '8443',
+        'private_http_port': '9080',
+        'private_https_port': '9443'
+      },
+      {
+        'public_http_port': '80',
+        'public_https_port': '443',
+        'private_http_port': '9080',
+        'private_https_port': '9443'
+      }
+    )
+  )
+%}
 
 {% set var_ctx_full_name = input.identifier %}
 {% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
 {% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
+{% set var_shared_network_name = params.shared_network | default(var_ctx_full_name + '-network', true) %}
+
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
+{% set var_use_internal_fluentd =
+  (params.use_fluentd | default(false) | bool)
+  and
+  (not (params.internal | default(false) | bool))
+%}
 
 {% set var_s3_config_src = '' %}
 {% set var_s3_config_dest = '' %}
@@ -85,8 +109,11 @@ templates:
     local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
+    shared_network: "{{ var_shared_network_name }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
+    internal: "{{ params.internal | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    use_internal_fluentd: "{{ var_use_internal_fluentd }}"
     use_nginx: "{{ params.use_nginx | default(false) }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
@@ -95,10 +122,6 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_node_exporter: "{{ params.use_node_exporter | default(false) }}"
     use_cadvisor: "{{ params.use_cadvisor | default(false) }}"
-    public_http_port: "{{ params.ports.public_http_port | default('') }}"
-    public_https_port: "{{ params.ports.public_https_port | default('') }}"
-    private_http_port: "{{ params.ports.private_http_port | default('') }}"
-    private_https_port: "{{ params.ports.private_https_port | default('') }}"
     fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
@@ -108,15 +131,17 @@ templates:
     grafana_smtp_host: "{{ credentials.grafana.smtp_host | default('') }}"
     grafana_smtp_user: "{{ credentials.grafana.smtp_user | default('') }}"
     grafana_smtp_from_address: "{{ credentials.grafana.smtp_from_address | default('') }}"
+    ports: {{ var_ports | to_json }}
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "docker-compose.run.yml"
   params:
+    pod_type: "{{ var_pod_type }}"
+    shared_network: "{{ var_shared_network_name }}"
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
-    pod_type: "{{ var_pod_type }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
@@ -167,7 +192,7 @@ templates:
   params:
     main_domain: "{{ params.main_domain }}"
     conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
-    ports: {{ params.ports | default({}) | to_json }}
+    ports: {{ var_ports | to_json }}
     services:
       - name: "grafana"
         domain: "{{ params.domains.grafana }}"
@@ -205,6 +230,7 @@ templates:
     var_load_script_path: "{{ var_main_dir }}/scripts/prometheus.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
+    var_load_general__shared_network: "{{ var_shared_network_name }}"
     var_load_general__main_base_dir: "{{ var_main_base_dir }}"
     var_load_general__main_base_dir_container: "{{ var_main_base_dir_container }}"
     var_load_general__backup_is_delete_old: "true"

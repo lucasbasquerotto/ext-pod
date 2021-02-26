@@ -25,7 +25,7 @@ x-logging:
 
 networks:
 
-  {% if params.use_fluentd | bool %}
+  {% if params.use_internal_fluentd | bool %}
 
   log:
     driver: "bridge"
@@ -34,7 +34,7 @@ networks:
 
   shared:
     external: true
-    name: "${CTX_NAME}-network"
+    name: "{{ params.shared_network }}"
 
 {% if (params.local | bool) and (params.named_volumes | bool) %}
 
@@ -61,7 +61,7 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -69,10 +69,10 @@ services:
     {% endif %}
 
     ports:
-    - "{{ params.public_http_port }}:80"
-    - "{{ params.public_https_port }}:443"
-    - "{{ params.private_http_port }}:9080"
-    - "{{ params.private_https_port }}:9443"
+    - "{{ params.ports.public_http_port }}:80"
+    - "{{ params.ports.public_https_port }}:443"
+    - "{{ params.ports.private_http_port }}:9080"
+    - "{{ params.ports.private_https_port }}:9443"
     networks:
     - "shared"
     volumes:
@@ -115,7 +115,7 @@ services:
     restart: "unless-stopped"
     user: root
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -165,7 +165,7 @@ services:
       MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
       MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -202,7 +202,7 @@ services:
         VERSION: "{{ params.images.filestash_version }}"
     restart: "unless-stopped"
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -240,7 +240,7 @@ services:
         MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -302,7 +302,7 @@ services:
         MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -354,7 +354,7 @@ services:
         VERSION: "{{ params.images.node_exporter_version }}"
     restart: unless-stopped
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -388,7 +388,7 @@ services:
         VERSION: "{{ params.images.cadvisor_version }}"
     restart: unless-stopped
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -425,7 +425,7 @@ services:
         VERSION: "{{ params.images.toolbox_version }}"
     restart: "unless-stopped"
 
-    {% if params.use_fluentd | bool %}
+    {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
@@ -454,7 +454,7 @@ services:
 
     {% endif %}
 
-  {% if params.use_fluentd | bool %}
+  {% if params.use_internal_fluentd | bool %}
 
   fluentd:
     container_name: "${CTX_PREFIX_MAIN}fluentd"
