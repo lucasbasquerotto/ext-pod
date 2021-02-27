@@ -345,10 +345,11 @@ templates:
     conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
+    node_dependencies: {{ input.node_dependencies | default({}) | to_json }}
     services:
       - name: "wordpress"
         domain: "{{ params.domains.wp }}"
-        service: "{{ var_wordpress_service }}"
+        endpoint: "{{ var_wordpress_service }}"
       - name: "private"
         domain: "{{ params.domains.private }}"
         private: true
@@ -360,28 +361,28 @@ templates:
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
         domain: "{{ params.domains.theia | default('') }}"
-        service: "http://theia:3000"
+        endpoint: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
         domain: "{{ params.domains.minio_gateway | default('') }}"
-        service: "http://minio_gateway:9000"
+        endpoint: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
         domain: "{{ params.domains.filestash | default('') }}"
-        service: "http://filestash:8334"
+        endpoint: "http://filestash:8334"
         private: true
       - name: "phpmyadmin"
         when: "{{ params.use_pma | default(false) }}"
         domain: "{{ params.domains.phpmyadmin | default('') }}"
-        service: "http://phpmyadmin:80"
+        endpoint: "http://phpmyadmin:80"
         private: true
       - name: "adminer"
         when: "{{ params.use_adminer | default(false) }}"
         domain: "{{ params.domains.adminer | default('') }}"
-        service: "http://adminer:8080"
+        endpoint: "http://adminer:8080"
         private: true
 
 {% endif %}

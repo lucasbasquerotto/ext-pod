@@ -194,32 +194,33 @@ templates:
     conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
+    node_dependencies: {{ input.node_dependencies | default({}) | to_json }}
     services:
       - name: "grafana"
         domain: "{{ params.domains.grafana }}"
-        service: "http://grafana:3000"
+        endpoint: "http://grafana:3000"
         upgrade: true
         private: true
       - name: "prometheus"
         domain: "{{ params.domains.prometheus }}"
-        service: "http://prometheus:9090"
+        endpoint: "http://prometheus:9090"
         upgrade: true
         private: true
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
         domain: "{{ params.domains.theia | default('') }}"
-        service: "http://theia:3000"
+        endpoint: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
         domain: "{{ params.domains.minio_gateway | default('') }}"
-        service: "http://minio_gateway:9000"
+        endpoint: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
         domain: "{{ params.domains.filestash | default('') }}"
-        service: "http://filestash:8334"
+        endpoint: "http://filestash:8334"
         private: true
 
 {% endif %}
