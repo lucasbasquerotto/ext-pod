@@ -277,10 +277,8 @@ templates:
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "rocketchat"
-        domain: "{{ params.domains.rocketchat }}"
         endpoint: "http://rocketchat:3000"
       - name: "private"
-        domain: "{{ params.domains.private }}"
         private: true
         location_info_list:
           - location: "= /nginx/basic_status"
@@ -289,23 +287,19 @@ templates:
             data: "return 404;"
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.domains.theia | default('') }}"
         endpoint: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.domains.minio_gateway | default('') }}"
         endpoint: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.domains.filestash | default('') }}"
         endpoint: "http://filestash:8334"
         private: true
       - name: "mongo_express"
         when: "{{ params.use_mongo_express | default(false) }}"
-        domain: "{{ params.domains.mongo_express | default('') }}"
         endpoint: "http://mongo_express:8081"
         private: true
 

@@ -197,29 +197,24 @@ templates:
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "grafana"
-        domain: "{{ params.domains.grafana }}"
         endpoint: "http://grafana:3000"
         upgrade: true
         private: true
       - name: "prometheus"
-        domain: "{{ params.domains.prometheus }}"
         endpoint: "http://prometheus:9090"
         upgrade: true
         private: true
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.domains.theia | default('') }}"
         endpoint: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.domains.minio_gateway | default('') }}"
         endpoint: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.domains.filestash | default('') }}"
         endpoint: "http://filestash:8334"
         private: true
 

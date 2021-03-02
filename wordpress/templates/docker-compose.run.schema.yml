@@ -13,6 +13,8 @@ schemas:
         type: "str"
         non_empty: true
         choices: ["app", "web", "cache", "db"]
+      shared_network:
+        type: "str"
       use_certbot:
         type: "bool"
       use_fluentd:

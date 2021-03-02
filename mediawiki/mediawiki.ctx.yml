@@ -310,10 +310,8 @@ templates:
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "mediawiki"
-        domain: "{{ params.domains.mediawiki }}"
         endpoint: "{{ var_mediawiki_service }}"
       - name: "private"
-        domain: "{{ params.domains.private }}"
         private: true
         location_info_list:
           - location: "= /nginx/basic_status"
@@ -322,28 +320,23 @@ templates:
             data: "return 404;"
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
-        domain: "{{ params.domains.theia | default('') }}"
         endpoint: "http://theia:3000"
         upgrade: true
         private: true
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
-        domain: "{{ params.domains.minio_gateway | default('') }}"
         endpoint: "http://minio_gateway:9000"
         private: true
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
-        domain: "{{ params.domains.filestash | default('') }}"
         endpoint: "http://filestash:8334"
         private: true
       - name: "phpmyadmin"
         when: "{{ params.use_pma | default(false) }}"
-        domain: "{{ params.domains.pma | default('') }}"
         endpoint: "http://phpmyadmin:80"
         private: true
       - name: "adminer"
         when: "{{ params.use_adminer | default(false) }}"
-        domain: "{{ params.domains.adminer | default('') }}"
         endpoint: "http://adminer:8080"
         private: true
 
