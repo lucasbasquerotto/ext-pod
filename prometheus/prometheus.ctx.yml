@@ -200,6 +200,7 @@ templates:
         endpoint: "http://grafana:3000"
         upgrade: true
         private: true
+        use_basic_auth: false
       - name: "prometheus"
         endpoint: "http://prometheus:9090"
         upgrade: true
