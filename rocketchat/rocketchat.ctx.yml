@@ -280,7 +280,7 @@ templates:
         endpoint: "http://rocketchat:3000"
       - name: "private"
         private: true
-        location_info_list:
+        locations:
           - location: "= /nginx/basic_status"
             data: "stub_status;"
           - location: "/"

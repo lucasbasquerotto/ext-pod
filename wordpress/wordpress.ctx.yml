@@ -349,9 +349,19 @@ templates:
     services:
       - name: "wordpress"
         endpoint: "{{ var_wordpress_service }}"
+        proxy: true
+        locations:
+          - location: "/wp-admin/"
+            data: |-
+              proxy_read_timeout       {{ params.proxy.wp_admin.proxy_read_timeout | default('240', true) }};
+              client_max_body_size     {{ params.proxy.wp_admin.client_max_body_size | default('10M', true) }};
+              ### limits ###
+              limit_req zone=mainlimit burst={{ params.proxy.wp_admin.limit_req_burst | default('6', true) }} nodelay;
+              limit_conn uploadconnlimit {{ params.proxy.wp_admin.uploadconnlimit | default('5', true) }};
+          - "/"
       - name: "private"
         private: true
-        location_info_list:
+        locations:
           - location: "= /nginx/basic_status"
             data: "stub_status;"
           - location: "/"
