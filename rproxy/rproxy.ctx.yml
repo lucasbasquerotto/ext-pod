@@ -69,6 +69,8 @@
   {% set var_s3_config_dest = 'env/mc/config.json' %}
 {% endif %}
 
+{% set var_rproxy_type = params.rproxy_type | default('') %}
+
 ### main ###
 
 env_files:
@@ -109,7 +111,7 @@ templates:
     internal: "{{ params.internal | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
-    use_nginx: true
+    rproxy_type: "{{ var_rproxy_type }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
@@ -170,10 +172,8 @@ templates:
       secret_key: "{{ credentials.backup_replica_bucket.secret_key | default('') }}"
       when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
-###############################
-{% if not (params.services.nginx.custom | default(false) | bool) %}
-
-{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_conf_file_ext = (var_rproxy_type == 'haproxy') | ternary('cfg', 'conf') %}
+{% set var_default_rproxy_conf = { 'ssl': params.use_ssl | default(false) } %}
 {% set var_rproxy_services =
   ((params.rproxy_services | default([]) | length) > 0)
   | ternary(
@@ -182,16 +182,35 @@ templates:
   )
 %}
 
+- src: "{{ var_shared_dir }}/templates/{{ var_rproxy_type }}/{{ var_rproxy_type }}.tpl.{{ var_conf_file_ext }}"
+  dest: "env/{{ var_rproxy_type }}/{{ var_rproxy_type }}.{{ var_conf_file_ext }}"
+  schema: "{{ var_shared_dir }}/templates/{{ var_rproxy_type }}/{{ var_rproxy_type }}.schema.yml"
+  params:
+    main_domain: "{{ params.main_domain }}"
+    conf: {{ params.services[var_rproxy_type].conf | default(var_default_rproxy_conf) | to_json }}
+    ports: {{ var_ports | to_json }}
+    domains: {{ params.domains | default({}) | to_json }}
+    dependencies: {{ input.dependencies | default({}) | to_json }}
+    services: {{ var_rproxy_services | to_json }}
+
+###############################
+{% if var_rproxy_type == 'haproxy' %}
+
 - src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   dest: "env/nginx/nginx.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    conf: {{ params.services.nginx.conf | default(var_default_rproxy_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
-    dependencies: {{ input.dependencies | default({}) | to_json }}
-    services: {{ var_rproxy_services | to_json }}
+    services:
+      - name: "rproxy"
+        locations:
+          - location: "= /nginx/basic_status"
+            data: "stub_status;"
+          - location: "/"
+            data: "root /var/www;"
 
 {% endif %}
 ###############################
@@ -215,6 +234,7 @@ templates:
 
     var_load_use__main_network: "true"
     var_load_use__logrotator: "true"
+    var_load_use__haproxy: "{{ (var_rproxy_type == 'haproxy') | lower }}"
     var_load_use__nginx: "true"
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"

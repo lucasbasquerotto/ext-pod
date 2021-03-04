@@ -38,6 +38,53 @@ networks:
 
 services:
 
+  {% if params.rproxy_type == 'haproxy' %}
+
+  haproxy:
+    container_name: "${CTX_PREFIX_MAIN}haproxy"
+    hostname: "haproxy"
+    build:
+      context: .
+      dockerfile: "shared/containers/haproxy/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.haproxy_image }}"
+        VERSION: "{{ params.images.haproxy_version }}"
+    restart: "unless-stopped"
+    depends_on:
+    - "nginx"
+
+    {% if params.use_internal_fluentd | bool %}
+
+    - "fluentd"
+
+    {% endif %}
+
+    {% if not (params.internal | default(false) | bool) %}
+
+    ports:
+    - "{{ params.ports.public_http_port }}:80"
+    - "{{ params.ports.public_https_port }}:443"
+    - "{{ params.ports.private_http_port }}:9080"
+    - "{{ params.ports.private_https_port }}:9443"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR/sync/haproxy:/var/main/data/sync/haproxy:ro"
+    - "$DATA_DIR/tmp/haproxy:/tmp/main/haproxy"
+    - "$DATA_DIR/tmp/tmp/haproxy:/tmp/main/tmp/haproxy"
+    logging: *mainlog
+
+    {% if (params.memory.haproxy | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.haproxy }}"
+
+    {% endif %}
+
+  {% endif %}
+
   nginx:
     container_name: "${CTX_PREFIX_MAIN}nginx"
     hostname: "nginx"
@@ -56,7 +103,7 @@ services:
 
     {% endif %}
 
-    {% if not (params.internal | default(false) | bool) %}
+    {% if (params.rproxy_type == 'nginx') and not (params.internal | default(false) | bool) %}
 
     ports:
     - "{{ params.ports.public_http_port }}:80"
