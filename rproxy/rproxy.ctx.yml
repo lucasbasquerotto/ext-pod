@@ -173,7 +173,13 @@ templates:
       when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 {% set var_conf_file_ext = (var_rproxy_type == 'haproxy') | ternary('cfg', 'conf') %}
-{% set var_default_rproxy_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_default_haproxy_conf =
+  { 'ssl': params.use_ssl | default(false), 'webservice_endpoint': 'http://nginx' }
+%}
+{% set var_default_rproxy_conf = (var_rproxy_type == 'haproxy')
+  | ternary(var_default_haproxy_conf, var_default_nginx_conf)
+%}
 {% set var_rproxy_services =
   ((params.rproxy_services | default([]) | length) > 0)
   | ternary(
@@ -201,7 +207,7 @@ templates:
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services.nginx.conf | default(var_default_rproxy_conf) | to_json }}
+    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
     services:
