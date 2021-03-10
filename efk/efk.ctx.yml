@@ -208,6 +208,7 @@ templates:
         when: "{{ params.use_minio_gateway | default(false) }}"
         endpoint: "http://minio_gateway:9000"
         private: true
+        use_basic_auth: false
       - name: "filestash"
         when: "{{ params.use_filestash | default(false) }}"
         endpoint: "http://filestash:8334"
