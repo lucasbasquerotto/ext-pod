@@ -233,6 +233,8 @@ templates:
     var_load_script_path: "{{ var_main_dir }}/scripts/efk.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
+    var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"
+    var_load_general__ctx_prefix_run: "{{ var_ctx_prefix_run }}"
     var_load_general__shared_network: "{{ var_shared_network_name }}"
     var_load_general__main_base_dir: "{{ var_main_base_dir }}"
     var_load_general__main_base_dir_container: "{{ var_main_base_dir_container }}"
