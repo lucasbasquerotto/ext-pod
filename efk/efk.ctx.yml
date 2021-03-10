@@ -192,6 +192,7 @@ templates:
     conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
+    contents: {{ contents | default({}) | to_json }}
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "kibana"

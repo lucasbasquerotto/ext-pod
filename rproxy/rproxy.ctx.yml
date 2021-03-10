@@ -196,6 +196,7 @@ templates:
     conf: {{ params.services[var_rproxy_type].conf | default(var_default_rproxy_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
+    contents: {{ contents | default({}) | to_json }}
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services: {{ var_rproxy_services | to_json }}
 
