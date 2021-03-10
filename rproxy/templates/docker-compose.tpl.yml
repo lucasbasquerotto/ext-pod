@@ -72,6 +72,17 @@ services:
     networks:
     - "shared"
     volumes:
+
+    {% if params.use_custom_ssl | default(false) | bool %}
+
+    - "./env/certbot/etc:/etc/ssl:ro"
+
+    {% elif params.use_certbot | default(false) | bool %}
+
+    - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
+
+    {% endif %}
+
     - "$DATA_DIR/sync/haproxy:/var/main/data/sync/haproxy:ro"
     - "$DATA_DIR/tmp/haproxy:/tmp/main/haproxy"
     - "$DATA_DIR/tmp/tmp/haproxy:/tmp/main/tmp/haproxy"
@@ -119,7 +130,7 @@ services:
 
     {% if params.use_custom_ssl | default(false) | bool %}
 
-    - "./env/nginx/ssl:/etc/ssl:ro"
+    - "./env/certbot/etc:/etc/ssl:ro"
 
     {% elif params.use_certbot | default(false) | bool %}
 

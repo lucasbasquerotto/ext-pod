@@ -18,9 +18,13 @@
 {% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}
 {% set var_custom_ssl_fullchain = params.custom_ssl.fullchain | default('') %}
 {% set var_custom_ssl_privkey = params.custom_ssl.privkey | default('') %}
+{% set var_custom_ssl_concat = params.custom_ssl.concat | default('') %}
 {% set var_use_custom_ssl = (var_custom_ssl_main_domain != '')
-  and (var_custom_ssl_fullchain != '')
-  and (var_custom_ssl_privkey != '')
+  and (
+    ((var_custom_ssl_fullchain != '') and (var_custom_ssl_privkey != ''))
+    or
+    (var_custom_ssl_concat != '')
+  )
 %}
 {% set var_ports = (params.ports is defined) | ternary(
     params.ports | default({}),
@@ -81,10 +85,16 @@ env_files:
 {% if var_use_custom_ssl | bool %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
-  dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  when: "{{ var_custom_ssl_fullchain != '' }}"
 
 - src: "{{ var_custom_ssl_privkey }}"
-  dest: "env/nginx/ssl/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  when: "{{ var_custom_ssl_privkey != '' }}"
+
+- src: "{{ var_custom_ssl_concat }}"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+  when: "{{ var_custom_ssl_concat != '' }}"
 
 {% endif %}
 ###############################
@@ -208,7 +218,7 @@ templates:
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    conf: {{ params.services.nginx.conf | default({}) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
     services:

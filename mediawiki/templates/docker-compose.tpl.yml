@@ -77,7 +77,7 @@ services:
 
     {% if params.use_custom_ssl | default(false) | bool %}
 
-    - "./env/nginx/ssl:/etc/ssl:ro"
+    - "./env/certbot/etc:/etc/ssl:ro"
 
     {% elif params.use_certbot | default(false) | bool %}
 
