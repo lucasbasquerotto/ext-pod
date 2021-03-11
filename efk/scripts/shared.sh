@@ -111,6 +111,10 @@ case "$command" in
 				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
+
+			if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+				"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+			fi
 		fi
 
 		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"

@@ -47,6 +47,10 @@ case "$command" in
 		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.entropy" > /dev/null 2>&1 ||:
 
+		if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+			"$pod_script_env_file" "shared:action:haproxy_reload" > /dev/null 2>&1 ||:
+		fi
+
 		if [ "${var_custom__use_nginx:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
 			"$pod_script_env_file" "shared:action:nginx_reload" > /dev/null 2>&1 ||:
@@ -71,6 +75,10 @@ case "$command" in
 		if [ "${var_custom__use_nginx:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 			"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
+		fi
+
+		if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+			"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		fi
 
 		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"

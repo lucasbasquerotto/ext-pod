@@ -147,6 +147,10 @@ case "$command" in
 				"$pod_script_env_file" "shared:log:nginx:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
+
+			if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+				"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+			fi
 		fi
 
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
