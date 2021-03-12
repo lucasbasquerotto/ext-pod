@@ -54,6 +54,9 @@ case "$command" in
 		if [ "${var_custom__use_nginx:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
 			"$pod_script_env_file" "shared:action:nginx_reload" > /dev/null 2>&1 ||:
+		fi
+
+		if [ "${var_custom__use_haproxy:-}" = "true" ] || [ "${var_custom__use_nginx:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:action:block_ips" > /dev/null 2>&1 ||:
 		fi
 
