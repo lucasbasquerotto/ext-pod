@@ -266,6 +266,7 @@ templates:
 
     var_load_enable__logs_backup: "{{ params.enable_logs_backup | default('') | lower }}"
     var_load_enable__sync_backup: "{{ params.enable_sync_backup | default('') | lower }}"
+    var_load_enable__backup_replica: "{{ params.enable_backup_replica | default('') | lower }}"
 
     var_load_enable__logs_setup: "{{ params.enable_logs_setup | default('') | lower }}"
     var_load_enable__sync_setup: "{{ params.enable_sync_setup | default('') | lower }}"
@@ -290,6 +291,11 @@ templates:
     var_load__s3_backup__bucket_path: "{{ params.backup_bucket_path | default('') }}"
     var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
     var_load__s3_backup__endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+
+    var_load__s3_backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
+    var_load__s3_backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
+    var_load__s3_backup_replica__cli: "{{ params.s3_cli | default('') }}"
+    var_load__s3_backup_replica__endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
 
     var_load__sync_setup__restore_bucket_path_dir: "{{ params.sync_setup.restore_bucket_path_dir | default('') }}"
     var_load__sync_setup__verify_file_to_skip: "{{ params.sync_setup.verify_file_to_skip | default('') }}"

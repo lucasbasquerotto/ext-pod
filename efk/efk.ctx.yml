@@ -268,9 +268,6 @@ templates:
 
     # Tasks
 
-    var_load__backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
-    var_load__backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
-
     var_load__block_ips: "{{ params.block_ips | default('') | lower }}"
     var_load__block_ips__max_amount: "{{ params.block_ips.max_amount | default('') }}"
     var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
