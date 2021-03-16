@@ -331,6 +331,8 @@ templates:
     var_load_general__main_base_dir_container: "{{ var_main_base_dir_container }}"
     var_load_general__backup_is_delete_old: "true"
     var_load_general__s3_cli: "{{ params.s3_cli | default('') }}"
+    var_load_general__define_s3_backup_lifecycle: "{{ params.define_s3_backup_lifecycle | default('') | lower }}"
+    var_load_general__define_s3_uploads_lifecycle: "{{ params.define_s3_uploads_lifecycle | default('') | lower }}"
 
     var_load_main__data_dir: "{{ input.data_dir }}"
     var_load_main__pod_type: "{{ var_pod_type }}"
@@ -438,6 +440,7 @@ templates:
     var_load__s3_backup__bucket_path: "{{ params.backup_bucket_path | default('') }}"
     var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
     var_load__s3_backup__endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+    var_load__s3_backup__lifecycle_file: "{{ params.s3_backup_lifecycle_file | default('') }}"
 
     var_load__s3_backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
     var_load__s3_backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
@@ -448,6 +451,7 @@ templates:
     var_load__s3_uploads__bucket_path: "{{ params.uploads_bucket_path | default('') }}"
     var_load__s3_uploads__cli: "{{ params.s3_cli | default('') }}"
     var_load__s3_uploads__endpoint: "{{ credentials.uploads_bucket.endpoint | default('') }}"
+    var_load__s3_uploads__lifecycle_file: "{{ params.s3_uploads_lifecycle_file | default('') }}"
 
     var_load__s3_uploads_replica__bucket_name: "{{ params.uploads_replica_bucket_name | default('') }}"
     var_load__s3_uploads_replica__bucket_path: "{{ params.uploads_replica_bucket_path | default('') }}"
