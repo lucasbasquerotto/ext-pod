@@ -78,10 +78,33 @@ case "$command" in
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"migrate")
-		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+	"shared:create_actions:main")
+		opts=()
+		opts+=( 'general_actions' )
+		opts+=( 'backup_actions' )
+
+		"$pod_script_env_file" "shared:create_actions" "${opts[@]}"
 		;;
-	"action:exec:actions")
+	"shared:create_actions:log")
+		opts=()
+		opts+=( 'log_register.memory_overview' )
+		opts+=( 'log_register.memory_details' )
+		opts+=( 'log_register.entropy' )
+
+		if [ "${var_custom__use_nginx:-}" = "true" ]; then
+			opts+=( 'log_register.nginx_basic_status' )
+		fi
+
+		"$pod_script_env_file" "shared:create_actions" "${opts[@]}"
+		;;
+	"shared:create_actions:full_log")
+		opts=()
+		opts+=( 'logrotate' )
+		opts+=( 'log_summary' )
+
+		"$pod_script_env_file" "shared:create_actions" "${opts[@]}"
+		;;
+	"action:exec:general_actions")
 		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.entropy" > /dev/null 2>&1 ||:
@@ -93,7 +116,10 @@ case "$command" in
 
 		"$pod_script_env_file" "shared:action:logrotate" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_summary" > /dev/null 2>&1 ||:
+		;;
+	"action:exec:backup_actions")
 		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:replicate_s3" > /dev/null 2>&1 ||:
 		;;
 	"action:exec:log_summary")
         days_ago="${var_custom__log_summary__days_ago:-}"

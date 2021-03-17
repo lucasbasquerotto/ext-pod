@@ -116,7 +116,26 @@ case "$command" in
 
 		"$pod_env_shared_exec_file" "$command" "${opts[@]}"
 		;;
-	"action:exec:actions")
+	"shared:create_actions:main")
+		opts=()
+		opts+=( 'general_actions' )
+		opts+=( 'backup_actions' )
+
+		"$pod_script_env_file" "shared:create_actions" "${opts[@]}"
+		;;
+	"shared:create_actions:log")
+		opts=()
+		opts+=( 'log_register.memory_overview' )
+		opts+=( 'log_register.memory_details' )
+		opts+=( 'log_register.entropy' )
+
+		if [ "${var_custom__use_nginx:-}" = "true" ]; then
+			opts+=( 'log_register.nginx_basic_status' )
+		fi
+
+		"$pod_script_env_file" "shared:create_actions" "${opts[@]}"
+		;;
+	"action:exec:general_actions")
 		"$pod_script_env_file" "shared:action:log_register.memory_overview" --task_info="$title" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.memory_details" --task_info="$title" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.entropy" --task_info="$title" > /dev/null 2>&1 ||:
@@ -129,7 +148,10 @@ case "$command" in
 
 		"$pod_script_env_file" "shared:action:logrotate" --task_info="$title" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_summary" --task_info="$title" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:backup" --task_info="$title" > /dev/null 2>&1 ||:
+		;;
+	"action:exec:backup_actions")
+		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
+		"$pod_script_env_file" "shared:action:replicate_s3" > /dev/null 2>&1 ||:
 		;;
 	"action:exec:log_summary")
         days_ago="${var_custom__log_summary__days_ago:-}"
