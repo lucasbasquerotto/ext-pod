@@ -247,6 +247,9 @@ templates:
     var_load_main__local: "{{ var_local | default('') | lower }}"
 
     var_load_shared__delete_old__days: "3"
+    var_load_shared__define_cron: "{{ params.define_cron | default('') | lower }}"
+    var_load_shared__cron__src: "{{ params.cron_src | default('') }}"
+    var_load_shared__cron__dest: "{{ params.cron_dest | default('') }}"
 
     var_load_use__main_network: "true"
     var_load_use__logrotator: "true"
