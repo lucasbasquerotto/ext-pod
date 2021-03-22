@@ -385,6 +385,7 @@ templates:
 
     var_load_shared__delete_old__days: "3"
     var_load_shared__define_cron: "{{ params.define_cron | default('') | lower }}"
+    var_load_shared__include_cron_watch: "{{ params.include_cron_watch | default('') | lower }}"
     var_load_shared__cron__src: "{{ params.cron_src | default('') }}"
     var_load_shared__cron__dest: "{{ params.cron_dest | default('') }}"
 
