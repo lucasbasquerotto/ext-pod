@@ -121,6 +121,14 @@
     | ternary('/' + (params.uploads_bucket_path | default('')), '')
 %}
 
+{% set var_certbot_domains =
+  ((params.certbot_domains | default([]) | length) > 0)
+  | ternary(
+    params.certbot_domains | default([]) | join(' '),
+    params.domains | default({}) | dict2items | map(attribute='value') | join(' ')
+  )
+%}
+
 {% set var_s3_config_src = '' %}
 {% set var_s3_config_dest = '' %}
 
@@ -476,13 +484,13 @@ templates:
     var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
     var_load__block_ips__amount_hour: "{{ params.block_ips.amount_hour | default('') }}"
 
-    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
-    var_load__certbot__domains: "{{ params.domains | default('') }}"
-    var_load__certbot__email: "{{ params.certbot.email | default('') }}"
-    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
     var_load__certbot__main_domain: "{{ params.main_domain | default('') }}"
+    var_load__certbot__domains: "{{ var_certbot_domains }}"
+    var_load__certbot__email: "{{ params.certbot.email | default('') }}"
     var_load__certbot__rsa_key_size: "{{ params.certbot.rsa_key_size | default('') }}"
+    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
+    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
 
     var_load__db_backup__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
     var_load__db_backup__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"
