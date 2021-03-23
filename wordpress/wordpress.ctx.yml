@@ -132,15 +132,20 @@
 {% set var_s3_config_src = '' %}
 {% set var_s3_config_dest = '' %}
 
-{% if params.s3_cli == 'awscli' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
-  {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
-{% elif params.s3_cli == 'rclone' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
-  {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
-{% elif params.s3_cli == 'mc' %}
-  {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
-  {% set var_s3_config_dest = 'env/mc/config.json' %}
+{% if params.use_s3 | default(false) | bool %}
+  {% if (params.s3_cli | default('')) == 'awscli' %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
+    {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
+  {% elif (params.s3_cli | default('')) == 'rclone' %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
+    {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
+  {% elif (params.s3_cli | default('')) == 'mc' %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
+    {% set var_s3_config_dest = 'env/mc/config.json' %}
+  {% else %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/unknown_s3_cli' %}
+    {% set var_s3_config_dest = 'env/unknown_s3_cli' %}
+  {% endif %}
 {% endif %}
 
 ### main ###
@@ -193,6 +198,7 @@ templates:
     internal: "{{ params.internal | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
+    use_s3: "{{ params.use_s3 | default(false) }}"
     use_varnish: "{{ params.use_varnish | default(false) }}"
     use_pma: "{{ params.use_pma | default(false) }}"
     use_adminer: "{{ params.use_adminer | default(false) }}"
@@ -201,8 +207,8 @@ templates:
     use_filestash: "{{ params.use_filestash | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
-    use_redis: "{{ params.use_redis| default(false) }}"
-    use_memcached: "{{ params.use_memcached| default(false) }}"
+    use_redis: "{{ params.use_redis | default(false) }}"
+    use_memcached: "{{ params.use_memcached | default(false) }}"
     use_composer: "{{ var_use_composer }}"
     wordpress_ini_file_type: "{{ var_wordpress_ini_file_type }}"
     db_host: "{{ var_mysql_hostname }}"
@@ -214,6 +220,7 @@ templates:
     fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
@@ -231,7 +238,6 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
-    s3_cli: "{{ params.s3_cli | default('') }}"
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
 
@@ -319,6 +325,9 @@ templates:
 {% endif %}
 ###############################
 
+###############################
+{% if params.use_s3 | default(false) | bool %}
+
 - src: "{{ var_s3_config_src }}"
   dest: "{{ var_s3_config_dest }}"
   schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
@@ -346,6 +355,9 @@ templates:
       access_key: "{{ credentials.uploads_replica_bucket.access_key | default('') }}"
       secret_key: "{{ credentials.uploads_replica_bucket.secret_key | default('') }}"
       when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+
+{% endif %}
+###############################
 
 ###############################
 {% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
@@ -443,6 +455,7 @@ templates:
     var_load_use__logrotator: "true"
     var_load_use__nginx: "true"
     var_load_use__mysql: "true"
+    var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
     var_load_use__composer: "{{ var_use_composer | default('') | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"

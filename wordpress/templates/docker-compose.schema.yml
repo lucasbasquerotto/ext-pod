@@ -91,6 +91,10 @@ schemas:
         non_empty: true
       elasticsearch_host:
         type: "str"
+      s3_cli:
+        type: "str"
+        non_empty: true
+        choices: ["awscli", "mc", "rclone"]
       ports:
         schema: "ports"
         non_empty: true

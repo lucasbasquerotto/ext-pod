@@ -35,6 +35,8 @@ tmp_errors=()
 tmp_error_count=${#tmp_errors[@]}
 
 if [[ $tmp_error_count -gt 0 ]]; then
+	echo "[specific errors]" >&2
+
 	for (( i=1; i<tmp_error_count+1; i++ )); do
 		echo "$i/${tmp_error_count}: ${tmp_errors[$i-1]}" >&2
 	done

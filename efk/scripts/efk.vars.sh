@@ -98,7 +98,7 @@ if [ "$tmp_is_db" = 'true' ]; then
 
 		if [ "${var_load__db_backup__s3_snapshot:-}" != 'true' ]; then
 			if [ -z "${var_load__s3_backup__bucket_name:-}" ]; then
-				tmp_errors+=("[shared] var_load__s3_backup__bucket_name is not defined (db_backup)")
+				tmp_errors+=("var_load__s3_backup__bucket_name is not defined (db_backup)")
 			fi
 
 			export var_task__db_backup__backup_remote__subtask_cmd_s3='s3:subtask:s3_backup'
@@ -185,6 +185,8 @@ fi
 tmp_error_count=${#tmp_errors[@]}
 
 if [[ $tmp_error_count -gt 0 ]]; then
+	echo "[specific errors]" >&2
+
 	for (( i=1; i<tmp_error_count+1; i++ )); do
 		echo "$i/${tmp_error_count}: ${tmp_errors[$i-1]}" >&2
 	done

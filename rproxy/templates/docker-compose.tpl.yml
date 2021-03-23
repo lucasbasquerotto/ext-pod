@@ -271,6 +271,43 @@ services:
 
     {% endif %}
 
+  {% if params.use_s3 | bool %}
+
+  s3_cli:
+    container_name: "${CTX_PREFIX_RUN}s3_cli"
+    hostname: "s3_cli"
+    build:
+      context: .
+      dockerfile: "shared/containers/{{ params.s3_cli }}/Dockerfile"
+      args:
+        IMAGE: "{{ params.images[params.s3_cli + '_image'] }}"
+        VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
+    restart: "unless-stopped"
+
+    {% if params.use_internal_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+
+    networks:
+    - "shared"
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+
+    {% if (params.memory.s3_cli | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.s3_cli }}"
+
+    {% endif %}
+
+  {% endif %}
+
   {% if params.use_internal_fluentd | bool %}
 
   fluentd:

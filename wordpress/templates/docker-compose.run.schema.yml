@@ -21,10 +21,6 @@ schemas:
         type: "bool"
       fluentd_port:
         type: "str"
-      s3_cli:
-        type: "str"
-        non_empty: true
-        choices: ["awscli", "mc", "rclone"]
       images:
         type: "dict"
         required: true
