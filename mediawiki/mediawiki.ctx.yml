@@ -343,6 +343,7 @@ templates:
       - name: "mediawiki"
         endpoint: "{{ var_mediawiki_service }}"
       - name: "private"
+        when: "{{ params.use_private_path | default(false) }}"
         private: true
         locations:
           - location: "= /nginx/basic_status"

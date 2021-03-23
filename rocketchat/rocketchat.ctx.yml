@@ -310,6 +310,7 @@ templates:
       - name: "rocketchat"
         endpoint: "http://rocketchat:3000"
       - name: "private"
+        when: "{{ params.use_private_path | default(false) }}"
         private: true
         locations:
           - location: "= /nginx/basic_status"

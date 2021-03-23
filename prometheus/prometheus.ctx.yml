@@ -236,6 +236,14 @@ templates:
         endpoint: "http://prometheus:9090"
         upgrade: true
         private: true
+      - name: "private"
+        when: "{{ params.use_private_path | default(false) }}"
+        private: true
+        locations:
+          - location: "= /nginx/basic_status"
+            data: "stub_status;"
+          - location: "/"
+            data: "return 404;"
       - name: "theia"
         when: "{{ params.use_theia | default(false) }}"
         endpoint: "http://theia:3000"
