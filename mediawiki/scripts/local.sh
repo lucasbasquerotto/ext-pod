@@ -22,6 +22,11 @@ fi
 shift;
 
 case "$command" in
+	"action:exec:test")
+		echo "[start] test"
+		sleep 10
+		echo "[end] test"
+		;;
 	"clear")
 		"$pod_script_env_file" "local:clear"
 		sudo docker volume rm -f "${var_run__general__ctx_full_name}_mysql"

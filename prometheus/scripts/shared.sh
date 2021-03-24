@@ -138,7 +138,8 @@ case "$command" in
 			"nginx_reload"|\
 			"pending"|\
 			"replicate_s3"|\
-			"setup")
+			"setup"|\
+			"watch")
 				"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 				;;
 			*)
