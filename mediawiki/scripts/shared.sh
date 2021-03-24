@@ -113,14 +113,7 @@ case "$command" in
 			--db_connect_wait_secs="$var_run__migrate__db_connect_wait_secs" \
 			--connection_sleep="${var_run__migrate__connection_sleep:-}"
 		;;
-	"shared:create_actions:main")
-		opts=()
-		opts+=( 'general_actions' )
-		opts+=( 'backup_actions' )
-
-		"$pod_script_env_file" "shared:create_actions" "${opts[@]}"
-		;;
-	"shared:create_actions:log")
+	"custom:unique:log")
 		opts=()
 		opts+=( 'log_register.memory_overview' )
 		opts+=( 'log_register.memory_details' )
@@ -130,9 +123,9 @@ case "$command" in
 			opts+=( 'log_register.nginx_basic_status' )
 		fi
 
-		"$pod_script_env_file" "shared:create_actions" "${opts[@]}"
+		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
-	"action:exec:general_actions")
+	"action:exec:actions")
 		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_register.entropy" > /dev/null 2>&1 ||:
@@ -145,8 +138,7 @@ case "$command" in
 
 		"$pod_script_env_file" "shared:action:logrotate" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:log_summary" > /dev/null 2>&1 ||:
-		;;
-	"action:exec:backup_actions")
+
 		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
 		"$pod_script_env_file" "shared:action:replicate_s3" > /dev/null 2>&1 ||:
 		;;
