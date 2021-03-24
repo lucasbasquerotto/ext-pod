@@ -128,23 +128,6 @@ case "$command" in
 
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
-	"action:exec:actions")
-		"$pod_script_env_file" "shared:action:log_register.memory_overview" --task_info="$title" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_register.memory_details" --task_info="$title" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_register.entropy" --task_info="$title" > /dev/null 2>&1 ||:
-
-		if [ "${var_custom__use_nginx:-}" = "true" ]; then
-			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" --task_info="$title" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "shared:action:nginx_reload" --task_info="$title" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "shared:action:block_ips" --task_info="$title" > /dev/null 2>&1 ||:
-		fi
-
-		"$pod_script_env_file" "shared:action:logrotate" --task_info="$title" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_summary" --task_info="$title" > /dev/null 2>&1 ||:
-
-		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:replicate_s3" > /dev/null 2>&1 ||:
-		;;
 	"action:exec:log_summary")
         days_ago="${var_custom__log_summary__days_ago:-}"
         days_ago="${arg_days_ago:-$days_ago}"
@@ -176,6 +159,30 @@ case "$command" in
 			--task_info="$title" \
 			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
 			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
+		;;
+	"action:exec:"*)
+		action="${command#action:exec:}"
+
+		case "$action" in
+			"backup"|\
+			"block_ips"|\
+			"local.backup"|\
+			"log_register.entropy"|\
+			"log_register.memory_details"|\
+			"log_register.memory_overview"|\
+			"log_register.nginx_basic_status"|\
+			"log_summary"|\
+			"logrotate"|\
+			"nginx_reload"|\
+			"pending"|\
+			"replicate_s3"|\
+			"setup")
+				"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+				;;
+			*)
+				error "$command: unsupported action: $action"
+				;;
+		esac
 		;;
 	*)
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}

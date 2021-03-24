@@ -96,22 +96,6 @@ case "$command" in
 
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
-	"action:exec:actions")
-		"$pod_script_env_file" "shared:action:log_register.memory_overview" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_register.memory_details" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_register.entropy" > /dev/null 2>&1 ||:
-
-		if [ "${var_custom__use_nginx:-}" = "true" ]; then
-			"$pod_script_env_file" "shared:action:log_register.nginx_basic_status" > /dev/null 2>&1 ||:
-			"$pod_script_env_file" "shared:action:nginx_reload" > /dev/null 2>&1 ||:
-		fi
-
-		"$pod_script_env_file" "shared:action:logrotate" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:log_summary" > /dev/null 2>&1 ||:
-
-		"$pod_script_env_file" "shared:action:backup" > /dev/null 2>&1 ||:
-		"$pod_script_env_file" "shared:action:replicate_s3" > /dev/null 2>&1 ||:
-		;;
 	"action:exec:log_summary")
         days_ago="${var_custom__log_summary__days_ago:-}"
         days_ago="${arg_days_ago:-$days_ago}"
@@ -138,6 +122,29 @@ case "$command" in
 		"$pod_script_env_file" "shared:log:disk:summary" \
 			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
 			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
+		;;
+	"action:exec:"*)
+		action="${command#action:exec:}"
+
+		case "$action" in
+			"backup"|\
+			"local.backup"|\
+			"log_register.entropy"|\
+			"log_register.memory_details"|\
+			"log_register.memory_overview"|\
+			"log_register.nginx_basic_status"|\
+			"log_summary"|\
+			"logrotate"|\
+			"nginx_reload"|\
+			"pending"|\
+			"replicate_s3"|\
+			"setup")
+				"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+				;;
+			*)
+				error "$command: unsupported action: $action"
+				;;
+		esac
 		;;
 	*)
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
