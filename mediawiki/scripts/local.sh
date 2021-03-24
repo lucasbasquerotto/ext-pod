@@ -33,6 +33,8 @@ case "$command" in
 	"clear-remote")
 		"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb
 		"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
+		"$pod_script_env_file" "s3:subtask:s3_uploads_replica" --s3_cmd=rb
+		"$pod_script_env_file" "s3:subtask:s3_backup_replica" --s3_cmd=rb
 		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"

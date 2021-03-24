@@ -55,10 +55,6 @@ case "$command" in
 
 		"$pod_env_shared_file" "$command" "$@"
 		;;
-	"clear-remote")
-		"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb
-		"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
-		;;
 	"clear")
 		"$pod_script_env_file" "local:clear"
 		sudo docker volume rm -f "${var_run__general__ctx_full_name}_mysql"
@@ -66,6 +62,12 @@ case "$command" in
 		;;
 	"clear-all")
 		"$pod_script_env_file" "local:clear-all"
+		;;
+	"clear-remote")
+		"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb
+		"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
+		"$pod_script_env_file" "s3:subtask:s3_uploads_replica" --s3_cmd=rb
+		"$pod_script_env_file" "s3:subtask:s3_backup_replica" --s3_cmd=rb
 		;;
 	*)
 		"$pod_env_shared_file" "$command" "$@"
