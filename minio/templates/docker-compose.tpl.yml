@@ -339,7 +339,7 @@ services:
     hostname: "minio_{{ idx }}"
     build:
       context: .
-      dockerfile: "shared/containers/minio/Dockerfile"
+      dockerfile: "{{ params.main_dir }}/containers/minio/Dockerfile"
       args:
         IMAGE: "{{ params.images.minio_image }}"
         VERSION: "{{ params.images.minio_version }}"
