@@ -193,10 +193,10 @@ templates:
     rocketchat:
       mail_url: "{{ credentials.rocketchat.mail_url | default('smtp://smtp.email') }}"
       storage_type: "{{ var_storage_type }}"
-      fileupload_s3_bucketurl: "{{ params.services.rocketchat.uploads_bucket_endpoint | default('') }}"
+      fileupload_s3_bucket_url: "{{ credentials.uploads_bucket.endpoint | default('') }}"
       fileupload_s3_bucket: "{{ params.uploads_bucket_name | default('') }}"
-      fileupload_s3_region: "{{ params.services.rocketchat.uploads_bucket_region | default('') }}"
-      fileupload_s3_acl: "{{ params.services.rocketchat.uploads_bucket_acl | default('') }}"
+      fileupload_s3_region: "{{ credentials.uploads_bucket.region | default('') }}"
+      fileupload_s3_acl: "{{ credentials.uploads_bucket.acl | default('') }}"
       fileupload_s3_cdn: "{{ params.services.rocketchat.s3_cdn | default('') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
