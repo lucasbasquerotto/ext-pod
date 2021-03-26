@@ -134,7 +134,13 @@ services:
     - MAIL_URL={{ params.rocketchat.mail_url | default('') }}
     - CDN_PREFIX={{ params.rocketchat.cdn_prefix | default('') }}
     - CDN_JSCSS_PREFIX={{ params.rocketchat.cdn_prefix | default('') }}
+
+    {% if params.rocketchat.block_default_settings | bool %}
+
     - SETTINGS_BLOCKED=FileUpload_Storage_Type,FileUpload_S3_Bucket,FileUpload_S3_Region,FileUpload_S3_BucketURL,FileUpload_FileSystemPath
+
+    {% endif %}
+
     - FileUpload_Storage_Type={{ params.rocketchat.storage_type }}
     - FileUpload_FileSystemPath=/app/uploads
 

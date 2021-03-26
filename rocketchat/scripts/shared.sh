@@ -53,8 +53,9 @@ case "$command" in
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 777 "\$dir"
 				fi
+
+				chown 999 "\$dir"
 			fi
 		SHELL
 

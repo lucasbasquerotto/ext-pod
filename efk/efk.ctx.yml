@@ -291,6 +291,7 @@ templates:
     var_load_use__logrotator: "true"
     var_load_use__nginx: "true"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
+    var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
@@ -337,7 +338,7 @@ templates:
     var_load__db_backup__recursive_mode_file: "{{ params.db_backup.recursive_mode_file | default('') }}"
     var_load__db_backup__file_to_clear: "{{ params.db_backup.file_to_clear | default('') }}"
     var_load__db_backup__dir_to_clear: "{{ params.db_backup.dir_to_clear | default('') }}"
-    var_load__db_backup__db_compress_type: "{{ params.db_backup.db_compress_type | default('') }}"
+    var_load__db_backup__compress_type: "{{ params.db_backup.compress_type | default('') }}"
     var_load__db_backup__db_compress_file_name: "{{ params.db_backup.db_compress_file_name | default('') }}"
     var_load__db_backup__compress_pass: "{{ credentials.efk_db.compress_pass | default('') }}"
 
@@ -353,7 +354,7 @@ templates:
     var_load__db_setup__index_prefix: "{{ params.db_setup.index_prefix | default('') }}"
     var_load__db_setup__restore_remote_file: "{{ params.db_setup.restore_remote_file | default('') }}"
     var_load__db_setup__snapshot_type: "{{ params.db_setup.snapshot_type | default('') }}"
-    var_load__db_setup__db_compress_type: "{{ params.db_setup.db_compress_type | default('') }}"
+    var_load__db_setup__compress_type: "{{ params.db_setup.compress_type | default('') }}"
     var_load__db_setup__db_compress_file_name: "{{ params.db_setup.db_compress_file_name | default('') }}"
     var_load__db_setup__compress_pass: >-
       {{
