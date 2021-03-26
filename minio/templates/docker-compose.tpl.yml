@@ -343,9 +343,9 @@ services:
   {#############################################################}
   {% for idx in range(1, (params.minio_amount | int) + 1) %}
 
-  minio_{{ idx | string }}:
-    container_name: "${CTX_PREFIX_MAIN}minio_{{ idx | string }}"
-    hostname: "minio_{{ idx | string }}"
+  minio{{ idx | string }}:
+    container_name: "${CTX_PREFIX_MAIN}minio{{ idx | string }}"
+    hostname: "minio{{ idx | string }}"
     build:
       context: .
       dockerfile: "{{ params.main_dir }}/containers/minio/Dockerfile"
@@ -368,12 +368,18 @@ services:
     expose:
     - "9000"
     environment:
-      MINIO_ROOT_USER: "{{ params.minio_root_user }}"
+      MINIO_ROOT_USER: $MINIO_ROOT_USER
       MINIO_ROOT_PASSWORD: $MINIO_ROOT_PASSWORD
-      MINIO_ACCESS_KEY: $MINIO_ACCESS_KEY
-      MINIO_SECRET_KEY: $MINIO_SECRET_KEY
+
+      {#############################################################}
+      {% if params.minio_new_keys | default(false) | bool %}
+
       MINIO_ACCESS_KEY_OLD: $MINIO_ACCESS_KEY_OLD
       MINIO_SECRET_KEY_OLD: $MINIO_SECRET_KEY_OLD
+
+      {% endif %}
+      {#############################################################}
+
     volumes:
 
     {#############################################################}

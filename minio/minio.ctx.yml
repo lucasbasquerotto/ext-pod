@@ -93,8 +93,9 @@
 
 {% set var_minio_endpoints = lookup(
     'sequence',
-    'start=1 count=' + (params.minio_amount | default(0)) + ' format=http://minio_%d:5601'
-  ) | list
+    'start=1 count=' + (params.minio_amount | default(0) | string) + ' format=http://minio%d:9000',
+    wantlist=True
+  )
 %}
 
 ### main ###
@@ -155,7 +156,7 @@ templates:
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     minio_amount: "{{ params.minio_amount | default(0) }}"
     minio_data_amount: "{{ params.minio_data_amount | default(0) }}"
-    minio_root_user: "{{ credentials.minio.root_user | default('') }}"
+    minio_new_keys: "{{ (credentials.minio.access_key_old | default('')) != '' }}"
     minio_include_healthcheck: "{{ params.minio_include_healthcheck | default(false) }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
@@ -187,9 +188,8 @@ templates:
     minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
     minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
     minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
+    minio_root_user: "{{ credentials.minio.root_user | default('') }}"
     minio_root_password: "{{ credentials.minio.root_password | default('') }}"
-    minio_access_key: "{{ credentials.minio.access_key | default('') }}"
-    minio_secret_key: "{{ credentials.minio.secret_key | default('') }}"
     minio_access_key_old: "{{ credentials.minio.access_key_old | default('') }}"
     minio_secret_key_old: "{{ credentials.minio.secret_key_old | default('') }}"
 
