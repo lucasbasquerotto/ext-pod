@@ -2,6 +2,7 @@ version: "2.4"
 
 x-logging:
 
+  {#############################################################}
   {% if params.use_fluentd | bool %}
 
   mainlog: &mainlog
@@ -22,6 +23,7 @@ x-logging:
       max-size: "50m"
 
   {% endif %}
+  {#############################################################}
 
 networks:
   shared:
@@ -30,8 +32,10 @@ networks:
 
 services:
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'web'] %}
 
+  {#############################################################}
   {% if params.use_certbot | bool %}
 
   certbot:
@@ -48,15 +52,19 @@ services:
     - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.certbot | default('')) != '' %}
 
     mem_limit: "{{ params.memory.certbot }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   logrotator:
     container_name: "${CTX_PREFIX_RUN}logrotator"
@@ -77,8 +85,10 @@ services:
     logging: *mainlog
     command: python3 /bin/logrotate.py /tmp/main/log /var/log/main/rotated
 
+    {#############################################################}
     {% if (params.memory.logrotator | default('')) != '' %}
 
     mem_limit: "{{ params.memory.logrotator }}"
 
     {% endif %}
+    {#############################################################}

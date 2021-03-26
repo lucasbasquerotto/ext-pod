@@ -2,6 +2,7 @@ version: '2.4'
 
 x-logging:
 
+  {#############################################################}
   {% if params.use_fluentd | bool %}
 
   mainlog: &mainlog
@@ -22,20 +23,24 @@ x-logging:
       max-size: "50m"
 
   {% endif %}
+  {#############################################################}
 
 networks:
 
+  {#############################################################}
   {% if params.use_internal_fluentd | bool %}
 
   log:
     driver: "bridge"
 
   {% endif %}
+  {#############################################################}
 
   shared:
     external: true
     name: "{{ params.shared_network }}"
 
+{#############################################################}
 {% if (params.local | bool) and (params.named_volumes | bool) %}
 
 volumes:
@@ -43,9 +48,11 @@ volumes:
   mysql: {}
 
 {% endif %}
+{#############################################################}
 
 services:
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'web'] %}
 
   nginx:
@@ -59,12 +66,14 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     ports:
     - "{{ params.ports.public_http_port }}:80"
@@ -75,6 +84,7 @@ services:
     - "shared"
     volumes:
 
+    {#############################################################}
     {% if params.use_custom_ssl | default(false) | bool %}
 
     - "./env/certbot/etc:/etc/ssl:ro"
@@ -84,6 +94,7 @@ services:
     - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
@@ -91,12 +102,15 @@ services:
     - "$DATA_DIR/tmp/tmp/nginx:/tmp/main/tmp/nginx"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.nginx | default('')) != '' %}
 
     mem_limit: "{{ params.memory.nginx }}"
 
     {% endif %}
+    {#############################################################}
 
+  {#############################################################}
   {% if params.use_varnish | bool %}
 
   varnish:
@@ -110,12 +124,14 @@ services:
         VERSION: "{{ params.images.varnish_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -131,13 +147,16 @@ services:
         soft: 82000
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.varnish | default('')) != '' %}
 
     mem_limit: "{{ params.memory.varnish }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   mediawiki:
     container_name: "${CTX_PREFIX_MAIN}mediawiki"
@@ -151,34 +170,43 @@ services:
         MAIN_DIR: "{{ params.main_dir }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if (params.use_internal_fluentd | bool) or (params.pod_type == 'app') %}
 
     depends_on:
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
+    {#############################################################}
     {% if params.pod_type == 'app' %}
 
+    {#############################################################}
     {% if params.use_memcached | bool %}
 
     - "memcached"
 
     {% endif %}
+    {#############################################################}
 
     - "mysql"
 
     {% endif %}
+    {#############################################################}
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
     volumes:
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "uploads:/var/www/html/images"
@@ -188,16 +216,20 @@ services:
     - "$DATA_DIR/mediawiki/uploads:/var/www/html/images"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/tmp/log/mediawiki:/tmp/main/log/mediawiki"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.mediawiki | default('')) != '' %}
 
     mem_limit: "{{ params.memory.mediawiki }}"
 
     {% endif %}
+    {#############################################################}
 
+  {#############################################################}
   {% if params.use_pma | bool %}
 
   phpmyadmin:
@@ -218,12 +250,14 @@ services:
       PMA_USER: "{{ params.db_gui_user }}"
       PMA_PASSWORD: $DB_GUI_PASSWORD
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -232,14 +266,18 @@ services:
     - "$DATA_DIR/tmp/tmp/phpmyadmin:/tmp/main/tmp/phpmyadmin"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.pma | default('')) != '' %}
 
     mem_limit: "{{ params.memory.pma }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_adminer | bool %}
 
   adminer:
@@ -260,12 +298,14 @@ services:
       ADMINER_PASSWORD: $DB_GUI_PASSWORD
       ADMINER_AUTOLOGIN: 1
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -274,14 +314,18 @@ services:
     - "$DATA_DIR/tmp/tmp/adminer:/tmp/main/tmp/adminer"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.adminer | default('')) != '' %}
 
     mem_limit: "{{ params.memory.adminer }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_theia | bool %}
 
   theia:
@@ -296,12 +340,14 @@ services:
     restart: "unless-stopped"
     user: root
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -311,25 +357,31 @@ services:
     - "$DATA_DIR/sync:/home/project/sync:cached"
     - "$DATA_DIR/action:/home/project/action:cached"
 
+    {#############################################################}
     {% if params.local | bool %}
 
     - "$DATA_DIR/log:/home/project/log:cached"
     - "$DATA_DIR/tmp:/home/project/tmp:cached"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     - "$DATA_DIR/tmp/tmp/theia:/tmp/main/tmp/theia"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.theia | default('')) != '' %}
 
     mem_limit: "{{ params.memory.theia }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_minio_gateway | bool %}
 
   minio_gateway:
@@ -346,12 +398,14 @@ services:
       MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
       MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -362,14 +416,18 @@ services:
     logging: *mainlog
     command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
 
+    {#############################################################}
     {% if (params.memory.minio_gateway | default('')) != '' %}
 
     mem_limit: "{{ params.memory.minio_gateway }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_filestash | bool %}
 
   filestash:
@@ -383,12 +441,14 @@ services:
         VERSION: "{{ params.images.filestash_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -397,18 +457,24 @@ services:
     - "$DATA_DIR/tmp/tmp/filestash:/tmp/main/tmp/filestash"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.filestash | default('')) != '' %}
 
     mem_limit: "{{ params.memory.filestash }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'cache'] %}
 
+  {#############################################################}
   {% if params.use_redis | bool %}
 
   redis:
@@ -422,22 +488,26 @@ services:
         VERSION: "{{ params.images.redis_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
 
+    {#############################################################}
     {% if params.pod_type in ['cache'] %}
 
     ports:
     - "6379:6379"
 
     {% endif %}
+    {#############################################################}
 
     volumes:
     - "$DATA_DIR/redis:/data"
@@ -445,14 +515,18 @@ services:
     - "$DATA_DIR/tmp/tmp/redis:/tmp/main/tmp/redis"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.redis | default('')) != '' %}
 
     mem_limit: "{{ params.memory.redis }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_memcached | bool %}
 
   memcached:
@@ -466,38 +540,47 @@ services:
         VERSION: "{{ params.images.memcached_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
 
+    {#############################################################}
     {% if params.pod_type in ['cache'] %}
 
     ports:
     - "11211:11211"
 
     {% endif %}
+    {#############################################################}
 
     volumes:
     - "$DATA_DIR/tmp/memcached:/tmp/main/memcached"
     - "$DATA_DIR/tmp/tmp/memcached:/tmp/main/tmp/memcached"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.memcached | default('')) != '' %}
 
     mem_limit: "{{ params.memory.memcached }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'db'] %}
 
   mysql:
@@ -514,25 +597,30 @@ services:
       MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
       MYSQL_DATABASE: "{{ params.db_name }}"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
 
+    {#############################################################}
     {% if params.pod_type in ['db'] %}
 
     ports:
     - "{{ params.db_port }}:3306"
 
     {% endif %}
+    {#############################################################}
 
     volumes:
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "mysql:/var/lib/mysql"
@@ -542,19 +630,23 @@ services:
     - "$DATA_DIR/mysql:/var/lib/mysql"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     - "$DATA_DIR/tmp/tmp/mysql:/tmp/main/tmp/mysql"
     - "$DATA_DIR/tmp/log/mysql:/tmp/main/log/mysql"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.mysql | default('')) != '' %}
 
     mem_limit: "{{ params.memory.mysql }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   toolbox:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
@@ -567,12 +659,14 @@ services:
         VERSION: "{{ params.images.toolbox_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -581,21 +675,26 @@ services:
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "uploads:/var/main/data/mediawiki/uploads"
 
     {% endif %}
+    {#############################################################}
 
     logging: *mainlog
     command: "tail -f /dev/null"
 
+    {#############################################################}
     {% if (params.memory.toolbox | default('')) != '' %}
 
     mem_limit: "{{ params.memory.toolbox }}"
 
     {% endif %}
+    {#############################################################}
 
+  {#############################################################}
   {% if params.use_s3 | bool %}
 
   s3_cli:
@@ -609,12 +708,14 @@ services:
         VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -626,14 +727,18 @@ services:
     entrypoint: ""
     command: "tail -f /dev/null"
 
+    {#############################################################}
     {% if (params.memory.s3_cli | default('')) != '' %}
 
     mem_limit: "{{ params.memory.s3_cli }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_internal_fluentd | bool %}
 
   fluentd:
@@ -653,6 +758,7 @@ services:
     networks:
     - "log"
 
+    {#############################################################}
     {% if params.fluentd_output_plugin == 'elasticsearch' %}
 
     environment:
@@ -660,6 +766,7 @@ services:
       ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
 
     {% endif %}
+    {#############################################################}
 
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
@@ -667,10 +774,13 @@ services:
     - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
     logging: *jsonlog
 
+    {#############################################################}
     {% if (params.memory.fluentd | default('')) != '' %}
 
     mem_limit: "{{ params.memory.fluentd }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}

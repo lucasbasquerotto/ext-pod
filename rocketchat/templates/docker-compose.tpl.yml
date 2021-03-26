@@ -2,6 +2,7 @@ version: '2.4'
 
 x-logging:
 
+  {#############################################################}
   {% if params.use_fluentd | bool %}
 
   mainlog: &mainlog
@@ -22,20 +23,24 @@ x-logging:
       max-size: "50m"
 
   {% endif %}
+  {#############################################################}
 
 networks:
 
+  {#############################################################}
   {% if params.use_internal_fluentd | bool %}
 
   log:
     driver: "bridge"
 
   {% endif %}
+  {#############################################################}
 
   shared:
     external: true
     name: "{{ params.shared_network }}"
 
+{#############################################################}
 {% if (params.local | bool) and (params.named_volumes | bool) %}
 
 volumes:
@@ -43,9 +48,11 @@ volumes:
   mongo_db: {}
 
 {% endif %}
+{#############################################################}
 
 services:
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'web'] %}
 
   nginx:
@@ -59,12 +66,14 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     ports:
     - "{{ params.ports.public_http_port }}:80"
@@ -75,6 +84,7 @@ services:
     - "shared"
     volumes:
 
+    {#############################################################}
     {% if params.use_custom_ssl | default(false) | bool %}
 
     - "./env/certbot/etc:/etc/ssl:ro"
@@ -84,6 +94,7 @@ services:
     - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
@@ -91,11 +102,13 @@ services:
     - "$DATA_DIR/tmp/tmp/nginx:/tmp/main/tmp/nginx"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.nginx | default('')) != '' %}
 
     mem_limit: "{{ params.memory.nginx }}"
 
     {% endif %}
+    {#############################################################}
 
   rocketchat:
     container_name: "${CTX_PREFIX_MAIN}rocketchat"
@@ -108,23 +121,29 @@ services:
         VERSION: "{{ params.images.rocketchat_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if (params.use_internal_fluentd | bool) or (params.pod_type == 'app') %}
 
     depends_on:
 
+      {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
+    {#############################################################}
     {% if params.pod_type == 'app' %}
 
     - "mongo"
 
     {% endif %}
+    {#############################################################}
 
     {% endif %}
+    {#############################################################}
 
     environment:
     - PORT=3000
@@ -135,15 +154,18 @@ services:
     - CDN_PREFIX={{ params.rocketchat.cdn_prefix | default('') }}
     - CDN_JSCSS_PREFIX={{ params.rocketchat.cdn_prefix | default('') }}
 
+    {#############################################################}
     {% if params.rocketchat.block_default_settings | bool %}
 
     - SETTINGS_BLOCKED=FileUpload_Storage_Type,FileUpload_S3_Bucket,FileUpload_S3_Region,FileUpload_S3_BucketURL,FileUpload_FileSystemPath
 
     {% endif %}
+    {#############################################################}
 
     - FileUpload_Storage_Type={{ params.rocketchat.storage_type }}
     - FileUpload_FileSystemPath=/app/uploads
 
+    {#############################################################}
     {% if params.rocketchat.storage_type == 'AmazonS3' %}
 
     - FileUpload_S3_Bucket={{ params.rocketchat.fileupload_s3_bucket }}
@@ -155,11 +177,13 @@ services:
     - FileUpload_S3_AWSSecretAccessKey=$ROCKETCHAT_FILEUPLOAD_S3_SECRET_KEY
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
     volumes:
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "uploads:/app/uploads"
@@ -169,6 +193,7 @@ services:
     - "$DATA_DIR/rocketchat/uploads:/app/uploads"
 
     {% endif %}
+    {#############################################################}
 
     command: >
       bash -c
@@ -180,12 +205,15 @@ services:
         done; (exit $$s)"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.rocketchat | default('')) != '' %}
 
     mem_limit: "{{ params.memory.rocketchat }}"
 
     {% endif %}
+    {#############################################################}
 
+  {#############################################################}
   {% if params.use_bot | bool %}
 
   hubot:
@@ -201,11 +229,13 @@ services:
     depends_on:
     - "rocketchat"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     environment:
     - ROCKETCHAT_URL=rocketchat:3000
@@ -221,14 +251,18 @@ services:
     - "$DATA_DIR/hubot/scripts:/home/hubot/scripts"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.hubot | default('')) != '' %}
 
     mem_limit: "{{ params.memory.hubot }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_mongo_express | bool %}
 
   mongo_express:
@@ -242,12 +276,14 @@ services:
         VERSION: "{{ params.images.mongo_express_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     environment:
     - ME_CONFIG_OPTIONS_EDITORTHEME=ambiance
@@ -259,14 +295,18 @@ services:
     - "shared"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.mongo_express | default('')) != '' %}
 
     mem_limit: "{{ params.memory.mongo_express }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_theia | bool %}
 
   theia:
@@ -281,12 +321,14 @@ services:
     restart: "unless-stopped"
     user: root
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -296,25 +338,31 @@ services:
     - "$DATA_DIR/sync:/home/project/sync:cached"
     - "$DATA_DIR/action:/home/project/action:cached"
 
+    {#############################################################}
     {% if params.local | bool %}
 
     - "$DATA_DIR/log:/home/project/log:cached"
     - "$DATA_DIR/tmp:/home/project/tmp:cached"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     - "$DATA_DIR/tmp/tmp/theia:/tmp/main/tmp/theia"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.theia | default('')) != '' %}
 
     mem_limit: "{{ params.memory.theia }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_minio_gateway | bool %}
 
   minio_gateway:
@@ -331,12 +379,14 @@ services:
       MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
       MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -347,14 +397,18 @@ services:
     logging: *mainlog
     command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
 
+    {#############################################################}
     {% if (params.memory.minio_gateway | default('')) != '' %}
 
     mem_limit: "{{ params.memory.minio_gateway }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_filestash | bool %}
 
   filestash:
@@ -368,12 +422,14 @@ services:
         VERSION: "{{ params.images.filestash_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -382,16 +438,21 @@ services:
     - "$DATA_DIR/tmp/tmp/filestash:/tmp/main/tmp/filestash"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.filestash | default('')) != '' %}
 
     mem_limit: "{{ params.memory.filestash }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'db'] %}
 
   mongo:
@@ -405,19 +466,23 @@ services:
         VERSION: "{{ params.images.mongo_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
+    {#############################################################}
     {% if params.pod_type == 'db' %}
 
     ports:
       - "{{ params.db_port }}:27017"
 
     {% endif %}
+    {#############################################################}
 
     environment:
     - MONGO_INITDB_ROOT_USERNAME={{ params.db_root_user }}
@@ -426,6 +491,7 @@ services:
     - "shared"
     volumes:
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "mongo_db:/data/db"
@@ -435,19 +501,23 @@ services:
     - "$DATA_DIR/mongo/db:/data/db"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/tmp/mongo:/tmp/main/mongo"
     - "$DATA_DIR/tmp/tmp/mongo:/tmp/main/tmp/mongo"
     logging: *mainlog
     command: mongod --auth --smallfiles --oplogSize 128 --replSet rs0 --storageEngine=mmapv1
 
+    {#############################################################}
     {% if (params.memory.mongo | default('')) != '' %}
 
     mem_limit: "{{ params.memory.mongo }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   toolbox:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
@@ -460,12 +530,14 @@ services:
         VERSION: "{{ params.images.toolbox_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -474,21 +546,26 @@ services:
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "uploads:/var/main/data/rocketchat/uploads"
 
     {% endif %}
+    {#############################################################}
 
     logging: *mainlog
     command: "tail -f /dev/null"
 
+    {#############################################################}
     {% if (params.memory.toolbox | default('')) != '' %}
 
     mem_limit: "{{ params.memory.toolbox }}"
 
     {% endif %}
+    {#############################################################}
 
+  {#############################################################}
   {% if params.use_s3 | bool %}
 
   s3_cli:
@@ -502,12 +579,14 @@ services:
         VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -518,14 +597,18 @@ services:
     logging: *mainlog
     command: "tail -f /dev/null"
 
+    {#############################################################}
     {% if (params.memory.s3_cli | default('')) != '' %}
 
     mem_limit: "{{ params.memory.s3_cli }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_internal_fluentd | bool %}
 
   fluentd:
@@ -545,6 +628,7 @@ services:
     networks:
     - "log"
 
+    {#############################################################}
     {% if params.fluentd_output_plugin == 'elasticsearch' %}
 
     environment:
@@ -552,6 +636,7 @@ services:
       ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
 
     {% endif %}
+    {#############################################################}
 
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
@@ -559,10 +644,13 @@ services:
     - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
     logging: *jsonlog
 
+    {#############################################################}
     {% if (params.memory.fluentd | default('')) != '' %}
 
     mem_limit: "{{ params.memory.fluentd }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}

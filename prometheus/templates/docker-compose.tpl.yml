@@ -2,6 +2,7 @@ version: '2.4'
 
 x-logging:
 
+  {#############################################################}
   {% if params.use_fluentd | bool %}
 
   mainlog: &mainlog
@@ -22,20 +23,24 @@ x-logging:
       max-size: "50m"
 
   {% endif %}
+  {#############################################################}
 
 networks:
 
+  {#############################################################}
   {% if params.use_internal_fluentd | bool %}
 
   log:
     driver: "bridge"
 
   {% endif %}
+  {#############################################################}
 
   shared:
     external: true
     name: "{{ params.shared_network }}"
 
+{#############################################################}
 {% if (params.local | bool) and (params.named_volumes | bool) %}
 
 volumes:
@@ -43,11 +48,14 @@ volumes:
   grafana: {}
 
 {% endif %}
+{#############################################################}
 
 services:
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'web'] %}
 
+  {#############################################################}
   {% if params.use_nginx | bool %}
 
   nginx:
@@ -61,12 +69,14 @@ services:
         VERSION: "{{ params.images.nginx_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     ports:
     - "{{ params.ports.public_http_port }}:80"
@@ -77,6 +87,7 @@ services:
     - "shared"
     volumes:
 
+    {#############################################################}
     {% if params.use_custom_ssl | default(false) | bool %}
 
     - "./env/certbot/etc:/etc/ssl:ro"
@@ -86,6 +97,7 @@ services:
     - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
@@ -93,14 +105,18 @@ services:
     - "$DATA_DIR/tmp/tmp/nginx:/tmp/main/tmp/nginx"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.nginx | default('')) != '' %}
 
     mem_limit: "{{ params.memory.nginx }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_theia | bool %}
 
   theia:
@@ -115,12 +131,14 @@ services:
     restart: "unless-stopped"
     user: root
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -130,25 +148,31 @@ services:
     - "$DATA_DIR/sync:/home/project/sync:cached"
     - "$DATA_DIR/action:/home/project/action:cached"
 
+    {#############################################################}
     {% if params.local | bool %}
 
     - "$DATA_DIR/log:/home/project/log:cached"
     - "$DATA_DIR/tmp:/home/project/tmp:cached"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/tmp/theia:/tmp/main/theia"
     - "$DATA_DIR/tmp/tmp/theia:/tmp/main/tmp/theia"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.theia | default('')) != '' %}
 
     mem_limit: "{{ params.memory.theia }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_minio_gateway | bool %}
 
   minio_gateway:
@@ -165,12 +189,14 @@ services:
       MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
       MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -181,14 +207,18 @@ services:
     logging: *mainlog
     command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
 
+    {#############################################################}
     {% if (params.memory.minio_gateway | default('')) != '' %}
 
     mem_limit: "{{ params.memory.minio_gateway }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_filestash | bool %}
 
   filestash:
@@ -202,12 +232,14 @@ services:
         VERSION: "{{ params.images.filestash_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -216,16 +248,21 @@ services:
     - "$DATA_DIR/tmp/tmp/filestash:/tmp/main/tmp/filestash"
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.filestash | default('')) != '' %}
 
     mem_limit: "{{ params.memory.filestash }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'web'] %}
 
   grafana:
@@ -240,25 +277,30 @@ services:
         MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
+    {#############################################################}
     {% if not (params.use_nginx | bool) %}
 
     ports:
     - "{{ params.grafana_port }}:3000"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
     volumes:
     - "$DATA_DIR/sync/grafana/dashboards:/etc/grafana/provisioning/dashboards/dynamic"
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "grafana:/var/lib/grafana"
@@ -268,6 +310,7 @@ services:
     - "$DATA_DIR/grafana:/var/lib/grafana"
 
     {% endif %}
+    {#############################################################}
 
     environment:
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -280,14 +323,18 @@ services:
       - GF_SMTP_FROM_ADDRESS={{ params.grafana_smtp_from_address }}
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.grafana | default('')) != '' %}
 
     mem_limit: "{{ params.memory.grafana }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.pod_type in ['app', 'db'] %}
 
   prometheus:
@@ -302,12 +349,14 @@ services:
         MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -315,6 +364,7 @@ services:
     - 9090:9090
     volumes:
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "prometheus:/prometheus"
@@ -324,6 +374,7 @@ services:
     - "$DATA_DIR/prometheus/data:/prometheus"
 
     {% endif %}
+    {#############################################################}
 
     - "$DATA_DIR/tmp/prometheus:/tmp/main/prometheus"
     - "$DATA_DIR/tmp/tmp/prometheus:/tmp/main/tmp/prometheus"
@@ -333,14 +384,18 @@ services:
     - '--web.enable-admin-api'
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.prometheus | default('')) != '' %}
 
     mem_limit: "{{ params.memory.prometheus }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_node_exporter | bool %}
 
   node-exporter:
@@ -354,12 +409,14 @@ services:
         VERSION: "{{ params.images.node_exporter_version }}"
     restart: unless-stopped
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -367,14 +424,18 @@ services:
       - 9100
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.node_exporter | default('')) != '' %}
 
     mem_limit: "{{ params.memory.node_exporter }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_cadvisor | bool %}
 
   cadvisor:
@@ -388,12 +449,14 @@ services:
         VERSION: "{{ params.images.cadvisor_version }}"
     restart: unless-stopped
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -406,13 +469,16 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     logging: *mainlog
 
+    {#############################################################}
     {% if (params.memory.cadvisor | default('')) != '' %}
 
     mem_limit: "{{ params.memory.cadvisor }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
   toolbox:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
@@ -425,12 +491,14 @@ services:
         VERSION: "{{ params.images.toolbox_version }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -439,21 +507,26 @@ services:
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
 
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "prometheus:/var/main/data/prometheus"
 
     {% endif %}
+    {#############################################################}
 
     logging: *mainlog
     command: "tail -f /dev/null"
 
+    {#############################################################}
     {% if (params.memory.toolbox | default('')) != '' %}
 
     mem_limit: "{{ params.memory.toolbox }}"
 
     {% endif %}
+    {#############################################################}
 
+  {#############################################################}
   {% if params.use_s3 | bool %}
 
   s3_cli:
@@ -467,12 +540,14 @@ services:
         VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
     restart: "unless-stopped"
 
+    {#############################################################}
     {% if params.use_internal_fluentd | bool %}
 
     depends_on:
     - "fluentd"
 
     {% endif %}
+    {#############################################################}
 
     networks:
     - "shared"
@@ -483,14 +558,18 @@ services:
     logging: *mainlog
     command: "tail -f /dev/null"
 
+    {#############################################################}
     {% if (params.memory.s3_cli | default('')) != '' %}
 
     mem_limit: "{{ params.memory.s3_cli }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
 
+  {#############################################################}
   {% if params.use_internal_fluentd | bool %}
 
   fluentd:
@@ -510,6 +589,7 @@ services:
     networks:
     - "log"
 
+    {#############################################################}
     {% if params.fluentd_output_plugin == 'elasticsearch' %}
 
     environment:
@@ -517,6 +597,7 @@ services:
       ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
 
     {% endif %}
+    {#############################################################}
 
     volumes:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
@@ -524,10 +605,13 @@ services:
     - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
     logging: *jsonlog
 
+    {#############################################################}
     {% if (params.memory.fluentd | default('')) != '' %}
 
     mem_limit: "{{ params.memory.fluentd }}"
 
     {% endif %}
+    {#############################################################}
 
   {% endif %}
+  {#############################################################}
