@@ -57,7 +57,7 @@
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 {% set var_shared_network_name = params.shared_network | default(var_ctx_full_name + '-network', true) %}
 
-{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
   (params.use_fluentd | default(false) | bool)
   and

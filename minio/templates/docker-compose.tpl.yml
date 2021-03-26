@@ -341,11 +341,11 @@ services:
   {% if params.pod_type in ['app', 'db'] %}
 
   {#############################################################}
-  {% for idx in range(params.minio_amount) %}
+  {% for idx in range(1, (params.minio_amount | int) + 1) %}
 
-  minio_{{ idx }}:
-    container_name: "${CTX_PREFIX_MAIN}minio_{{ idx }}"
-    hostname: "minio_{{ idx }}"
+  minio_{{ idx | string }}:
+    container_name: "${CTX_PREFIX_MAIN}minio_{{ idx | string }}"
+    hostname: "minio_{{ idx | string }}"
     build:
       context: .
       dockerfile: "{{ params.main_dir }}/containers/minio/Dockerfile"
@@ -377,17 +377,19 @@ services:
     volumes:
 
     {#############################################################}
-    {% for idx_data in range(params.minio_data_amount) %}
+    {% for idx_data in range(1, (params.minio_data_amount | int) + 1) %}
 
-    - "$DATA_DIR/minio/data-{{ idx }}-{{ idx_data }}:/data{{ idx_data }}"
+    - "$DATA_DIR/minio/data-{{ idx | string }}-{{ idx_data | string }}:/data{{ idx_data | string }}"
 
     {% endfor %}
     {#############################################################}
 
-    - "$DATA_DIR/tmp/minio_{{ idx }}:/tmp/main/minio_{{ idx }}"
-    - "$DATA_DIR/tmp/tmp/minio_{{ idx }}:/tmp/main/tmp/minio_{{ idx }}"
+    - "$DATA_DIR/tmp/minio/{{ idx | string }}:/tmp/main/minio/{{ idx | string }}"
+    - "$DATA_DIR/tmp/tmp/minio/{{ idx | string }}:/tmp/main/tmp/minio/{{ idx | string }}"
     logging: *mainlog
-    command: server http://minio{1...{{ params.minio_amount }}}/data{1...{{ params.minio_data_amount }}}
+    command: {{ ''
+      }}server http://minio{1...{{ params.minio_amount | string }}}{{ ''
+      }}/data{1...{{ params.minio_data_amount | string }}}
 
     {#############################################################}
     {% if params.minio_include_healthcheck | default(false) | bool %}

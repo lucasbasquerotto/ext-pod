@@ -89,7 +89,7 @@
 {% set var_mongo_hostname = var_mongo_host | urlsplit('hostname') | default('mongo', true) %}
 {% set var_mongo_port = var_mongo_host | urlsplit('port') | default('27017', true) %}
 
-{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
   (params.use_fluentd | default(false) | bool)
   and

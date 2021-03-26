@@ -57,7 +57,7 @@
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 {% set var_shared_network_name = params.shared_network | default(var_ctx_full_name + '-network', true) %}
 
-{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
   (params.use_fluentd | default(false) | bool)
   and
@@ -90,6 +90,12 @@
     {% set var_s3_config_dest = 'env/unknown_s3_cli' %}
   {% endif %}
 {% endif %}
+
+{% set var_minio_endpoints = lookup(
+    'sequence',
+    'start=1 count=' + (params.minio_amount | default(0)) + ' format=http://minio_%d:5601'
+  ) | list
+%}
 
 ### main ###
 
@@ -181,11 +187,11 @@ templates:
     minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
     minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
     minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
-    root_password: "{{ credentials.minio.root_password | default('') }}"
-    access_key: "{{ credentials.minio.access_key | default('') }}"
-    secret_key: "{{ credentials.minio.secret_key | default('') }}"
-    access_key_old: "{{ credentials.minio.access_key_old | default('') }}"
-    secret_key_old: "{{ credentials.minio.secret_key_old | default('') }}"
+    minio_root_password: "{{ credentials.minio.root_password | default('') }}"
+    minio_access_key: "{{ credentials.minio.access_key | default('') }}"
+    minio_secret_key: "{{ credentials.minio.secret_key | default('') }}"
+    minio_access_key_old: "{{ credentials.minio.access_key_old | default('') }}"
+    minio_secret_key_old: "{{ credentials.minio.secret_key_old | default('') }}"
 
 ###############################
 {% if params.use_s3 | default(false) | bool %}
@@ -225,10 +231,8 @@ templates:
     contents: {{ contents | default({}) | to_json }}
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
-      - name: "kibana"
-        endpoint: "http://kibana:5601"
-        upgrade: true
-        private: true
+      - name: "minio"
+        endpoint: {{ var_minio_endpoints | to_json }}
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
@@ -247,10 +251,6 @@ templates:
         endpoint: "http://minio_gateway:9000"
         private: true
         use_basic_auth: false
-      - name: "filestash"
-        when: "{{ params.use_filestash | default(false) }}"
-        endpoint: "http://filestash:8334"
-        private: true
 
 {% endif %}
 ###############################
@@ -258,7 +258,7 @@ templates:
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
   params:
-    var_load_script_path: "{{ var_main_dir }}/scripts/efk.vars.sh"
+    var_load_script_path: "{{ var_main_dir }}/scripts/minio.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"

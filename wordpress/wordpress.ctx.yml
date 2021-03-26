@@ -93,7 +93,7 @@
 {% set var_mysql_hostname = var_mysql_host | urlsplit('hostname') | default('mysql', true) %}
 {% set var_mysql_port = var_mysql_host | urlsplit('port') | default('3306', true) %}
 
-{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file') %}
+{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
   (params.use_fluentd | default(false) | bool)
   and
