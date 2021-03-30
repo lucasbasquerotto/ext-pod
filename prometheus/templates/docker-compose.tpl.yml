@@ -556,6 +556,7 @@ services:
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
+    entrypoint: ""
     command: "tail -f /dev/null"
 
     {#############################################################}
