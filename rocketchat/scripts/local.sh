@@ -23,13 +23,6 @@ shift;
 pod_env_shared_file="$var_run__general__script_dir/shared.sh"
 
 case "$command" in
-	"test")
-		>&2 "$pod_script_env_file" "s3:subtask:s3_backup" \
-			--s3_cmd=delete_old \
-			--s3_path="" \
-			--s3_older_than_days="3" \
-			--s3_test='true'
-		;;
 	"clear")
 		"$pod_script_env_file" "local:clear"
 		sudo docker volume rm -f "${var_run__general__ctx_full_name}_mongo_db"
