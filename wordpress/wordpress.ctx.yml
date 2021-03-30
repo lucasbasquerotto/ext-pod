@@ -106,8 +106,8 @@
 
 {% set var_wp_domain = params.domains.wordpress | default('') %}
 {% set var_wp_external_port = params.use_ssl | default(false) | bool | ternary(
-    params.ports.public_https_port | default(''),
-    params.ports.public_http_port | default('')
+    var_ports.public_https_port | default(''),
+    var_ports.public_http_port | default('')
   )
 %}
 {% set var_wp_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
