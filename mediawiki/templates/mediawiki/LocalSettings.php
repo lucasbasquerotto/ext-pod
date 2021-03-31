@@ -145,8 +145,8 @@ wfLoadSkin( 'Vector' );
 # to LocalSettings.php. Check specific extension documentation for more details.
 # The following extensions were automatically enabled:
 wfLoadExtension( 'Nuke' );
-
 wfLoadExtension( 'WikiEditor' );
+wfLoadExtension( 'VisualEditor' );
 
 {###################################################################}
 {% if params.use_s3_storage | bool %}
