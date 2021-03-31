@@ -31,9 +31,10 @@
     (var_custom_ssl_concat != '')
   )
 %}
+{% set var_non_standard_local_ports = not (params.local_standard_ports | default(false) | bool) %}
 {% set var_ports = (params.ports is defined) | ternary(
     params.ports | default({}),
-    var_local | ternary(
+    (var_local and var_non_standard_local_ports) | ternary(
       {
         'public_http_port': '8080',
         'public_https_port': '8443',
