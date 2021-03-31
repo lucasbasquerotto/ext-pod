@@ -22,7 +22,9 @@ sub vcl_recv {
     # Serve objects up to 2 minutes past their expiry if the backend
     # is slow to respond.
     # set req.grace = 120s;
+
     set req.http.X-Forwarded-For = req.http.X-Forwarded-For + ", " + client.ip;
+
     set req.backend_hint= default;
 
     # This uses the ACL action called "purge". Basically if a request to
@@ -35,24 +37,11 @@ sub vcl_recv {
         }
     }
 
-    # Pass any requests that Varnish does not understand straight to the backend.
-    if (req.method != "GET" && req.method != "HEAD" &&
-        req.method != "PUT" && req.method != "POST" &&
-        req.method != "TRACE" && req.method != "OPTIONS" &&
-        req.method != "DELETE") {
-            return (pipe);
-    }
-
-    # Pass anything other than GET and HEAD directly.
-    if (req.method != "GET" && req.method != "HEAD") {
-        return (pass);
-    }
-
     # Pass requests from logged-in users directly.
     # Only detect cookies with "session" and "Token" in file name, otherwise nothing get cached.
     if (req.http.Authorization || req.http.Cookie ~ "session" || req.http.Cookie ~ "Token") {
         return (pass);
-    }
+    } /* Not cacheable by default */
 
     # normalize Accept-Encoding to reduce vary
     if (req.http.Accept-Encoding) {
@@ -95,9 +84,6 @@ sub vcl_hit {
 
 # Called after a document has been successfully retrieved from the backend.
 sub vcl_backend_response {
-    # set minimum timeouts to auto-discard stored objects
-    set beresp.grace = 120s;
-
     if (beresp.ttl < 48h) {
         set beresp.ttl = 48h;
     }
