@@ -379,6 +379,7 @@ templates:
     var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
     var_load__s3_backup__endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
     var_load__s3_backup__lifecycle_file: "{{ params.s3_backup_lifecycle_file | default('') }}"
+    var_load__s3_backup__acl: "{{ params.s3_backup_acl | default('') }}"
 
     var_load__s3_backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
     var_load__s3_backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"

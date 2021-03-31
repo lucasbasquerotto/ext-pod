@@ -61,6 +61,7 @@ $wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
 
 ## Shared memory settings
 
+{###################################################################}
 {% if params.use_memcached | bool %}
 
 $wgMainCacheType = CACHE_MEMCACHED;
@@ -76,6 +77,7 @@ $wgMainCacheType = CACHE_ACCEL;
 $wgMemCachedServers = [];
 
 {% endif %}
+{###################################################################}
 
 ## To enable image uploads, make sure the 'images' directory
 ## is writable, then set this to true:
@@ -83,11 +85,13 @@ $wgEnableUploads = true;
 $wgUseImageMagick = true;
 $wgImageMagickConvertCommand = "/usr/bin/convert";
 
+{###################################################################}
 {% if (params.upload_path | default('')) != '' %}
 
 $wgUploadPath = "{{ params.upload_path }}";
 
 {% endif %}
+{###################################################################}
 
 # InstantCommons allows wiki to use images from https://commons.wikimedia.org
 $wgUseInstantCommons = false;
@@ -144,6 +148,7 @@ wfLoadExtension( 'Nuke' );
 
 wfLoadExtension( 'WikiEditor' );
 
+{###################################################################}
 {% if params.use_s3_storage | bool %}
 
 wfLoadExtension( 'AWS' );
@@ -161,23 +166,45 @@ $wgAWSCredentials = [
 	'token' => false
 ];
 
+$wgAWSBucketName = '{{ params.s3_bucket }}';
+$wgAWSRegion = '{{ params.s3_region | default("") }}';
+
+{###################################################################}
 {% if (params.s3_endpoint | default('')) != '' %}
 
 $wgFileBackends['s3']['endpoint'] = '{{ params.s3_endpoint }}';
 
+{###################################################################}
+{% if (params.uploads_cdn_path | default('')) == '' %}
+
+$wgAWSBucketDomain = '$1.{{ params.s3_endpoint | urlsplit("netloc") }}';
+
 {% endif %}
+{###################################################################}
 
-$wgAWSBucketName = '{{ params.s3_bucket }}';
-$wgAWSRegion = '{{ params.s3_region | default("") }}';
+{% endif %}
+{###################################################################}
 
+{###################################################################}
+{% if (params.uploads_cdn_path | default('')) != '' %}
+
+$wgAWSBucketDomain = '{{ params.uploads_cdn_path | urlsplit("netloc") }}';
+
+{% endif %}
+{###################################################################}
+
+{###################################################################}
 {% if (params.s3_path | default('')) != '' %}
 
-$wgAWSBucketTopSubdirectory = '{{ params.s3_path }}';
+$wgAWSBucketTopSubdirectory = '/{{ params.s3_path }}';
 
 {% endif %}
+{###################################################################}
 
 {% endif %}
+{###################################################################}
 
+{###################################################################}
 {% if not (params.disable_logs | bool) %}
 
 $wgDBerrorLog = '/tmp/main/log/mediawiki/dberror.log';
@@ -189,13 +216,17 @@ $wgDebugLogGroups = array(
 );
 
 {% endif %}
+{###################################################################}
 
+{###################################################################}
 {% if params.debug_logs | bool %}
 
 $wgDebugLogFile = '/tmp/main/log/mediawiki/debug.log';
 
 {% endif %}
+{###################################################################}
 
+{###################################################################}
 {% if params.use_varnish | bool %}
 
 $wgUseCdn = true;
@@ -203,3 +234,4 @@ $wgCdnServers = [];
 $wgCdnServers[] = "varnish";
 
 {% endif %}
+{###################################################################}

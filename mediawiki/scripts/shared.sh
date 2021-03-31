@@ -53,8 +53,9 @@ case "$command" in
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 777 "\$dir"
 				fi
+
+				chown -R 33:33 "\$dir"
 
 				dir="$data_dir/tmp/log/mediawiki"
 
