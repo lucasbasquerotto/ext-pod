@@ -9,7 +9,7 @@ function info {
 }
 
 function error {
-	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -108,11 +108,6 @@ case "$command" in
 		"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
-			function error {
-				>&2 echo -e "\$(date '+%F %T') - \${BASH_SOURCE[0]}: line \${BASH_LINENO[0]}: \${*}"
-				exit 2
-			}
-
 			>&2 echo "update database"
 			wp --allow-root core update-db
 			wp --allow-root core is-installed
@@ -122,6 +117,7 @@ case "$command" in
 			if [ "${arg_use_w3tc:-}" = "true" ]; then
 				>&2 echo "activate plugin: w3tc"
 				wp --allow-root plugin activate w3-total-cache
+				>&2 echo "plugin activated: w3tc"
 
 				if [ "${arg_use_redis:-}" = "true" ]; then
 					cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/object-cache.php \
@@ -136,6 +132,8 @@ case "$command" in
 					wp --allow-root w3-total-cache option set objectcache.enabled true --type=boolean
 					wp --allow-root w3-total-cache option set objectcache.engine redis
 					wp --allow-root w3-total-cache option set objectcache.redis.servers 'redis:6379'
+
+					>&2 echo "w3tc: redis - end"
 				elif [ "${arg_use_memcached:-}" = "true" ]; then
 					cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/object-cache.php \
 						/var/www/html/web/app/object-cache.php
@@ -149,21 +147,25 @@ case "$command" in
 					wp --allow-root w3-total-cache option set objectcache.enabled true --type=boolean
 					wp --allow-root w3-total-cache option set objectcache.engine memcached
 					wp --allow-root w3-total-cache option set objectcache.memcached.servers 'memcached:11211'
+
+					>&2 echo "w3tc: memcached - end"
 				fi
 
 				>&2 echo "w3tc: verify if page cache can use apcu"
 				has_apcu="\$(php -m | grep -c apcu ||:)"
 
 				if [ "\$has_apcu" = "1" ]; then
-					>&2 echo "w3tc: page cache: apcu"
+					>&2 echo "w3tc: page cache: apcu (start)"
 					wp --allow-root w3-total-cache option set pgcache.enabled true --type=boolean
 					wp --allow-root w3-total-cache option set pgcache.engine apc
+					>&2 echo "w3tc: page cache: apcu (end)"
 				fi
 
 				if [ "${arg_use_varnish:-}" = "true" ]; then
 					>&2 echo "w3tc: enable varnish"
 					wp --allow-root w3-total-cache option set varnish.enabled true --type=boolean
 					wp --allow-root w3-total-cache option set varnish.servers 'varnish'
+					>&2 echo "w3tc: varnish enabled"
 				fi
 			fi
 
@@ -178,6 +180,7 @@ case "$command" in
 				if [ "\$error" != "0" ]; then
 					>&2 echo "ignore previous error and activate specified plugins"
 					wp --allow-root plugin activate ${arg_wp_plugins_to_activate:-}
+					>&2 echo "specified plugins activated"
 				fi
 			fi
 
@@ -189,12 +192,14 @@ case "$command" in
 				if [ "\$error" != "0" ]; then
 					>&2 echo "ignore previous error and deactivate specified plugins"
 					wp --allow-root plugin deactivate ${arg_wp_plugins_to_deactivate:-}
+					>&2 echo "specified plugins deactivated"
 				fi
 			fi
 
 			if [ -n "${arg_old_domain_host:-}" ] && [ -n "${arg_new_domain_host:-}" ]; then
 				>&2 echo "update domain"
 				wp --allow-root search-replace "$arg_old_domain_host" "$arg_new_domain_host"
+				>&2 echo "domain updated"
 			fi
 
 			if [ -d "/var/www/html/web/app/cache" ]; then
@@ -208,11 +213,13 @@ case "$command" in
 			if [ -n "${arg_wp_rewrite_structure:-}" ]; then
 				>&2 echo "rewrite structure to ${arg_wp_rewrite_structure:-}"
 				wp --allow-root rewrite structure "${arg_wp_rewrite_structure:-}"
+				>&2 echo "structure rewritten to ${arg_wp_rewrite_structure:-}"
 			fi
 
 			if [ "${arg_use_s3_storage:-}" = "true" ]; then
 				>&2 echo "activate plugin: s3-uploads"
 				wp --allow-root plugin activate s3-uploads
+				>&2 echo "plugin activated: s3-uploads"
 			fi
 		SHELL
 		;;

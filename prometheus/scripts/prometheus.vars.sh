@@ -22,7 +22,7 @@ export var_load__db_main__db_host="${var_load__db_main__db_host:-prometheus}"
 export var_load__db_main__db_port="${var_load__db_main__db_port:-9090}"
 
 function tmp_error {
-	echo "${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}" >&2
+	echo "${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}" >&2
 	exit 2
 }
 

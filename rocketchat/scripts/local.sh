@@ -9,7 +9,7 @@ function info {
 }
 
 function error {
-	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -25,8 +25,6 @@ pod_env_shared_file="$var_run__general__script_dir/shared.sh"
 case "$command" in
 	"clear")
 		"$pod_script_env_file" "local:clear"
-		sudo docker volume rm -f "${var_run__general__ctx_full_name}_mongo_db"
-		sudo docker volume rm -f "${var_run__general__ctx_full_name}_uploads"
 		;;
 	"clear-all")
 		"$pod_script_env_file" "local:clear-all"

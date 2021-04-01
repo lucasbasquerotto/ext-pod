@@ -22,7 +22,7 @@ if [ "${var_load_main__local:-}" = 'true' ]; then
 fi
 
 function tmp_error {
-	echo "${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}" >&2
+	echo "${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}" >&2
 	exit 2
 }
 

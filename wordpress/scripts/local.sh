@@ -12,7 +12,7 @@ function info {
 }
 
 function error {
-	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}: line ${BASH_LINENO[0]}: ${*}"
+	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}"
 }
 
 command="${1:-}"
@@ -47,7 +47,7 @@ case "$command" in
 
 		"$pod_env_shared_file" "$command" "$@"
 		;;
-	"setup")
+	"migrate")
 		if [ "${var_custom__use_composer:-}" = "true" ]; then
 			"$pod_env_shared_file" up mysql composer
 			"$pod_env_shared_file" exec composer composer install --verbose
@@ -57,8 +57,6 @@ case "$command" in
 		;;
 	"clear")
 		"$pod_script_env_file" "local:clear"
-		sudo docker volume rm -f "${var_run__general__ctx_full_name}_mysql"
-		sudo docker volume rm -f "${var_run__general__ctx_full_name}_uploads"
 		;;
 	"clear-all")
 		"$pod_script_env_file" "local:clear-all"
