@@ -48,7 +48,7 @@ case "$command" in
 		"$pod_env_shared_file" "$command" "$@"
 		;;
 	"migrate")
-		if [ "${var_custom__use_composer:-}" = "true" ]; then
+		if [ "${var_custom__app_dev:-}" = "true" ] && [ "${var_custom__use_composer:-}" = "true" ]; then
 			"$pod_env_shared_file" up mysql composer
 			"$pod_env_shared_file" exec composer composer install --verbose
 		fi
