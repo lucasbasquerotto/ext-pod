@@ -1,3 +1,24 @@
+{% set var_is_web = params.pod_type in ['app', 'web'] %}
+{% set var_use_nginx = var_is_web %}
+{% set var_use_varnish = var_is_web and (params.use_varnish | bool) %}
+{% set var_use_wordpress = var_is_web %}
+{% set var_use_pma = var_is_web and (params.use_pma | bool) %}
+{% set var_use_adminer = var_is_web and (params.use_adminer | bool) %}
+{% set var_use_theia = var_is_web and (params.use_theia | bool) %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+{% set var_use_filestash = var_is_web and (params.use_filestash | bool) %}
+{% set var_use_composer = var_is_web and (params.use_composer | bool) %}
+
+{% set var_is_cache = params.pod_type in ['app', 'cache'] %}
+{% set var_use_redis = var_is_cache and (params.use_redis | bool) %}
+{% set var_use_memcached = var_is_cache and (params.use_memcached | bool) %}
+
+{% set var_is_db = params.pod_type in ['app', 'db'] %}
+{% set var_use_mysql = var_is_db %}
+
+{% set var_use_s3 = params.use_s3 | bool %}
+{% set var_use_internal_fluentd = params.use_internal_fluentd | bool %}
+
 version: '2.4'
 
 x-logging:
@@ -28,7 +49,7 @@ x-logging:
 networks:
 
   {#############################################################}
-  {% if params.use_internal_fluentd | bool %}
+  {% if var_use_internal_fluentd %}
 
   log:
     driver: "bridge"
@@ -50,10 +71,47 @@ volumes:
 {% endif %}
 {#############################################################}
 
+{#############################################################}
+{% if params.use_secrets | bool %}
+
+secrets:
+
+  {#############################################################}
+  {% if var_use_minio_gateway %}
+
+  minio_gateway_access_key:
+    file: "$DATA_DIR/secrets/minio_gateway_access_key.txt"
+  minio_gateway_secret_key:
+    file: "$DATA_DIR/secrets/minio_gateway_secret_key.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_mysql %}
+
+  db_root_password:
+    file: "$DATA_DIR/secrets/db_root_password.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_pma or var_use_adminer %}
+
+  db_gui_password:
+    file: "$DATA_DIR/secrets/db_gui_password.txt"
+
+  {% endif %}
+  {#############################################################}
+
+{% endif %}
+{#############################################################}
+
 services:
 
   {#############################################################}
-  {% if params.pod_type in ['app', 'web'] %}
+  {% if var_use_nginx %}
 
   nginx:
     container_name: "${CTX_PREFIX_MAIN}nginx"
@@ -67,7 +125,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -110,8 +168,11 @@ services:
     {% endif %}
     {#############################################################}
 
+  {% endif %}
   {#############################################################}
-  {% if params.use_varnish | bool %}
+
+  {#############################################################}
+  {% if var_use_varnish %}
 
   varnish:
     container_name: "${CTX_PREFIX_MAIN}varnish"
@@ -125,7 +186,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -158,6 +219,9 @@ services:
   {% endif %}
   {#############################################################}
 
+  {#############################################################}
+  {% if var_use_wordpress %}
+
   wordpress:
     container_name: "${CTX_PREFIX_MAIN}wordpress"
     hostname: "wordpress"
@@ -171,12 +235,12 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if (params.use_internal_fluentd | bool) or (params.pod_type == 'app') %}
+    {% if var_use_internal_fluentd or (params.pod_type == 'app') %}
 
     depends_on:
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     - "fluentd"
 
@@ -187,7 +251,7 @@ services:
     {% if params.pod_type == 'app' %}
 
     {#############################################################}
-    {% if params.use_redis | bool %}
+    {% if var_use_redis %}
 
     - "redis"
 
@@ -195,7 +259,7 @@ services:
     {#############################################################}
 
     {#############################################################}
-    {% if params.use_memcached | bool %}
+    {% if var_use_memcached %}
 
     - "memcached"
 
@@ -247,8 +311,11 @@ services:
     {% endif %}
     {#############################################################}
 
+    {% endif %}
   {#############################################################}
-  {% if params.use_pma | bool %}
+
+  {#############################################################}
+  {% if var_use_pma %}
 
   phpmyadmin:
     container_name: "${CTX_PREFIX_MAIN}phpmyadmin"
@@ -266,10 +333,30 @@ services:
       PMA_HOST: "{{ params.db_host }}"
       PMA_PORT: "{{ params.db_port }}"
       PMA_USER: "{{ params.db_gui_user }}"
-      PMA_PASSWORD: $DB_GUI_PASSWORD
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if params.use_secrets | bool %}
+
+      PMA_PASSWORD_FILE: db_gui_password
+
+    {% else %}
+
+      PMA_PASSWORD: $DB_GUI_PASSWORD
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "db_gui_password"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -296,7 +383,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_adminer | bool %}
+  {% if var_use_adminer %}
 
   adminer:
     container_name: "${CTX_PREFIX_MAIN}adminer"
@@ -313,11 +400,31 @@ services:
       ADMINER_SERVER: "{{ params.db_host }}"
       ADMINER_DB: "{{ params.db_name }}"
       ADMINER_USERNAME: "{{ params.db_gui_user }}"
-      ADMINER_PASSWORD: $DB_GUI_PASSWORD
       ADMINER_AUTOLOGIN: 1
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if params.use_secrets | bool %}
+
+      ADMINER_PASSWORD_FILE: db_gui_password
+
+    {% else %}
+
+      ADMINER_PASSWORD: $DB_GUI_PASSWORD
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "db_gui_password"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -344,7 +451,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_theia | bool %}
+  {% if var_use_theia %}
 
   theia:
     container_name: "${CTX_PREFIX_MAIN}theia"
@@ -359,7 +466,7 @@ services:
     user: root
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -400,7 +507,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_minio_gateway | bool %}
+  {% if var_use_minio_gateway %}
 
   minio_gateway:
     container_name: "${CTX_PREFIX_MAIN}minio_gateway"
@@ -413,11 +520,33 @@ services:
         VERSION: "{{ params.images.minio_gateway_version }}"
     restart: "unless-stopped"
     environment:
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+      MINIO_ACCESS_KEY_FILE: "minio_gateway_access_key"
+      MINIO_SECRET_KEY_FILE: "minio_gateway_secret_key"
+
+    {% else %}
+
       MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
       MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
 
+    {% endif %}
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "minio_gateway_access_key"
+      - "minio_gateway_secret_key"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -446,7 +575,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_filestash | bool %}
+  {% if var_use_filestash %}
 
   filestash:
     container_name: "${CTX_PREFIX_MAIN}filestash"
@@ -460,7 +589,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -486,14 +615,50 @@ services:
   {% endif %}
   {#############################################################}
 
+  {#############################################################}
+  {% if var_use_composer %}
+
+  composer:
+    container_name: "${CTX_PREFIX_MAIN}composer"
+    hostname: "composer"
+    build:
+      context: .
+      dockerfile: "shared/containers/composer/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.composer_image }}"
+        VERSION: "{{ params.images.composer_version }}"
+    restart: "unless-stopped"
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$WP_APP_REPO_DIR:/var/www/html"
+    - "$DATA_DIR/tmp/composer:/tmp/main/composer"
+    - "$DATA_DIR/tmp/tmp/composer:/tmp/main/tmp/composer"
+    logging: *mainlog
+    command: "tail -f /dev/null"
+    working_dir: "/var/www/html"
+
+    {#############################################################}
+    {% if (params.memory.composer | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.composer }}"
+
+    {% endif %}
+    {#############################################################}
+
   {% endif %}
   {#############################################################}
 
   {#############################################################}
-  {% if params.pod_type in ['app', 'cache'] %}
-
-  {#############################################################}
-  {% if params.use_redis | bool %}
+  {% if var_use_redis %}
 
   redis:
     container_name: "${CTX_PREFIX_MAIN}redis"
@@ -507,7 +672,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -545,7 +710,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_memcached | bool %}
+  {% if var_use_memcached %}
 
   memcached:
     container_name: "${CTX_PREFIX_MAIN}memcached"
@@ -559,7 +724,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -595,11 +760,8 @@ services:
   {% endif %}
   {#############################################################}
 
-  {% endif %}
   {#############################################################}
-
-  {#############################################################}
-  {% if params.pod_type in ['app', 'db'] %}
+  {% if var_use_mysql %}
 
   mysql:
     container_name: "${CTX_PREFIX_MAIN}mysql"
@@ -612,11 +774,31 @@ services:
         VERSION: "{{ params.images.mysql_version }}"
     restart: "unless-stopped"
     environment:
-      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
       MYSQL_DATABASE: "{{ params.db_name }}"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if params.use_secrets | bool %}
+
+      MYSQL_ROOT_PASSWORD_FILE: "db_root_password"
+
+    {% else %}
+
+      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "db_root_password"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -678,7 +860,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -712,7 +894,7 @@ services:
     {% endif %}
     {#############################################################}
 
-  {% if params.use_s3 | bool %}
+  {% if var_use_s3 %}
 
   s3_cli:
     container_name: "${CTX_PREFIX_RUN}s3_cli"
@@ -726,7 +908,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -756,49 +938,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_composer | default(false) | bool %}
-
-  composer:
-    container_name: "${CTX_PREFIX_MAIN}composer"
-    hostname: "composer"
-    build:
-      context: .
-      dockerfile: "shared/containers/composer/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.composer_image }}"
-        VERSION: "{{ params.images.composer_version }}"
-    restart: "unless-stopped"
-
-    {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
-
-    depends_on:
-    - "fluentd"
-
-    {% endif %}
-    {#############################################################}
-
-    volumes:
-    - "$WP_APP_REPO_DIR:/var/www/html"
-    - "$DATA_DIR/tmp/composer:/tmp/main/composer"
-    - "$DATA_DIR/tmp/tmp/composer:/tmp/main/tmp/composer"
-    logging: *mainlog
-    command: "tail -f /dev/null"
-    working_dir: "/var/www/html"
-
-    {#############################################################}
-    {% if (params.memory.composer | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.composer }}"
-
-    {% endif %}
-    {#############################################################}
-
-  {% endif %}
-  {#############################################################}
-
-  {#############################################################}
-  {% if params.use_internal_fluentd | bool %}
+  {% if var_use_internal_fluentd %}
 
   fluentd:
     container_name: "${CTX_PREFIX_MAIN}fluentd"

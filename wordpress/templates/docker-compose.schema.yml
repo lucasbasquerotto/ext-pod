@@ -25,6 +25,9 @@ schemas:
       internal:
         type: "bool"
         non_empty: true
+      use_secrets:
+        type: "bool"
+        non_empty: true
       use_fluentd:
         type: "bool"
         non_empty: true
