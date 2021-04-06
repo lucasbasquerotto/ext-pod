@@ -45,6 +45,40 @@ case "$command" in
 			chmod 777 "$app_dir/web/app/uploads/"
 		fi
 
+		"$pod_script_env_file" up wordpress
+
+		if [ "${var_custom__app_dev:-}" = "true" ]; then
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+				"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
+					set -eou pipefail
+
+					dir="/var/www/html/web"
+
+					if [ ! -d "\$dir" ]; then
+						mkdir -p "\$dir"
+					fi
+
+					chmod 777 "\$dir"
+
+					dir="/var/www/html/web/app"
+
+					if [ ! -d "\$dir" ]; then
+						mkdir -p "\$dir"
+					fi
+
+					chmod 777 "\$dir"
+
+					dir="/var/www/html/web/app/plugins"
+
+					if [ ! -d "\$dir" ]; then
+						mkdir -p "\$dir"
+					fi
+
+					chmod -R 777 "\$dir"
+				SHELL
+			fi
+		fi
+
 		"$pod_env_shared_file" "$command" "$@"
 		;;
 	"migrate")

@@ -54,18 +54,19 @@ case "$command" in
 
 		"$pod_script_env_file" up toolbox
 
-		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL || error "$command"
-			set -eou pipefail
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+			"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+				set -eou pipefail
 
-			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
 				dir="$data_dir/wordpress/uploads"
 
 				if [ ! -d "\$dir" ]; then
 					mkdir -p "\$dir"
-					chmod 777 "\$dir"
 				fi
-			fi
-		SHELL
+
+				chown -R 33:33 "\$dir"
+			SHELL
+		fi
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
