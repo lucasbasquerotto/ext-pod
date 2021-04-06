@@ -149,6 +149,9 @@ case "$command" in
 					wp --allow-root w3-total-cache option set objectcache.memcached.servers 'memcached:11211'
 
 					>&2 echo "w3tc: memcached - end"
+				else
+					wp --allow-root w3-total-cache option set dbcache.enabled false --type=boolean
+					wp --allow-root w3-total-cache option set objectcache.enabled false --type=boolean
 				fi
 
 				>&2 echo "w3tc: verify if page cache can use apcu"
