@@ -102,6 +102,8 @@ case "$command" in
 		info "$command - nothing to do..."
 		;;
 	"migrate:web")
+		s3_plugins='amazon-s3-and-cloudfront amazon-s3-and-cloudfront-tweaks'
+
 		info "$command - start container"
 		"$pod_script_env_file" up wordpress
 
@@ -219,10 +221,10 @@ case "$command" in
 				>&2 echo "structure rewritten to ${arg_wp_rewrite_structure:-}"
 			fi
 
-			if [ "${arg_use_s3_storage:-}" = "true" ]; then
-				>&2 echo "activate plugin: s3-uploads"
-				wp --allow-root plugin activate s3-uploads
-				>&2 echo "plugin activated: s3-uploads"
+			if [ "${arg_use_s3_storage:-}" = "true" ];
+				>&2 echo "activate plugins: $s3_plugins"
+				wp --allow-root plugin activate $s3_plugins
+				>&2 echo "plugins activated: $s3_plugins"
 			fi
 		SHELL
 		;;

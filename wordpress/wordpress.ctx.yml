@@ -300,7 +300,7 @@ templates:
     wplang: "{{ params.services.wordpress.lang }}"
     debug: "{{ params.services.wordpress.debug | default(false) | lower }}"
     use_w3tc: "{{ params.use_w3tc | default(false) }}"
-    use_s3_storage: "{{ params.use_s3_storage | default('') }}"
+    use_s3_storage: "{{ params.use_s3_storage | default(false) }}"
     s3_uploads_bucket: "{{ var_s3_uploads_bucket }}"
     s3_uploads_region: "{{ credentials.uploads_bucket.region | default('') }}"
     s3_uploads_key: "{{ credentials.uploads_bucket.access_key | default('') }}"

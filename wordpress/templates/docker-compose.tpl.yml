@@ -638,6 +638,8 @@ services:
     {% endif %}
     {#############################################################}
 
+    networks:
+    - "shared"
     volumes:
     - "$WP_APP_REPO_DIR:/var/www/html"
     - "$DATA_DIR/tmp/composer:/tmp/main/composer"
