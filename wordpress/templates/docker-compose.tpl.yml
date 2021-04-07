@@ -326,7 +326,7 @@ services:
       args:
         IMAGE: "{{ params.images.pma_image }}"
         VERSION: "{{ params.images.pma_version }}"
-        PERL_VERSION: $PERL_VERSION
+        PERL_VERSION: "$PERL_VERSION"
         LOGIN_COOKIE_VALIDITY: "{{ params.pma_login_cookie_validity }}"
     restart: "unless-stopped"
     environment:
@@ -337,11 +337,11 @@ services:
     {#############################################################}
     {% if params.use_secrets | bool %}
 
-      PMA_PASSWORD_FILE: db_gui_password
+      PMA_PASSWORD_FILE: "/run/secrets/db_gui_password"
 
     {% else %}
 
-      PMA_PASSWORD: $DB_GUI_PASSWORD
+      PMA_PASSWORD: "$DB_GUI_PASSWORD"
 
     {% endif %}
     {#############################################################}

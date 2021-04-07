@@ -430,12 +430,12 @@ templates:
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
-{% set var_is_web = params.pod_type in ['app', 'web'] %}
+{% set var_is_web = var_pod_type in ['app', 'web'] %}
 {% set var_use_pma = var_is_web and (params.use_pma | bool) %}
 {% set var_use_adminer = var_is_web and (params.use_adminer | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
-{% set var_is_db = params.pod_type in ['app', 'db'] %}
+{% set var_is_db = var_pod_type in ['app', 'db'] %}
 {% set var_use_mysql = var_is_db %}
 
 - src: "main/vars/vars.tpl.sh"
