@@ -781,7 +781,7 @@ services:
     {#############################################################}
     {% if params.use_secrets | bool %}
 
-      MYSQL_ROOT_PASSWORD_FILE: "db_root_password"
+      MYSQL_ROOT_PASSWORD_FILE: "/run/secrets/db_root_password"
 
     {% else %}
 
