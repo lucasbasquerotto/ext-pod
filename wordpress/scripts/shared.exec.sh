@@ -221,7 +221,7 @@ case "$command" in
 				>&2 echo "structure rewritten to ${arg_wp_rewrite_structure:-}"
 			fi
 
-			if [ "${arg_use_s3_storage:-}" = "true" ];
+			if [ "${arg_use_s3_storage:-}" = "true" ]; then
 				>&2 echo "activate plugins: $s3_plugins"
 				wp --allow-root plugin activate $s3_plugins
 				>&2 echo "plugins activated: $s3_plugins"
