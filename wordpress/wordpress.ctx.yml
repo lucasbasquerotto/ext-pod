@@ -155,7 +155,7 @@ env_files:
 
 - when: false
 
-###############################
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
@@ -171,16 +171,16 @@ env_files:
   when: "{{ var_custom_ssl_concat != '' }}"
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/auth/.htpasswd"
 
 {% endif %}
-###############################
+##############################################################
 
 templates:
 
@@ -263,7 +263,7 @@ templates:
     db_root_password: "{{ credentials.mysql.root_password | default('') }}"
     db_gui_password: "{{ var_db_gui_password }}"
 
-###############################
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and (params.use_varnish | bool) %}
 
 - src: "{{ var_main_dir }}/templates/varnish/default.vcl"
@@ -272,9 +272,9 @@ templates:
   params: {}
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if var_pod_type in ['app', 'web'] %}
 
 - src: "{{ var_main_dir }}/templates/wordpress/wp.env"
@@ -311,9 +311,9 @@ templates:
     s3_provider: "{{ credentials.uploads_bucket.provider | default('') }}"
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if var_pod_type in ['app', 'db'] %}
 
 - src: "{{ var_shared_dir }}/templates/mysql/init.sql"
@@ -326,9 +326,9 @@ templates:
     db_password: "{{ credentials.wordpress.db.password | default('') }}"
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if params.use_s3 | default(false) | bool %}
 
 - src: "{{ var_s3_config_src }}"
@@ -360,9 +360,9 @@ templates:
       when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
@@ -425,7 +425,51 @@ templates:
         private: true
 
 {% endif %}
-###############################
+##############################################################
+
+##############################################################
+{% if params.use_secrets | default(false) | bool %}
+
+{% set var_is_web = params.pod_type in ['app', 'web'] %}
+{% set var_use_pma = var_is_web and (params.use_pma | bool) %}
+{% set var_use_adminer = var_is_web and (params.use_adminer | bool) %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+
+{% set var_is_db = params.pod_type in ['app', 'db'] %}
+{% set var_use_mysql = var_is_db %}
+
+- src: "main/vars/vars.tpl.sh"
+  dest: "env/secrets.sh"
+  params:
+    empty: ""
+
+    ##############################################################
+    {% if var_use_minio_gateway %}
+
+    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_mysql %}
+
+    db_root_password: "{{ credentials.mysql.root_password | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_pma or var_use_adminer %}
+
+    db_gui_password: "{{ var_db_gui_password }}"
+
+    {% endif %}
+    ##############################################################
+
+{% endif %}
+##############################################################
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
@@ -463,6 +507,7 @@ templates:
     var_load_shared__cron__dest: "{{ params.cron_dest | default('') }}"
 
     var_load_use__main_network: "true"
+    var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
     var_load_use__nginx: "true"
     var_load_use__mysql: "true"

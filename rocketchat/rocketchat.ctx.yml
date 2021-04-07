@@ -130,7 +130,7 @@ env_files:
 
 - when: false
 
-###############################
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
@@ -146,16 +146,16 @@ env_files:
   when: "{{ var_custom_ssl_concat != '' }}"
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/auth/.htpasswd"
 
 {% endif %}
-###############################
+##############################################################
 
 templates:
 
@@ -243,7 +243,7 @@ templates:
     hubot_password: "{{ credentials.hubot.password | default('') }}"
     db_gui_password: "{{ var_db_gui_password }}"
 
-###############################
+##############################################################
 {% if var_pod_type in ['app', 'db'] %}
 
 - src: "{{ var_shared_dir }}/templates/mongo/init.js"
@@ -257,9 +257,9 @@ templates:
     oploguser_password: "{{ credentials.rocketchat.db.oploguser_password | default('') }}"
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if params.use_s3 | default(false) | bool %}
 
 - src: "{{ var_s3_config_src }}"
@@ -291,9 +291,9 @@ templates:
       when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 {% endif %}
-###############################
+##############################################################
 
-###############################
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
@@ -339,7 +339,7 @@ templates:
         private: true
 
 {% endif %}
-###############################
+##############################################################
 
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
