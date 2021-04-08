@@ -37,6 +37,9 @@ schemas:
       use_s3:
         type: "bool"
         non_empty: true
+      use_local_s3:
+        type: "bool"
+        non_empty: true
       use_varnish:
         type: "bool"
         non_empty: true

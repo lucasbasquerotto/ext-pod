@@ -41,6 +41,10 @@ schemas:
         type: "str"
       minio_gateway_version:
         type: "str"
+      minio_image:
+        type: "str"
+      minio_version:
+        type: "str"
       filestash_image:
         type: "str"
       filestash_version:
