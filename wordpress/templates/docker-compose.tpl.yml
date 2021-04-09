@@ -916,18 +916,11 @@ services:
     {#############################################################}
 
     volumes:
-    - "$DATA_DIR/s3/data-1:/data1"
-    - "$DATA_DIR/s3/data-2:/data2"
-
+    - "$DATA_DIR/s3/data:/data"
     - "$DATA_DIR/tmp/s3:/tmp/main/minio"
     - "$DATA_DIR/tmp/tmp/s3:/tmp/main/tmp/minio"
     logging: *mainlog
-    command: "server http://s3/data{1...2}"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+    command: "server /data"
 
     {#############################################################}
     {% if (params.memory.local_s3 | default('')) != '' %}

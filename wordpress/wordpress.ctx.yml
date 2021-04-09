@@ -165,7 +165,8 @@
 {% set var_local_s3_credentials = {
     'endpoint': 'http://s3:9000',
     'access_key': 'minio',
-    'secret_key': 'minio123'
+    'secret_key': 'minio123',
+    'path_style': true
   }
 %}
 
