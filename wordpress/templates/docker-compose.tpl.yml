@@ -89,6 +89,17 @@ secrets:
   {#############################################################}
 
   {#############################################################}
+  {% if var_use_local_s3 %}
+
+  local_s3_access_key:
+    file: "$DATA_DIR/secrets/local_s3_access_key.txt"
+  local_s3_secret_key:
+    file: "$DATA_DIR/secrets/local_s3_secret_key.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
   {% if var_use_mysql %}
 
   db_root_password:
@@ -102,17 +113,6 @@ secrets:
 
   db_gui_password:
     file: "$DATA_DIR/secrets/db_gui_password.txt"
-
-  {% endif %}
-  {#############################################################}
-
-  {#############################################################}
-  {% if var_use_local_s3 %}
-
-  local_s3_access_key:
-    file: "$DATA_DIR/secrets/local_s3_access_key.txt"
-  local_s3_secret_key:
-    file: "$DATA_DIR/secrets/local_s3_secret_key.txt"
 
   {% endif %}
   {#############################################################}
