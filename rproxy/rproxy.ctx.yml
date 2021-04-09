@@ -5,6 +5,10 @@
 {% set var_local = params.local | default(false) | bool %}
 {% set var_pod_type = 'web' %}
 
+{% set var_is_web = var_pod_type in ['app', 'web'] %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+{% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
+
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
 {% set var_main_base_dir_container = (var_local and (params.custom_dir_sync | default(false) | bool))
@@ -89,6 +93,26 @@
 
 {% set var_rproxy_type = params.rproxy_type | default('') %}
 
+{% set var_s3_minio_gateway_credentials = credentials.minio_gateway | default({}) %}
+{% set var_s3_backup_credentials = credentials.backup_bucket | default({}) %}
+{% set var_s3_backup_replica_credentials = credentials.backup_replica_bucket | default({}) %}
+
+{% set var_local_s3_credentials = {
+    'endpoint': 'http://s3:9000',
+    'access_key': 'minio',
+    'secret_key': 'minio123',
+    'path_style': true
+  }
+%}
+
+{% if var_use_local_s3 %}
+
+  {% set var_s3_minio_gateway_credentials = var_local_s3_credentials %}
+  {% set var_s3_backup_credentials = var_local_s3_credentials %}
+  {% set var_s3_backup_replica_credentials = var_local_s3_credentials %}
+
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -136,6 +160,7 @@ templates:
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
     use_s3: "{{ params.use_s3 | default(false) }}"
+    use_local_s3: "{{ var_use_local_s3 }}"
     rproxy_type: "{{ var_rproxy_type }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
@@ -148,7 +173,7 @@ templates:
     elasticsearch_port: "{{ params.services.elasticsearch.port | default('') }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     internal_elasticsearch: "{{ params.internal_elasticsearch | default(false) }}"
-    backup_bucket_endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+    backup_bucket_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
@@ -176,10 +201,14 @@ templates:
     type: "{{ var_pod_type }}"
     local: "{{ var_local }}"
     data_dir: "{{ var_data_dir }}"
+    use_secrets: "{{ params.use_secrets | default(false) }}"
+    use_local_s3: "{{ var_use_local_s3 }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
-    minio_gateway_endpoint: "{{ credentials.minio_gateway.endpoint | default('') }}"
-    minio_gateway_access_key: "{{ credentials.minio_gateway.access_key | default('') }}"
-    minio_gateway_secret_key: "{{ credentials.minio_gateway.secret_key | default('') }}"
+    minio_gateway_endpoint: "{{ var_s3_minio_gateway_credentials.endpoint | default('') }}"
+    minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
+    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
+    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
 
 ##############################################################
 {% if params.use_s3 | default(false) | bool %}
@@ -189,15 +218,15 @@ templates:
   schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
   params:
     - alias: "backup"
-      endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
-      region: "{{ credentials.backup_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_bucket.access_key | default('') }}"
-      secret_key: "{{ credentials.backup_bucket.secret_key | default('') }}"
+      endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
+      region: "{{ var_s3_backup_credentials.region | default('') }}"
+      access_key: "{{ var_s3_backup_credentials.access_key | default('') }}"
+      secret_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
     - alias: "backup_replica"
-      endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
-      region: "{{ credentials.backup_replica_bucket.region | default('') }}"
-      access_key: "{{ credentials.backup_replica_bucket.access_key | default('') }}"
-      secret_key: "{{ credentials.backup_replica_bucket.secret_key | default('') }}"
+      endpoint: "{{ var_s3_backup_replica_credentials.endpoint | default('') }}"
+      region: "{{ var_s3_backup_replica_credentials.region | default('') }}"
+      access_key: "{{ var_s3_backup_replica_credentials.access_key | default('') }}"
+      secret_key: "{{ var_s3_backup_replica_credentials.secret_key | default('') }}"
       when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
 
 {% endif %}
@@ -253,6 +282,35 @@ templates:
 {% endif %}
 ##############################################################
 
+##############################################################
+{% if params.use_secrets | default(false) | bool %}
+
+- src: "main/vars/vars.tpl.sh"
+  dest: "env/secrets.sh"
+  params:
+    empty: ""
+
+    ##############################################################
+    {% if var_use_minio_gateway %}
+
+    minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_local_s3 %}
+
+    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
+    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+    {% endif %}
+    ##############################################################
+
+{% endif %}
+##############################################################
+
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
   params:
@@ -286,11 +344,13 @@ templates:
     var_load_shared__cron__dest: "{{ params.cron_dest | default('') }}"
 
     var_load_use__main_network: "true"
+    var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
     var_load_use__haproxy: "{{ (var_rproxy_type == 'haproxy') | lower }}"
     var_load_use__nginx: "true"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
+    var_load_use__local_s3: "{{ var_use_local_s3 | lower }}"
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
@@ -336,14 +396,14 @@ templates:
     var_load__s3_backup__bucket_name: "{{ params.backup_bucket_name | default('') }}"
     var_load__s3_backup__bucket_path: "{{ params.backup_bucket_path | default('') }}"
     var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
-    var_load__s3_backup__endpoint: "{{ credentials.backup_bucket.endpoint | default('') }}"
+    var_load__s3_backup__endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
     var_load__s3_backup__lifecycle_file: "{{ params.s3_backup_lifecycle_file | default('') }}"
     var_load__s3_backup__acl: "{{ params.s3_backup_acl | default('') }}"
 
     var_load__s3_backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
     var_load__s3_backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
     var_load__s3_backup_replica__cli: "{{ params.s3_cli | default('') }}"
-    var_load__s3_backup_replica__endpoint: "{{ credentials.backup_replica_bucket.endpoint | default('') }}"
+    var_load__s3_backup_replica__endpoint: "{{ var_s3_backup_replica_credentials.endpoint | default('') }}"
 
     var_load__sync_setup__restore_bucket_path_dir: "{{ params.sync_setup.restore_bucket_path_dir | default('') }}"
     var_load__sync_setup__verify_file_to_skip: "{{ params.sync_setup.verify_file_to_skip | default('') }}"

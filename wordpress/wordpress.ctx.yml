@@ -5,6 +5,11 @@
 {% set var_local = params.local | default(false) | bool %}
 {% set var_pod_type = params.type | default('') %}
 
+{% if not (var_pod_type in ['app', 'web', 'db']) %}
+  {% set error = {} %}
+  {{ error['error.pod_type.invalid.' + var_pod_type] }}
+{% endif %}
+
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
 {% set var_use_pma = var_is_web and (params.use_pma | bool) %}
 {% set var_use_adminer = var_is_web and (params.use_adminer | bool) %}
@@ -13,11 +18,6 @@
 
 {% set var_is_db = var_pod_type in ['app', 'db'] %}
 {% set var_use_mysql = var_is_db %}
-
-{% if not (var_pod_type in ['app', 'web', 'db']) %}
-  {% set error = {} %}
-  {{ error['error.pod_type.invalid.' + var_pod_type] }}
-{% endif %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -288,15 +288,15 @@ templates:
     app_dev: "{{ var_app_dev }}"
     wp_app_repo_dir: "{{ var_wp_app_repo_dir }}"
     use_secrets: "{{ params.use_secrets | default(false) }}"
-    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     use_local_s3: "{{ var_use_local_s3 }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     minio_gateway_endpoint: "{{ var_s3_minio_gateway_credentials.endpoint | default('') }}"
     minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
     minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
-    db_root_password: "{{ credentials.mysql.root_password | default('') }}"
-    db_gui_password: "{{ var_db_gui_password }}"
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+    db_root_password: "{{ credentials.mysql.root_password | default('') }}"
+    db_gui_password: "{{ var_db_gui_password }}"
 
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and (params.use_varnish | bool) %}
@@ -480,6 +480,15 @@ templates:
     ##############################################################
 
     ##############################################################
+    {% if var_use_local_s3 %}
+
+    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
+    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
     {% if var_use_mysql %}
 
     db_root_password: "{{ credentials.mysql.root_password | default('') }}"
@@ -491,15 +500,6 @@ templates:
     {% if var_use_pma or var_use_adminer %}
 
     db_gui_password: "{{ var_db_gui_password }}"
-
-    {% endif %}
-    ##############################################################
-
-    ##############################################################
-    {% if var_use_local_s3 %}
-
-    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
-    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
 
     {% endif %}
     ##############################################################
