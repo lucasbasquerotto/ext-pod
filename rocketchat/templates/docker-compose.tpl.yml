@@ -1,3 +1,19 @@
+{% set var_is_web = params.pod_type in ['app', 'web'] %}
+{% set var_use_nginx = var_is_web %}
+{% set var_use_rocketchat = var_is_web %}
+{% set var_use_bot = var_is_web and (params.use_bot | bool) %}
+{% set var_use_mongo_express = var_is_web and (params.use_mongo_express | bool) %}
+{% set var_use_theia = var_is_web and (params.use_theia | bool) %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+{% set var_use_filestash = var_is_web and (params.use_filestash | bool) %}
+
+{% set var_is_db = params.pod_type in ['app', 'db'] %}
+{% set var_use_mongo = var_is_db %}
+
+{% set var_use_s3 = params.use_s3 | bool %}
+{% set var_use_local_s3 = params.use_local_s3 | bool %}
+{% set var_use_internal_fluentd = params.use_internal_fluentd | bool %}
+
 version: '2.4'
 
 x-logging:
@@ -28,7 +44,7 @@ x-logging:
 networks:
 
   {#############################################################}
-  {% if params.use_internal_fluentd | bool %}
+  {% if var_use_internal_fluentd %}
 
   log:
     driver: "bridge"
@@ -50,10 +66,40 @@ volumes:
 {% endif %}
 {#############################################################}
 
+{#############################################################}
+{% if params.use_secrets | bool %}
+
+secrets:
+
+  {#############################################################}
+  {% if var_use_minio_gateway %}
+
+  minio_gateway_access_key:
+    file: "$DATA_DIR/secrets/minio_gateway_access_key.txt"
+  minio_gateway_secret_key:
+    file: "$DATA_DIR/secrets/minio_gateway_secret_key.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_local_s3 %}
+
+  local_s3_access_key:
+    file: "$DATA_DIR/secrets/local_s3_access_key.txt"
+  local_s3_secret_key:
+    file: "$DATA_DIR/secrets/local_s3_secret_key.txt"
+
+  {% endif %}
+  {#############################################################}
+
+{% endif %}
+{#############################################################}
+
 services:
 
   {#############################################################}
-  {% if params.pod_type in ['app', 'web'] %}
+  {% if var_use_nginx %}
 
   nginx:
     container_name: "${CTX_PREFIX_MAIN}nginx"
@@ -67,7 +113,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -110,6 +156,12 @@ services:
     {% endif %}
     {#############################################################}
 
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_rocketchat %}
+
   rocketchat:
     container_name: "${CTX_PREFIX_MAIN}rocketchat"
     hostname: "rocketchat"
@@ -122,12 +174,12 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if (params.use_internal_fluentd | bool) or (params.pod_type == 'app') %}
+    {% if var_use_internal_fluentd or (params.pod_type == 'app') %}
 
     depends_on:
 
       {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     - "fluentd"
 
@@ -213,8 +265,11 @@ services:
     {% endif %}
     {#############################################################}
 
+  {% endif %}
   {#############################################################}
-  {% if params.use_bot | bool %}
+
+  {#############################################################}
+  {% if var_use_bot %}
 
   hubot:
     container_name: "${CTX_PREFIX_MAIN}hubot"
@@ -230,7 +285,7 @@ services:
     - "rocketchat"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     - "fluentd"
 
@@ -263,7 +318,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_mongo_express | bool %}
+  {% if var_use_mongo_express %}
 
   mongo_express:
     container_name: "${CTX_PREFIX_MAIN}mongo_express"
@@ -277,7 +332,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -307,7 +362,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_theia | bool %}
+  {% if var_use_theia %}
 
   theia:
     container_name: "${CTX_PREFIX_MAIN}theia"
@@ -322,7 +377,7 @@ services:
     user: root
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -363,7 +418,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_minio_gateway | bool %}
+  {% if var_use_minio_gateway %}
 
   minio_gateway:
     container_name: "${CTX_PREFIX_MAIN}minio_gateway"
@@ -376,11 +431,33 @@ services:
         VERSION: "{{ params.images.minio_gateway_version }}"
     restart: "unless-stopped"
     environment:
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      MINIO_ACCESS_KEY_FILE: "minio_gateway_access_key"
+      MINIO_SECRET_KEY_FILE: "minio_gateway_secret_key"
+
+      {% else %}
+
       MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
       MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
 
+      {% endif %}
+      {#############################################################}
+
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "minio_gateway_access_key"
+      - "minio_gateway_secret_key"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -409,7 +486,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_filestash | bool %}
+  {% if var_use_filestash %}
 
   filestash:
     container_name: "${CTX_PREFIX_MAIN}filestash"
@@ -423,7 +500,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -449,11 +526,8 @@ services:
   {% endif %}
   {#############################################################}
 
-  {% endif %}
   {#############################################################}
-
-  {#############################################################}
-  {% if params.pod_type in ['app', 'db'] %}
+  {% if var_use_mongo %}
 
   mongo:
     container_name: "${CTX_PREFIX_MAIN}mongo"
@@ -467,7 +541,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -519,6 +593,77 @@ services:
   {% endif %}
   {#############################################################}
 
+  {#############################################################}
+  {% if var_use_local_s3 %}
+
+  s3:
+    container_name: "${CTX_PREFIX_MAIN}s3"
+    hostname: "s3"
+    build:
+      context: .
+      dockerfile: "shared/containers/minio/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.minio_image }}"
+        VERSION: "{{ params.images.minio_version }}"
+    restart: "unless-stopped"
+
+    {#############################################################}
+    {% if params.use_internal_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+    expose:
+    - "9000"
+    environment:
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      MINIO_ROOT_USER_FILE: "/run/secrets/local_s3_access_key"
+      MINIO_ROOT_PASSWORD_FILE: "/run/secrets/local_s3_secret_key"
+
+      {% else %}
+
+      MINIO_ROOT_USER: $LOCAL_S3_ACCESS_KEY
+      MINIO_ROOT_PASSWORD: $LOCAL_S3_SECRET_KEY
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "local_s3_access_key"
+      - "local_s3_secret_key"
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR/s3/data:/data"
+    - "$DATA_DIR/tmp/s3:/tmp/main/minio"
+    - "$DATA_DIR/tmp/tmp/s3:/tmp/main/tmp/minio"
+    logging: *mainlog
+    command: "server /data"
+
+    {#############################################################}
+    {% if (params.memory.local_s3 | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.local_s3 }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
   toolbox:
     container_name: "${CTX_PREFIX_MAIN}toolbox"
     hostname: "toolbox"
@@ -531,7 +676,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -566,7 +711,7 @@ services:
     {#############################################################}
 
   {#############################################################}
-  {% if params.use_s3 | bool %}
+  {% if var_use_s3 %}
 
   s3_cli:
     container_name: "${CTX_PREFIX_RUN}s3_cli"
@@ -580,7 +725,7 @@ services:
     restart: "unless-stopped"
 
     {#############################################################}
-    {% if params.use_internal_fluentd | bool %}
+    {% if var_use_internal_fluentd %}
 
     depends_on:
     - "fluentd"
@@ -610,7 +755,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if params.use_internal_fluentd | bool %}
+  {% if var_use_internal_fluentd %}
 
   fluentd:
     container_name: "${CTX_PREFIX_MAIN}fluentd"
