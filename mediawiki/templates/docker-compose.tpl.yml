@@ -726,8 +726,29 @@ services:
         VERSION: "{{ params.images.mysql_version }}"
     restart: "unless-stopped"
     environment:
-      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
       MYSQL_DATABASE: "{{ params.db_name }}"
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      MYSQL_ROOT_PASSWORD_FILE: "/run/secrets/db_root_password"
+
+      {% else %}
+
+      MYSQL_ROOT_PASSWORD: "$DB_ROOT_PASSWORD"
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "db_root_password"
+
+    {% endif %}
+    {#############################################################}
+
 
     {#############################################################}
     {% if var_use_internal_fluentd %}

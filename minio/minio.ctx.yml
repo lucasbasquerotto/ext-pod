@@ -167,6 +167,7 @@ templates:
     shared_network: "{{ var_shared_network_name }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     internal: "{{ params.internal | default(false) }}"
+    use_secrets: "{{ params.use_secrets | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
     use_s3: "{{ params.use_s3 | default(false) }}"
@@ -246,32 +247,6 @@ templates:
 ##############################################################
 
 ##############################################################
-{% if params.use_secrets | default(false) | bool %}
-
-- src: "main/vars/vars.tpl.sh"
-  dest: "env/secrets.sh"
-  params:
-    empty: ""
-
-    ##############################################################
-    {% if var_use_minio_gateway %}
-
-    minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
-    minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
-
-    {% endif %}
-    ##############################################################
-
-    ##############################################################
-    {% if var_use_local_s3 %}
-
-    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
-    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
-
-    {% endif %}
-    ##############################################################
-
-##############################################################
 {% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
@@ -307,6 +282,35 @@ templates:
         endpoint: "http://minio_gateway:9000"
         private: true
         use_basic_auth: false
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if params.use_secrets | default(false) | bool %}
+
+- src: "main/vars/vars.tpl.sh"
+  dest: "env/secrets.sh"
+  params:
+    empty: ""
+
+    ##############################################################
+    {% if var_use_minio_gateway %}
+
+    minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_local_s3 %}
+
+    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
+    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+    {% endif %}
+    ##############################################################
 
 {% endif %}
 ##############################################################

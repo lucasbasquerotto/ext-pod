@@ -1,5 +1,5 @@
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
-{% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
+{% set var_use_nginx = var_is_web %}
 {% set var_use_theia = var_is_web and (params.use_theia | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 

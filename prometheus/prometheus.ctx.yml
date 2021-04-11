@@ -160,6 +160,7 @@ templates:
     shared_network: "{{ var_shared_network_name }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     internal: "{{ params.internal | default(false) }}"
+    use_secrets: "{{ params.use_secrets | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
     use_s3: "{{ params.use_s3 | default(false) }}"
