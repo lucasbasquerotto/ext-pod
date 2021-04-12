@@ -386,8 +386,22 @@ services:
         VERSION: "{{ params.images.elasticsearch_version }}"
         MAIN_DIR: "{{ params.main_dir }}"
         S3_ENDPOINT: "{{ params.backup_bucket_endpoint }}"
+        S3_PATH_STYLE_ACCESS: "{{ params.s3_path_style_access | lower() }}"
+
+        {#############################################################}
+        {% if params.s3_snapshot | bool %}
+
         S3_ACCESS_KEY: $S3_ACCESS_KEY
         S3_SECRET_KEY: $S3_SECRET_KEY
+
+        {% else %}
+
+        S3_ACCESS_KEY: ""
+        S3_SECRET_KEY: ""
+
+        {% endif %}
+        {#############################################################}
+
     restart: "unless-stopped"
 
     {#############################################################}

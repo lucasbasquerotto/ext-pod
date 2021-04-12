@@ -7,6 +7,7 @@ RUN bin/elasticsearch-plugin install --batch repository-s3
 
 ARG MAIN_DIR
 ARG S3_ENDPOINT
+ARG S3_PATH_STYLE_ACCESS
 ARG S3_ACCESS_KEY
 ARG S3_SECRET_KEY
 
@@ -15,6 +16,10 @@ COPY $MAIN_DIR/containers/elasticsearch/elasticsearch.yml /usr/share/elasticsear
 RUN echo "" >> /usr/share/elasticsearch/config/elasticsearch.yml; \
     if [ -n "$S3_ENDPOINT" ]; then \
         echo "s3.client.default.endpoint: $S3_ENDPOINT" \
+            >> /usr/share/elasticsearch/config/elasticsearch.yml; \
+    fi; \
+    if [ -n "$S3_PATH_STYLE_ACCESS" ]; then \
+        echo "s3.client.default.path_style_access: $S3_PATH_STYLE_ACCESS" \
             >> /usr/share/elasticsearch/config/elasticsearch.yml; \
     fi; \
     if [ -n "$S3_ACCESS_KEY" ]; then \

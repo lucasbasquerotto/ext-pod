@@ -180,6 +180,8 @@ templates:
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     internal_elasticsearch: "{{ params.internal_elasticsearch | default(false) }}"
     backup_bucket_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
+    s3_path_style_access: "{{ var_s3_backup_credentials.path_style | default('') }}"
+    s3_snapshot: "{{ params.db_backup.s3_snapshot | default(false) }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
