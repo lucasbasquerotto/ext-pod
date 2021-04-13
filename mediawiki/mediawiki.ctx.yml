@@ -134,6 +134,16 @@
   | ternary('', ':' + (var_mediawiki_external_port | string)))
 %}
 
+{% set var_memcached_endpoint = '' %}
+
+{% if params.use_memcached | default(false) | bool %}
+  {% if var_pod_type = 'web' %}
+    {% set var_memcached_endpoint = input.dependencies.memcached.host | default('') %}
+  {% else %}
+    {% set var_memcached_endpoint = 'memcached:11211' %}
+  {% endif %}
+{% endif %}
+
 {% set var_s3_minio_gateway_credentials = credentials.minio_gateway | default({}) %}
 {% set var_s3_backup_credentials = credentials.backup_bucket | default({}) %}
 {% set var_s3_uploads_credentials = credentials.uploads_bucket | default({}) %}
@@ -302,6 +312,7 @@ templates:
     use_varnish: "{{ params.use_varnish | default(false) }}"
     use_redis: "{{ params.use_redis | default(false) }}"
     use_memcached: "{{ params.use_memcached | default(false) }}"
+    memcached_endpoint: "{{ var_memcached_endpoint }}"
     uploads_cdn_path: "{{ params.uploads_cdn_path | default('') }}"
     s3_key: "{{ var_s3_uploads_credentials.access_key | default('') }}"
     s3_secret: "{{ var_s3_uploads_credentials.secret_key | default('') }}"

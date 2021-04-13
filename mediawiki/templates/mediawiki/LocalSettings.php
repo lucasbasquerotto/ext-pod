@@ -67,7 +67,7 @@ $wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
 $wgMainCacheType = CACHE_MEMCACHED;
 $wgParserCacheType = CACHE_MEMCACHED;
 $wgMessageCacheType = CACHE_MEMCACHED;
-$wgMemCachedServers = [ 'memcached:11211' ];
+$wgMemCachedServers = [ '{{ params.memcached_endpoint }}' ];
 $wgSessionCacheType = CACHE_MEMCACHED;
 
 {% else %}
@@ -233,8 +233,8 @@ $wgUseCdn = true;
 $wgCdnServers = [];
 $wgCdnServers[] = "varnish";
 
-{% endif %}
-{###################################################################}
-
 # workaround to fix https://phabricator.wikimedia.org/T235554
 $wgDisableOutputCompression = true;
+
+{% endif %}
+{###################################################################}
