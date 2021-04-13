@@ -5,7 +5,7 @@
 {% set var_local = params.local | default(false) | bool %}
 {% set var_pod_type = params.type | default('') %}
 
-{% if not (var_pod_type in ['app', 'web', 'db']) %}
+{% if not (var_pod_type in ['app', 'web', 'cache', 'db']) %}
   {% set error = {} %}
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
