@@ -235,3 +235,6 @@ $wgCdnServers[] = "varnish";
 
 {% endif %}
 {###################################################################}
+
+# workaround to fix https://phabricator.wikimedia.org/T235554
+$wgDisableOutputCompression = true;
