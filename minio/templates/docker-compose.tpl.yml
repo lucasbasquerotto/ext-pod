@@ -75,6 +75,28 @@ secrets:
   {% endif %}
   {#############################################################}
 
+  {#############################################################}
+  {% if var_use_minio %}
+
+  minio_access_key:
+    file: "$DATA_DIR/secrets/minio_access_key.txt"
+  minio_secret_key:
+    file: "$DATA_DIR/secrets/minio_secret_key.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_minio and (params.minio_new_keys | default(false) | bool) %}
+
+  minio_access_key_old:
+    file: "$DATA_DIR/secrets/minio_access_key_old.txt"
+  minio_secret_key_old:
+    file: "$DATA_DIR/secrets/minio_secret_key_old.txt"
+
+  {% endif %}
+  {#############################################################}
+
 {% endif %}
 {#############################################################}
 
@@ -504,17 +526,53 @@ services:
     expose:
     - "9000"
     environment:
-      MINIO_ROOT_USER: $MINIO_ROOT_USER
-      MINIO_ROOT_PASSWORD: $MINIO_ROOT_PASSWORD
 
       {#############################################################}
-      {% if params.minio_new_keys | default(false) | bool %}
+      {% if params.use_secrets | bool %}
+
+      MINIO_ROOT_USER_FILE: "/run/secrets/minio_access_key"
+      MINIO_ROOT_PASSWORD_FILE: "/run/secrets/minio_secret_key"
+
+      {% else %}
+
+      MINIO_ROOT_USER: $MINIO_ACCESS_KEY
+      MINIO_ROOT_PASSWORD: $MINIO_SECRET_KEY
+
+      {% endif %}
+      {#############################################################}
+
+      {#############################################################}
+      {% if (params.minio_new_keys | default(false) | bool) and (params.use_secrets | bool) %}
+
+      MINIO_ACCESS_KEY_OLD_FILE: "/run/secrets/minio_access_key_old"
+      MINIO_SECRET_KEY_OLD_FILE: "/run/secrets/minio_secret_key_old"
+
+      {% elif params.minio_new_keys | default(false) | bool %}
 
       MINIO_ACCESS_KEY_OLD: $MINIO_ACCESS_KEY_OLD
       MINIO_SECRET_KEY_OLD: $MINIO_SECRET_KEY_OLD
 
       {% endif %}
       {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "minio_access_key"
+      - "minio_secret_key"
+
+      {#############################################################}
+      {% if params.minio_new_keys | default(false) | bool %}
+
+      - "minio_access_key_old"
+      - "minio_secret_key_old"
+
+      {% endif %}
+      {#############################################################}
+
+    {% endif %}
+    {#############################################################}
 
     volumes:
 

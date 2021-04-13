@@ -14,6 +14,11 @@
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 
+{% set var_is_db = var_pod_type in ['app', 'db'] %}
+{% set var_use_minio = var_is_db %}
+
+{% set var_minio_new_keys = var_use_minio and ((credentials.minio.access_key_old | default('')) != '') %}
+
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
 {% set var_main_base_dir_container = (var_local and (params.custom_dir_sync | default(false) | bool))
@@ -183,7 +188,7 @@ templates:
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     minio_amount: "{{ params.minio_amount | default(0) }}"
     minio_data_amount: "{{ params.minio_data_amount | default(0) }}"
-    minio_new_keys: "{{ (credentials.minio.access_key_old | default('')) != '' }}"
+    minio_new_keys: "{{ var_minio_new_keys }}"
     minio_include_healthcheck: "{{ params.minio_include_healthcheck | default(false) }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
@@ -219,8 +224,8 @@ templates:
     minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
-    minio_root_user: "{{ credentials.minio.root_user | default('') }}"
-    minio_root_password: "{{ credentials.minio.root_password | default('') }}"
+    minio_access_key: "{{ credentials.minio.access_key | default('') }}"
+    minio_secret_key: "{{ credentials.minio.secret_key | default('') }}"
     minio_access_key_old: "{{ credentials.minio.access_key_old | default('') }}"
     minio_secret_key_old: "{{ credentials.minio.secret_key_old | default('') }}"
 
@@ -312,6 +317,24 @@ templates:
     {% endif %}
     ##############################################################
 
+    ##############################################################
+    {% if var_use_minio %}
+
+    minio_access_key: "{{ credentials.minio.access_key | default('') }}"
+    minio_secret_key: "{{ credentials.minio.secret_key | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_minio and var_minio_new_keys %}
+
+    minio_access_key_old: "{{ credentials.minio.access_key_old | default('') }}"
+    minio_secret_key_old: "{{ credentials.minio.secret_key_old | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
 {% endif %}
 ##############################################################
 
@@ -339,6 +362,7 @@ templates:
 
     var_load_main__data_dir: "{{ input.data_dir }}"
     var_load_main__pod_type: "{{ var_pod_type }}"
+    var_load_main__instance_index: "{{ input.instance_index }}"
     var_load_main__local: "{{ var_local | default('') | lower }}"
 
     var_load_shared__delete_old__days: "3"
@@ -362,12 +386,12 @@ templates:
 
     # Enable Tasks
 
-    var_load_enable__custom_db_backup: "{{ params.enable_db_backup | default('') | lower }}"
+    var_load_enable__db_backup_sync: "{{ params.enable_db_backup | default('') | lower }}"
     var_load_enable__logs_backup: "{{ params.enable_logs_backup | default('') | lower }}"
     var_load_enable__sync_backup: "{{ params.enable_sync_backup | default('') | lower }}"
     var_load_enable__backup_replica: "{{ params.enable_backup_replica | default('') | lower }}"
 
-    var_load_enable__custom_db_setup: "{{ params.enable_db_setup | default('') | lower }}"
+    var_load_enable__db_setup_sync: "{{ params.enable_db_setup | default('') | lower }}"
     var_load_enable__logs_setup: "{{ params.enable_logs_setup | default('') | lower }}"
     var_load_enable__sync_setup: "{{ params.enable_sync_setup | default('') | lower }}"
 
@@ -386,43 +410,16 @@ templates:
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
     var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
 
-    var_load__db_backup__repository_name: "{{ params.db_backup.repository_name | default('') }}"
-    var_load__db_backup__snapshot_name: "{{ params.db_backup.snapshot_name | default('') }}"
-    var_load__db_backup__s3_snapshot: "{{ params.db_backup.s3_snapshot | default('') | lower }}"
-    var_load__db_backup__backup_bucket_sync_dir: "{{ params.db_backup.backup_bucket_sync_dir | default('') }}"
-    var_load__db_backup__is_compressed_file: "{{ params.db_backup.is_compressed_file | default('') }}"
-    var_load__db_backup__backup_date_format: "{{ params.db_backup.backup_date_format | default('') }}"
-    var_load__db_backup__backup_time_format: "{{ params.db_backup.backup_time_format | default('') }}"
-    var_load__db_backup__backup_datetime_format: "{{ params.db_backup.backup_datetime_format | default('') }}"
-    var_load__db_backup__recursive_dir: "{{ params.db_backup.recursive_dir | default('') }}"
-    var_load__db_backup__recursive_mode: "{{ params.db_backup.recursive_mode | default('') }}"
-    var_load__db_backup__recursive_mode_dir: "{{ params.db_backup.recursive_mode_dir | default('') }}"
-    var_load__db_backup__recursive_mode_file: "{{ params.db_backup.recursive_mode_file | default('') }}"
-    var_load__db_backup__file_to_clear: "{{ params.db_backup.file_to_clear | default('') }}"
-    var_load__db_backup__dir_to_clear: "{{ params.db_backup.dir_to_clear | default('') }}"
-    var_load__db_backup__compress_type: "{{ params.db_backup.compress_type | default('') }}"
-    var_load__db_backup__db_compress_file_name: "{{ params.db_backup.db_compress_file_name | default('') }}"
-    var_load__db_backup__compress_pass: "{{ credentials.efk_db.compress_pass | default('') }}"
+    var_load__db_backup_sync__backup_bucket_sync_dir: "{{ params.db_backup_sync.backup_bucket_sync_dir | default('') }}"
+    var_load__db_backup_sync__backup_date_format: "{{ params.db_backup_sync.backup_date_format | default('') }}"
+    var_load__db_backup_sync__backup_time_format: "{{ params.db_backup_sync.backup_time_format | default('') }}"
+    var_load__db_backup_sync__backup_datetime_format: "{{ params.db_backup_sync.backup_datetime_format | default('') }}"
 
-    var_load__db_main__db_host: "{{ params.db_main.host | default('') }}"
-    var_load__db_main__db_port: "{{ params.db_main.port | default('') }}"
-    var_load__db_main__db_user: "{{ credentials.efk.db.user | default('') }}"
-    var_load__db_main__db_pass: "{{ credentials.efk.db.password | default('') }}"
-    var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
-
-    var_load__db_setup__use_s3: "{{ params.db_setup.use_s3 | default('') }}"
-    var_load__db_setup__repository_name: "{{ params.db_setup.repository_name | default('') }}"
-    var_load__db_setup__snapshot_name: "{{ params.db_setup.snapshot_name | default('') }}"
-    var_load__db_setup__index_prefix: "{{ params.db_setup.index_prefix | default('') }}"
-    var_load__db_setup__restore_remote_file: "{{ params.db_setup.restore_remote_file | default('') }}"
-    var_load__db_setup__snapshot_type: "{{ params.db_setup.snapshot_type | default('') }}"
-    var_load__db_setup__compress_type: "{{ params.db_setup.compress_type | default('') }}"
-    var_load__db_setup__db_compress_file_name: "{{ params.db_setup.db_compress_file_name | default('') }}"
-    var_load__db_setup__compress_pass: >-
-      {{
-        credentials.efk_db.restore_compress_pass
-        | default(credentials.efk_db.compress_pass | default(''))
-      }}
+    var_load__db_setup_sync__restore_bucket_path_dir: "{{ params.db_setup_sync.restore_bucket_path_dir | default('') }}/{{ input.instance_index }}"
+    var_load__db_setup_sync__verify_file_to_skip: "{{ params.db_setup_sync.verify_file_to_skip | default('') }}"
+    var_load__db_setup_sync__recursive_mode: "{{ params.db_setup_sync.recursive_mode | default('') }}"
+    var_load__db_setup_sync__recursive_mode_dir: "{{ params.db_setup_sync.recursive_mode_dir | default('') }}"
+    var_load__db_setup_sync__recursive_mode_file: "{{ params.db_setup_sync.recursive_mode_file | default('') }}"
 
     var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
     var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"

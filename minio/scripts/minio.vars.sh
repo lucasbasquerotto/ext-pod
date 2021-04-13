@@ -15,6 +15,9 @@ export var_load_general__toolbox_service='toolbox'
 export var_load_general__script_dir="$tmp_dir"
 export var_load_general__script_env_file='remote.sh'
 
+export var_load__db_backup_sync__src_relpath='minio'
+export var_load__db_setup_sync__dest_dir_relpath='minio'
+
 if [ "${var_load_main__local:-}" = 'true' ]; then
 	export var_load_general__script_env_file='local.sh'
 fi
