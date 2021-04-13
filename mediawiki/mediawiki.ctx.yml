@@ -137,7 +137,7 @@
 {% set var_memcached_endpoint = '' %}
 
 {% if params.use_memcached | default(false) | bool %}
-  {% if var_pod_type = 'web' %}
+  {% if var_pod_type == 'web' %}
     {% set var_memcached_endpoint = input.dependencies.memcached.host | default('') %}
   {% else %}
     {% set var_memcached_endpoint = 'memcached:11211' %}
