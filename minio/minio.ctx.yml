@@ -294,7 +294,7 @@ templates:
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
-- src: "main/vars/vars.tpl.sh"
+- src: "main/vars/secrets.tpl.sh"
   dest: "env/secrets.sh"
   params:
     empty: ""

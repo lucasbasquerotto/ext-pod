@@ -70,6 +70,8 @@ volumes:
 {% if params.use_secrets | bool %}
 
 secrets:
+  empty:
+    file: "$DATA_DIR/secrets/empty.txt"
 
   {#############################################################}
   {% if var_use_minio_gateway %}
