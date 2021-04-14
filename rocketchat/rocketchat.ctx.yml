@@ -378,8 +378,8 @@ templates:
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
-- src: "main/vars/secrets.tpl.sh"
-  dest: "env/secrets.sh"
+- src: "main/vars/values.tpl.txt"
+  dest: "env/secrets.txt"
   params:
     empty: ""
 

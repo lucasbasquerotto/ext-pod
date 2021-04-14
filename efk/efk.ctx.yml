@@ -300,7 +300,7 @@ templates:
   params:
     elasticsearch_user: "fluentd"
     elasticsearch_password: "{{ credentials.elasticsearch.fluentd_password | default('') }}"
-    elasticsearch_hosts: "{{ var_elasticsearch_hosts }}"
+    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
 
 {% endif %}
 ##############################################################
@@ -313,7 +313,7 @@ templates:
   params:
     kibana_user: "kibana"
     kibana_password: "{{ credentials.elasticsearch.kibana_password | default('') }}"
-    elasticsearch_hosts: "{{ var_elasticsearch_hosts }}"
+    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
 
 {% endif %}
 ##############################################################
@@ -327,25 +327,22 @@ templates:
     s3_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
     s3_path_style_access: "{{ var_s3_backup_credentials.path_style | default('') }}"
 
-- src: "main/vars/secrets.tpl.sh"
-  dest: "env/elasticsearch/users.sh"
+- src: "main/vars/values.tpl.txt"
+  dest: "env/elasticsearch/users.txt"
   params:
-    elastic: >-
-      {{
+    elastic: {{
         {
           'roles': ['superuser'],
           'password': credentials.elasticsearch.elastic_password | default('')
         } | to_json
       }}
-    kibana: >-
-      {{
+    kibana: {{
         {
           'roles': ['kibana_system'],
           'password': credentials.elasticsearch.kibana_password | default('')
         } | to_json
       }}
-    fluentd: >-
-      {{
+    fluentd: {{
         {
           'roles': ['fluentd'],
           'password': credentials.elasticsearch.fluentd_password | default('')
@@ -358,8 +355,8 @@ templates:
 ##############################################################
 {% if var_use_elasticsearch and (params.s3_snapshot | default(false) | bool) %}
 
-- src: "main/vars/secrets.tpl.sh"
-  dest: "env/elasticsearch/keystore.sh"
+- src: "main/vars/values.tpl.txt"
+  dest: "env/elasticsearch/keystore.txt"
   params:
     s3.client.default.access_key: "{{ var_s3_backup_credentials.access_key | default('') }}"
     s3.client.default.secret_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
@@ -370,8 +367,8 @@ templates:
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
-- src: "main/vars/secrets.tpl.sh"
-  dest: "env/secrets.sh"
+- src: "main/vars/values.tpl.txt"
+  dest: "env/secrets.txt"
   params:
     empty: ""
 

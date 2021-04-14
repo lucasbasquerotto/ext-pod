@@ -78,44 +78,63 @@ case "$command" in
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"setup")
+	"shared:setup")
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
 			"$pod_script_env_file" "custom:elasticsearch:prepare"
 		fi
+
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"custom:elasticsearch:prepare")
 		bootstrap_user='elastic'
 
+		"$pod_script_env_file" up toolbox elasticsearch
+
 		function bootstrap_password {
-			grep "$bootstrap_user" "$pod_layer_dir/env/elasticsearch/users.sh" | awk '{ print $2 }'
+			"$pod_script_env_file" exec-nontty elasticsearch /bin/bash <<-SHELL || error "$command"
+				set -eou pipefail
+				pass_file="\$(printenv | grep ELASTIC_PASSWORD_FILE | cut -f 2- -d '=')"
+
+				if [ -n "\$pass_file" ]; then
+					cat "\$pass_file"
+				else
+					printenv | grep ELASTIC_PASSWORD | cut -f 2- -d '='
+				fi
+			SHELL
 		}
 
 		# Wait to be ready and create roles
-		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+			set -eou pipefail
+
 			timeout="${var_custom__elasticsearch_timeout:-150}"
 			end=\$((SECONDS+\$timeout))
 			success=false
+
+			url='http://elasticsearch:9200/_cluster/health?wait_for_status=yellow'
 
 			while [ \$SECONDS -lt \$end ]; do
 				current=\$((end-SECONDS))
 				msg="\$timeout seconds - \$current second(s) remaining"
 				>&2 echo "wait for elasticsearch to be ready (\$msg)"
 
-				if curl --fail -u "$bootstrap_user:$(bootstrap_password)" \
-						"http://elasticsearch:9200/_cluster/health?wait_for_status=yellow"; then
+				echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" "\$url" >&2
+
+				if curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" "\$url" >&2; then
 					success=true
 					break
 				fi
+
+				sleep 5
 			done
 
 			if [ "\$success" != 'true' ]; then
-				echo "timeout while waiting for elasticsearch"
+				echo "timeout while waiting for elasticsearch" >&2
 				exit 2
 			fi
 
-			curl -u "$bootstrap_user:$(bootstrap_password)" \
+			curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
 				-XPOST "http://elasticsearch:9200/_security/role/fluentd" \
 				-d'{
 					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
@@ -126,7 +145,8 @@ case "$command" in
 						}
 					]
 				}' \
-				-H "Content-Type: application/json"
+				-H "Content-Type: application/json" \
+				>&2
 		SHELL
 
 		# Create Users
@@ -140,17 +160,15 @@ case "$command" in
 						-d"$(echo "$value" | xargs)" \
 						-H "Content-Type: application/json"
 			fi
-		done < "$pod_layer_dir/env/elasticsearch/users.sh"
+		done < "$pod_layer_dir/env/elasticsearch/users.txt"
 
 		# Define Keystore
 		if [ "${var_load__custom__s3_snapshot:-}" ]; then
-			"$pod_script_env_file" up elasticsearch
-
 			while IFS='=' read -r key value; do
 				echo "$value" | xargs \
 					| "$pod_script_env_file" exec-nontty elasticsearch \
 						bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)"
-			done < "$pod_layer_dir/env/elasticsearch/keystore.sh"
+			done < "$pod_layer_dir/env/elasticsearch/keystore.txt"
 		fi
 		;;
 	"custom:unique:log")
