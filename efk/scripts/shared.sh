@@ -78,6 +78,66 @@ case "$command" in
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
+	"setup")
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+			"$pod_script_env_file" "custom:elasticsearch:create_users"
+		fi
+		;;
+	"custom:elasticsearch:create_users")
+		bootstrap_user='elastic'
+
+		function bootstrap_password {
+			grep "$bootstrap_user" "$pod_layer_dir/env/elasticsearch/users.sh" | awk '{ print $2 }'
+		}
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+			timeout="${var_custom__elasticsearch_timeout:-150}"
+			end=\$((SECONDS+\$timeout))
+			success=false
+
+			while [ \$SECONDS -lt \$end ]; do
+				current=\$((end-SECONDS))
+				msg="\$timeout seconds - \$current second(s) remaining"
+				>&2 echo "wait for elasticsearch to be ready (\$msg)"
+
+				if curl --fail -u "$bootstrap_user:$(bootstrap_password)" \
+						"http://elasticsearch:9200/_cluster/health?wait_for_status=yellow"; then
+					success=true
+					break
+				fi
+			done
+
+			if [ "\$success" != 'true' ]; then
+				echo "timeout while waiting for elasticsearch"
+				exit 2
+			fi
+
+			curl -u "$bootstrap_user:$(bootstrap_password)" \
+				-XPOST "http://elasticsearch:9200/_security/role/fluentd" \
+				-d'{
+					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
+					"indices": [
+						{
+							"names": [ "fluentd-*" ],
+							"privileges": ["write","create","delete","create_index","manage","manage_ilm"]
+						}
+					]
+				}' \
+				-H "Content-Type: application/json"
+		SHELL
+
+		while IFS='=' read -r key value; do
+			user="$(echo "$key" | xargs)"
+
+			if [ "$user" != "$bootstrap_user" ] && [[ ! "$user" == \#* ]]; then
+				"$pod_script_env_file" exec-nontty toolbox \
+					curl -u "$bootstrap_user:$(bootstrap_password)" \
+						-XPOST "http://elasticsearch:9200/_xpack/security/user/${user}/_password" \
+						-d"$(echo "$value" | xargs)" \
+						-H "Content-Type: application/json"
+			fi
+		done < "$pod_layer_dir/env/elasticsearch/users.sh"
+		;;
 	"custom:unique:log")
 		opts=()
 		opts+=( 'log_register.memory_overview' )

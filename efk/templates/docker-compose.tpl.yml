@@ -92,6 +92,15 @@ secrets:
   {% endif %}
   {#############################################################}
 
+  {#############################################################}
+  {% if var_use_elasticsearch %}
+
+  elastic_password:
+    file: "$DATA_DIR/secrets/elastic_password.txt"
+
+  {% endif %}
+  {#############################################################}
+
 {% endif %}
 {#############################################################}
 
@@ -418,6 +427,27 @@ services:
     environment:
       cluster.initial_master_nodes: elasticsearch
       ES_JAVA_OPTS: "{{ params.elasticsearch_java_opts }}"
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      ELASTIC_PASSWORD_FILE: "/run/secrets/elastic_password"
+
+      {% else %}
+
+      ELASTIC_PASSWORD: $ELASTIC_PASSWORD
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "elastic_password"
+
+    {% endif %}
+    {#############################################################}
 
     {#############################################################}
     {% if not (params.internal_elasticsearch | bool) %}

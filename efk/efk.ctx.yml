@@ -14,6 +14,9 @@
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 
+{% set var_is_db = var_pod_type in ['app', 'db'] %}
+{% set var_use_elasticsearch = var_is_db %}
+
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
 {% set var_main_base_dir_container = (var_local and (params.custom_dir_sync | default(false) | bool))
@@ -219,6 +222,8 @@ templates:
     s3_snapshot: "{{ params.db_backup.s3_snapshot | default(false) }}"
     s3_access_key: "{{ var_s3_backup_credentials.access_key | default('') }}"
     s3_secret_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
+    use_elasticsearch: "{{ params.use_elasticsearch | default(false) }}"
+    elastic_password: "{{ credentials.elasticsearch.elastic_password | default('') }}"
 
 ##############################################################
 {% if params.use_s3 | default(false) | bool %}
@@ -289,6 +294,37 @@ templates:
 ##############################################################
 
 ##############################################################
+{% if var_use_elasticsearch %}
+
+- src: "main/vars/secrets.tpl.sh"
+  dest: "env/elasticsearch/users.sh"
+  params:
+    elastic: >-
+      {{
+        {
+          'roles': ['superuser'],
+          'password': credentials.elasticsearch.elastic_password | default('')
+        } | to_json
+      }}
+    kibana: >-
+      {{
+        {
+          'roles': ['kibana_system'],
+          'password': credentials.elasticsearch.kibana_password | default('')
+        } | to_json
+      }}
+    fluentd: >-
+      {{
+        {
+          'roles': ['fluentd'],
+          'password': credentials.elasticsearch.fluentd_password | default('')
+        } | to_json
+      }}
+
+{% endif %}
+##############################################################
+
+##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
 - src: "main/vars/secrets.tpl.sh"
@@ -310,6 +346,14 @@ templates:
 
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_elasticsearch %}
+
+    elastic_password: "{{ credentials.elasticsearch.elastic_password | default('') }}"
 
     {% endif %}
     ##############################################################
@@ -409,8 +453,8 @@ templates:
 
     var_load__db_main__db_host: "{{ params.db_main.host | default('') }}"
     var_load__db_main__db_port: "{{ params.db_main.port | default('') }}"
-    var_load__db_main__db_user: "{{ credentials.efk.db.user | default('') }}"
-    var_load__db_main__db_pass: "{{ credentials.efk.db.password | default('') }}"
+    var_load__db_main__db_user: "elastic"
+    var_load__db_main__db_pass: "{{ credentials.elasticsearch.elastic_password | default('') }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
 
     var_load__db_setup__use_s3: "{{ params.db_setup.use_s3 | default('') }}"
