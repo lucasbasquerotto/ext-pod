@@ -67,7 +67,7 @@ $wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
 $wgMainCacheType = CACHE_MEMCACHED;
 $wgParserCacheType = CACHE_MEMCACHED;
 $wgMessageCacheType = CACHE_MEMCACHED;
-$wgMemCachedServers = [ '{{ params.memcached_endpoint }}' ];
+$wgMemCachedServers = [ '{{ params.memcached_endpoint | urlsplit("netloc") }}' ];
 $wgSessionCacheType = CACHE_MEMCACHED;
 
 {% else %}
