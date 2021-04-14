@@ -1,0 +1,4 @@
+xpack.security.enabled: true
+elasticsearch.username: "{{ params.kibana_user }}"
+elasticsearch.password: "{{ params.kibana_password }}"
+elasticsearch.hosts: "{{ elasticsearch_hosts | to_json }}"

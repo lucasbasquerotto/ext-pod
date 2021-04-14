@@ -370,6 +370,7 @@ templates:
     var_load_shared__include_cron_watch: "{{ params.include_cron_watch | default('') | lower }}"
     var_load_shared__cron__src: "{{ params.cron_src | default('') }}"
     var_load_shared__cron__dest: "{{ params.cron_dest | default('') }}"
+    var_load_shared__fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
 
     var_load_use__main_network: "true"
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
@@ -379,6 +380,7 @@ templates:
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__local_s3: "{{ var_use_local_s3 | lower }}"
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
+    var_load_use__internal_fluentd: "{{ var_use_internal_fluentd | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
     var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"

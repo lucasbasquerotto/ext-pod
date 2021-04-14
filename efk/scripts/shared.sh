@@ -80,15 +80,18 @@ case "$command" in
 		;;
 	"setup")
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
-			"$pod_script_env_file" "custom:elasticsearch:create_users"
+			"$pod_script_env_file" "custom:elasticsearch:prepare"
 		fi
 		;;
-	"custom:elasticsearch:create_users")
+	"custom:elasticsearch:prepare")
 		bootstrap_user='elastic'
 
 		function bootstrap_password {
 			grep "$bootstrap_user" "$pod_layer_dir/env/elasticsearch/users.sh" | awk '{ print $2 }'
 		}
+
+		# Wait to be ready and create roles
+		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			timeout="${var_custom__elasticsearch_timeout:-150}"
@@ -126,6 +129,7 @@ case "$command" in
 				-H "Content-Type: application/json"
 		SHELL
 
+		# Create Users
 		while IFS='=' read -r key value; do
 			user="$(echo "$key" | xargs)"
 
@@ -137,6 +141,17 @@ case "$command" in
 						-H "Content-Type: application/json"
 			fi
 		done < "$pod_layer_dir/env/elasticsearch/users.sh"
+
+		# Define Keystore
+		if [ "${var_load__custom__s3_snapshot:-}" ]; then
+			"$pod_script_env_file" up elasticsearch
+
+			while IFS='=' read -r key value; do
+				echo "$value" | xargs \
+					| "$pod_script_env_file" exec-nontty elasticsearch \
+						bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)"
+			done < "$pod_layer_dir/env/elasticsearch/keystore.sh"
+		fi
 		;;
 	"custom:unique:log")
 		opts=()

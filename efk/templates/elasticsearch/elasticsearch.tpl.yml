@@ -1,0 +1,20 @@
+xpack.security.enabled: true
+cluster.name: "docker-cluster"
+path.repo: /tmp/main/elasticsearch/snapshots
+network.host: 0.0.0.0
+
+{#############################################################}
+{% if (params.s3_endpoint | default('')) != '' %}
+
+s3.client.default.endpoint: {{ params.s3_endpoint }}
+
+{% endif %}
+{#############################################################}
+
+{#############################################################}
+{% if params.s3_path_style_access | default(false) | bool %}
+
+s3.client.default.path_style_access: true
+
+{% endif %}
+{#############################################################}
