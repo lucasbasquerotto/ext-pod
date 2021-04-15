@@ -119,10 +119,10 @@ case "$command" in
 				msg="\$timeout seconds - \$current second(s) remaining"
 				>&2 echo "wait for elasticsearch to be ready (\$msg)"
 
-				echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" "\$url" >&2
-
 				if curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" "\$url" >&2; then
 					success=true
+					echo ''
+					echo "> elasticsearch is ready" >&2
 					break
 				fi
 
@@ -133,6 +133,22 @@ case "$command" in
 				echo "timeout while waiting for elasticsearch" >&2
 				exit 2
 			fi
+
+			echo "creating the elasticsearch roles..." >&2
+
+			echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
+				-XPOST "http://elasticsearch:9200/_security/role/fluentd" \
+				-d'{
+					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
+					"indices": [
+						{
+							"names": [ "fluentd-*" ],
+							"privileges": ["write","create","delete","create_index","manage","manage_ilm"]
+						}
+					]
+				}' \
+				-H "Content-Type: application/json" \
+				>&2
 
 			curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
 				-XPOST "http://elasticsearch:9200/_security/role/fluentd" \

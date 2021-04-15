@@ -139,11 +139,11 @@ services:
     volumes:
 
     {#############################################################}
-    {% if params.use_custom_ssl | default(false) | bool %}
+    {% if params.use_custom_ssl | bool %}
 
-    - "./env/certbot/etc:/etc/ssl:ro"
+    - "./env/ssl/etc:/etc/ssl:ro"
 
-    {% elif params.use_certbot | default(false) | bool %}
+    {% elif params.use_certbot | bool %}
 
     - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
 
@@ -452,6 +452,14 @@ services:
     {% else %}
 
     - "$DATA_DIR/elasticsearch:/usr/share/elasticsearch/data"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secure_elasticsearch | bool %}
+
+    - "./env/ssl/etc:/etc/ssl:ro"
 
     {% endif %}
     {#############################################################}

@@ -1,7 +1,20 @@
-xpack.security.enabled: true
 cluster.name: "docker-cluster"
 path.repo: /tmp/main/elasticsearch/snapshots
 network.host: 0.0.0.0
+
+{##############################################################}
+{% if params.use_secure_elasticsearch | default(false) | bool %}
+
+xpack.security.enabled: true
+xpack.security.audit.enabled: true
+xpack.security.http.ssl.enabled: true
+xpack.security.transport.ssl.enabled: true
+
+xpack.ssl.key: /etc/ssl/privkey.pem
+xpack.ssl.certificate: /etc/ssl/fullchain.pem
+
+{% endif %}
+{##############################################################}
 
 {#############################################################}
 {% if (params.s3_endpoint | default('')) != '' %}

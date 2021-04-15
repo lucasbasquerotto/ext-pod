@@ -17,6 +17,7 @@
 
 {% set var_is_db = var_pod_type in ['app', 'db'] %}
 {% set var_use_elasticsearch = var_is_db %}
+{% set var_use_secure_elasticsearch = params.use_elasticsearch | default(false) | bool %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -136,15 +137,15 @@ env_files:
 {% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  dest: "env/ssl/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
   when: "{{ var_custom_ssl_fullchain != '' }}"
 
 - src: "{{ var_custom_ssl_privkey }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  dest: "env/ssl/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
   when: "{{ var_custom_ssl_privkey != '' }}"
 
 - src: "{{ var_custom_ssl_concat }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+  dest: "env/ssl/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
   when: "{{ var_custom_ssl_concat != '' }}"
 
 {% endif %}
@@ -181,6 +182,7 @@ templates:
     use_filestash: "{{ params.use_filestash | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
@@ -222,6 +224,7 @@ templates:
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
     use_elasticsearch: "{{ params.use_elasticsearch | default(false) }}"
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     elastic_password: "{{ credentials.elasticsearch.elastic_password | default('') }}"
 
 ##############################################################
@@ -298,6 +301,7 @@ templates:
 - src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
   dest: "env/fluentd/fluent.conf"
   params:
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     elasticsearch_user: "fluentd"
     elasticsearch_password: "{{ credentials.elasticsearch.fluentd_password | default('') }}"
     elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
@@ -311,6 +315,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/kibana/kibana.tpl.yml"
   dest: "env/kibana/kibana.yml"
   params:
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     kibana_user: "kibana"
     kibana_password: "{{ credentials.elasticsearch.kibana_password | default('') }}"
     elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
@@ -324,8 +329,15 @@ templates:
 - src: "{{ var_main_dir }}/templates/elasticsearch/elasticsearch.tpl.yml"
   dest: "env/elasticsearch/elasticsearch.yml"
   params:
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     s3_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
     s3_path_style_access: "{{ var_s3_backup_credentials.path_style | default('') }}"
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if var_use_elasticsearch and var_use_secure_elasticsearch %}
 
 - src: "main/vars/values.tpl.txt"
   dest: "env/elasticsearch/users.txt"
@@ -353,7 +365,10 @@ templates:
 ##############################################################
 
 ##############################################################
-{% if var_use_elasticsearch and (params.s3_snapshot | default(false) | bool) %}
+{% if var_use_elasticsearch
+  and var_use_secure_elasticsearch
+  and (params.s3_snapshot | default(false) | bool)
+%}
 
 - src: "main/vars/values.tpl.txt"
   dest: "env/elasticsearch/keystore.txt"
@@ -391,7 +406,7 @@ templates:
     ##############################################################
 
     ##############################################################
-    {% if var_use_elasticsearch %}
+    {% if var_use_elasticsearch and var_use_secure_elasticsearch %}
 
     elastic_password: "{{ credentials.elasticsearch.elastic_password | default('') }}"
 
@@ -450,6 +465,7 @@ templates:
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
     var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
+    var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
 
     # Enable Tasks
 
