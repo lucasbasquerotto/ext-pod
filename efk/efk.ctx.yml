@@ -32,7 +32,7 @@
 {% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
 {% set var_elasticsearch_port = params.services.elasticsearch.port | default('9200') %}
 {% set var_elasticsearch_hosts = (var_pod_type in ['app', 'db'])
-  | ternary(['elasticsearch:9200'], input.dependencies.elasticsearch.host_list | default([]))
+  | ternary(['http://elasticsearch:9200'], input.dependencies.elasticsearch.host_list | default([]))
 %}
 
 {% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}
@@ -46,6 +46,11 @@
     (var_custom_ssl_concat != '')
   )
 %}
+
+{% set var_internal_ssl_fullchain = params.internal_ssl.fullchain | default('') %}
+{% set var_internal_ssl_privkey = params.internal_ssl.privkey | default('') %}
+{% set var_internal_ssl_concat = params.internal_ssl.concat | default('') %}
+
 {% set var_non_standard_local_ports = not (params.local_standard_ports | default(false) | bool) %}
 {% set var_ports = (params.ports is defined) | ternary(
     params.ports | default({}),
@@ -137,16 +142,34 @@ env_files:
 {% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
-  dest: "env/ssl/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
   when: "{{ var_custom_ssl_fullchain != '' }}"
 
 - src: "{{ var_custom_ssl_privkey }}"
-  dest: "env/ssl/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
   when: "{{ var_custom_ssl_privkey != '' }}"
 
 - src: "{{ var_custom_ssl_concat }}"
-  dest: "env/ssl/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
   when: "{{ var_custom_ssl_concat != '' }}"
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if var_use_secure_elasticsearch %}
+
+- src: "{{ var_internal_ssl_fullchain }}"
+  dest: "env/ssl/fullchain.pem"
+  when: "{{ var_internal_ssl_fullchain != '' }}"
+
+- src: "{{ var_internal_ssl_privkey }}"
+  dest: "env/ssl/privkey.pem"
+  when: "{{ var_internal_ssl_privkey != '' }}"
+
+- src: "{{ var_internal_ssl_concat }}"
+  dest: "env/ssl/concat.pem"
+  when: "{{ var_internal_ssl_concat != '' }}"
 
 {% endif %}
 ##############################################################

@@ -1,3 +1,7 @@
+server.name: kibana
+server.host: "0"
+xpack.monitoring.ui.container.elasticsearch.enabled: true
+
 elasticsearch.hosts: {{ params.elasticsearch_hosts | to_json }}
 
 {##############################################################}

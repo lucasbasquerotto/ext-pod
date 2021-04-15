@@ -80,12 +80,14 @@ case "$command" in
 		;;
 	"shared:setup")
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
-			"$pod_script_env_file" "custom:elasticsearch:prepare"
+			if [ "${var_custom__use_mongo:-}" = 'true' ]; then
+				"$pod_script_env_file" "custom:elasticsearch:secure"
+			fi
 		fi
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"custom:elasticsearch:prepare")
+	"custom:elasticsearch:secure")
 		bootstrap_user='elastic'
 
 		"$pod_script_env_file" up toolbox elasticsearch

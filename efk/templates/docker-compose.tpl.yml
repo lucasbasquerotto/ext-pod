@@ -141,7 +141,7 @@ services:
     {#############################################################}
     {% if params.use_custom_ssl | bool %}
 
-    - "./env/ssl/etc:/etc/ssl:ro"
+    - "./env/certbot/etc:/etc/ssl:ro"
 
     {% elif params.use_certbot | bool %}
 
@@ -402,11 +402,11 @@ services:
       ES_JAVA_OPTS: "{{ params.elasticsearch_java_opts }}"
 
       {#############################################################}
-      {% if params.use_secrets | bool %}
+      {% if (params.use_secure_elasticsearch | bool) and (params.use_secrets | bool) %}
 
       ELASTIC_PASSWORD_FILE: "/run/secrets/elastic_password"
 
-      {% else %}
+      {% elif params.use_secure_elasticsearch | bool %}
 
       ELASTIC_PASSWORD: $ELASTIC_PASSWORD
 
@@ -414,7 +414,7 @@ services:
       {#############################################################}
 
     {#############################################################}
-    {% if params.use_secrets | bool %}
+    {% if (params.use_secure_elasticsearch | bool) and (params.use_secrets | bool) %}
 
     secrets:
       - "elastic_password"
