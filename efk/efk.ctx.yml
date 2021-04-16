@@ -17,7 +17,7 @@
 
 {% set var_is_db = var_pod_type in ['app', 'db'] %}
 {% set var_use_elasticsearch = var_is_db %}
-{% set var_use_secure_elasticsearch = params.use_elasticsearch | default(false) | bool %}
+{% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -48,6 +48,7 @@
   )
 %}
 
+{% set var_use_internal_ssl = var_use_secure_elasticsearch %}
 {% set var_internal_ssl_fullchain = params.internal_ssl.fullchain | default('') %}
 {% set var_internal_ssl_privkey = params.internal_ssl.privkey | default('') %}
 {% set var_internal_ssl_concat = params.internal_ssl.concat | default('') %}
@@ -158,7 +159,7 @@ env_files:
 ##############################################################
 
 ##############################################################
-{% if var_use_secure_elasticsearch %}
+{% if var_use_internal_ssl %}
 
 - src: "{{ var_internal_ssl_fullchain }}"
   dest: "env/ssl/fullchain.pem"
@@ -204,7 +205,8 @@ templates:
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     use_filestash: "{{ params.use_filestash | default(false) }}"
-    use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl }}"
+    use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     fluentd_port: "{{ var_fluentd_port }}"

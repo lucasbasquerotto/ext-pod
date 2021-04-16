@@ -80,7 +80,7 @@ case "$command" in
 		;;
 	"shared:setup")
 		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
-			if [ "${var_custom__use_mongo:-}" = 'true' ]; then
+			if [ "${var_custom__use_secure_elasticsearch:-}" = 'true' ]; then
 				"$pod_script_env_file" "custom:elasticsearch:secure"
 			fi
 		fi
@@ -109,6 +109,8 @@ case "$command" in
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
+
+			export CURL_CA_BUNDLE="/etc/ssl/fullchain.pem"
 
 			timeout="${var_custom__elasticsearch_timeout:-150}"
 			end=\$((SECONDS+\$timeout))
@@ -173,7 +175,7 @@ case "$command" in
 
 			if [ "$user" != "$bootstrap_user" ] && [[ ! "$user" == \#* ]]; then
 				"$pod_script_env_file" exec-nontty toolbox \
-					curl -u "$bootstrap_user:$(bootstrap_password)" \
+					CURL_CA_BUNDLE="/etc/ssl/fullchain.pem" && curl -u "$bootstrap_user:$(bootstrap_password)" \
 						-XPOST "https://elasticsearch:9200/_xpack/security/user/${user}/_password" \
 						-d"$(echo "$value" | xargs)" \
 						-H "Content-Type: application/json"
