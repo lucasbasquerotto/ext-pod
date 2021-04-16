@@ -90,8 +90,6 @@ schemas:
         non_empty: true
       db_gui_user:
         type: "str"
-      pma_login_cookie_validity:
-        type: "str"
       fluentd_port:
         type: "str"
         non_empty: true

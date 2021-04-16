@@ -96,6 +96,17 @@ secrets:
   {% endif %}
   {#############################################################}
 
+  {#############################################################}
+  {% if var_use_grafana %}
+
+  grafana_security_admin_password:
+    file: "$DATA_DIR/secrets/grafana_security_admin_password.txt"
+  grafana_smtp_password:
+    file: "$DATA_DIR/secrets/grafana_smtp_password.txt"
+
+  {% endif %}
+  {#############################################################}
+
 {% endif %}
 {#############################################################}
 
@@ -213,14 +224,37 @@ services:
     {#############################################################}
 
     environment:
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_SECURITY_ADMIN_PASSWORD
-      - GF_SERVER_DOMAIN={{ params.grafana_server_domain }}
-      - GF_SMTP_ENABLED={{ params.grafana_smtp_enabled }}
-      - GF_SMTP_HOST={{ params.grafana_smtp_host }}
-      - GF_SMTP_USER={{ params.grafana_smtp_user }}
-      - GF_SMTP_PASSWORD=$GRAFANA_SMTP_PASSWORD
-      - GF_SMTP_FROM_ADDRESS={{ params.grafana_smtp_from_address }}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_DOMAIN: "{{ params.grafana_server_domain }}"
+      GF_SMTP_ENABLED: "{{ params.grafana_smtp_enabled }}"
+      GF_SMTP_HOST: "{{ params.grafana_smtp_host }}"
+      GF_SMTP_USER: "{{ params.grafana_smtp_user }}"
+      GF_SMTP_FROM_ADDRESS: "{{ params.grafana_smtp_from_address }}"
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      GF_SECURITY_ADMIN_PASSWORD__FILE: "/run/secrets/grafana_security_admin_password"
+      GF_SMTP_PASSWORD__FILE: "/run/secrets/grafana_smtp_password"
+
+      {% else %}
+
+      GF_SECURITY_ADMIN_PASSWORD: $GRAFANA_SECURITY_ADMIN_PASSWORD
+      GF_SMTP_PASSWORD: $GRAFANA_SMTP_PASSWORD
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "grafana_security_admin_password"
+      - "grafana_smtp_password"
+
+    {% endif %}
+    {#############################################################}
+
     logging: *mainlog
 
     {#############################################################}

@@ -321,8 +321,6 @@ services:
       args:
         IMAGE: "{{ params.images.pma_image }}"
         VERSION: "{{ params.images.pma_version }}"
-        PERL_VERSION: $PERL_VERSION
-        LOGIN_COOKIE_VALIDITY: "{{ params.pma_login_cookie_validity }}"
     restart: "unless-stopped"
     environment:
       PMA_HOST: "{{ params.db_host }}"

@@ -11,6 +11,7 @@
 {% endif %}
 
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
+{% set var_use_grafana = var_is_web %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
@@ -247,8 +248,8 @@ templates:
     minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
-    grafana_security_admin_password: "{{ credentials.grafana.security_admin_password }}"
-    grafana_smtp_password: "{{ credentials.grafana.smtp_password }}"
+    grafana_security_admin_password: "{{ credentials.grafana.security_admin_password | default('') }}"
+    grafana_smtp_password: "{{ credentials.grafana.smtp_password | default('') }}"
 
 ##############################################################
 {% if params.use_s3 | default(false) | bool %}
@@ -359,6 +360,15 @@ templates:
 
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_grafana %}
+
+    grafana_security_admin_password: "{{ credentials.grafana.security_admin_password | default('') }}"
+    grafana_smtp_password: "{{ credentials.grafana.smtp_password | default('') }}"
 
     {% endif %}
     ##############################################################

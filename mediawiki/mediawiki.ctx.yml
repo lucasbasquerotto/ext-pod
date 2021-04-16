@@ -262,7 +262,6 @@ templates:
     db_name: "{{ credentials.wordpress.db.name | default('') }}"
     db_user: "{{ credentials.wordpress.db.user | default('') }}"
     db_gui_user: "{{ var_db_gui_user }}"
-    pma_login_cookie_validity: "{{ params.services.pma.login_cookie_validity | default('36000') }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
