@@ -307,7 +307,7 @@ services:
     - "shared"
 
     {#############################################################}
-    {% if var_use_nginx and (not var_use_varnish) %}
+    {% if var_use_nginx and or var_use_varnish %}
 
     expose:
     - "80"
