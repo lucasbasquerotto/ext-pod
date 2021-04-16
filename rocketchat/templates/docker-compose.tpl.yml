@@ -1,5 +1,5 @@
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
-{% set var_use_nginx = var_is_web %}
+{% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_rocketchat = var_is_web %}
 {% set var_use_bot = var_is_web and (params.use_bot | bool) %}
 {% set var_use_mongo_express = var_is_web and (params.use_mongo_express | bool) %}
@@ -253,6 +253,21 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_use_nginx %}
+
+    expose:
+    - "3000"
+
+    {% else %}
+
+    ports:
+    - "{{ params.ports.public_http_port }}:3000"
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}

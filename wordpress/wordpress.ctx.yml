@@ -262,6 +262,7 @@ templates:
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
     use_s3: "{{ params.use_s3 | default(false) }}"
     use_local_s3: "{{ var_use_local_s3 }}"
+    use_nginx: "{{ params.use_nginx | default(false) }}"
     use_varnish: "{{ params.use_varnish | default(false) }}"
     use_pma: "{{ params.use_pma | default(false) }}"
     use_adminer: "{{ params.use_adminer | default(false) }}"
@@ -460,6 +461,7 @@ templates:
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
         locations:
           - location: "= /nginx/basic_status"
             data: "stub_status;"
@@ -470,6 +472,7 @@ templates:
         endpoint: "http://theia:3000"
         upgrade: true
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
         endpoint: "http://minio_gateway:9000"
@@ -479,14 +482,17 @@ templates:
         when: "{{ params.use_filestash | default(false) }}"
         endpoint: "http://filestash:8334"
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "phpmyadmin"
         when: "{{ params.use_pma | default(false) }}"
         endpoint: "http://phpmyadmin:80"
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "adminer"
         when: "{{ params.use_adminer | default(false) }}"
         endpoint: "http://adminer:8080"
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
 
 {% endif %}
 ##############################################################
@@ -590,7 +596,7 @@ templates:
     var_load_use__main_network: "true"
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
-    var_load_use__nginx: "true"
+    var_load_use__nginx: "{{ params.use_nginx | default('') | lower }}"
     var_load_use__mysql: "true"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"

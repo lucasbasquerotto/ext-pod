@@ -1,5 +1,5 @@
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
-{% set var_use_nginx = var_is_web %}
+{% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_varnish = var_is_web and (params.use_varnish | bool) %}
 {% set var_use_wordpress = var_is_web %}
 {% set var_use_pma = var_is_web and (params.use_pma | bool) %}
@@ -210,6 +210,21 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_use_nginx %}
+
+    expose:
+    - "80"
+
+    {% else %}
+
+    ports:
+    - "{{ params.ports.public_http_port }}:80"
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/tmp/varnish:/tmp/main/varnish"
     - "$DATA_DIR/tmp/tmp/varnish:/tmp/main/tmp/varnish"
@@ -290,6 +305,21 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_use_nginx and (not var_use_varnish) %}
+
+    expose:
+    - "80"
+
+    {% else %}
+
+    ports:
+    - "{{ params.ports.public_http_port }}:80"
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}

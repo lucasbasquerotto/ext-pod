@@ -220,6 +220,7 @@ templates:
     minio_data_amount: "{{ params.minio_data_amount | default(0) }}"
     minio_new_keys: "{{ var_minio_new_keys }}"
     minio_include_healthcheck: "{{ params.minio_include_healthcheck | default(false) }}"
+    minio_external_port: "{{ params.minio_external_port | default('9000', true) }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
@@ -302,6 +303,7 @@ templates:
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
         locations:
           - location: "= /nginx/basic_status"
             data: "stub_status;"
@@ -312,6 +314,7 @@ templates:
         endpoint: "http://theia:3000"
         upgrade: true
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
         endpoint: "http://minio_gateway:9000"
@@ -419,7 +422,7 @@ templates:
     var_load_use__main_network: "true"
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
-    var_load_use__nginx: "true"
+    var_load_use__nginx: "{{ params.use_nginx | default('') | lower }}"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__local_s3: "{{ var_use_local_s3 | lower }}"

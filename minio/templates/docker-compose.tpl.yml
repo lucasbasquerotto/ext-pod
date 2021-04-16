@@ -1,5 +1,5 @@
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
-{% set var_use_nginx = var_is_web %}
+{% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_theia = var_is_web and (params.use_theia | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
@@ -525,8 +525,21 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_use_nginx %}
+
     expose:
     - "9000"
+
+    {% else %}
+
+    ports:
+    - "{{ params.minio_external_port }}:9000"
+
+    {% endif %}
+    {#############################################################}
+
     environment:
 
       {#############################################################}
@@ -589,9 +602,20 @@ services:
     - "$DATA_DIR/tmp/minio/{{ idx | string }}:/tmp/main/minio/{{ idx | string }}"
     - "$DATA_DIR/tmp/tmp/minio/{{ idx | string }}:/tmp/main/tmp/minio/{{ idx | string }}"
     logging: *mainlog
+
+    {#############################################################}
+    {% if (params.minio_amount | int) > 1 %}
+
     command: {{ ''
       }}server http://minio{1...{{ params.minio_amount | string }}}{{ ''
       }}/data{1...{{ params.minio_data_amount | string }}}
+
+    {% else %}
+
+    command: server /data1
+
+    {% endif %}
+    {#############################################################}
 
     {#############################################################}
     {% if params.minio_include_healthcheck | default(false) | bool %}

@@ -296,9 +296,11 @@ templates:
         endpoint: "http://kibana:5601"
         upgrade: true
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
         locations:
           - location: "= /nginx/basic_status"
             data: "stub_status;"
@@ -309,6 +311,7 @@ templates:
         endpoint: "http://theia:3000"
         upgrade: true
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "minio_gateway"
         when: "{{ params.use_minio_gateway | default(false) }}"
         endpoint: "http://minio_gateway:9000"
@@ -318,6 +321,7 @@ templates:
         when: "{{ params.use_filestash | default(false) }}"
         endpoint: "http://filestash:8334"
         private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
 
 {% endif %}
 ##############################################################
