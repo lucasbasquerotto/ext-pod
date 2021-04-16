@@ -11,7 +11,11 @@
 {% endif %}
 
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
+{% set var_use_mongo_express = var_is_web and (params.use_mongo_express | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+
+{% set var_is_db = var_pod_type in ['app', 'db'] %}
+{% set var_use_mongo = var_is_db %}
 
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 {% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
@@ -82,8 +86,7 @@
     ternary(credentials.rocketchat.db.root_user, 'viewer')
   %}
   {% set var_db_gui_password = params.db_gui_root_user | default(false) | bool |
-    ternary(credentials.rocketchat.db.root_password,
-      credentials.rocketchat.db.viewer_password)
+    ternary(credentials.rocketchat.db.root_password, credentials.rocketchat.db.viewer_password)
   %}
 {% endif %}
 
@@ -297,7 +300,6 @@ templates:
     minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
-    mongo_express_pass: "{{ var_db_gui_password | default('') }}"
     rocketchat_fileupload_storage_type: "{{ var_storage_type }}"
     rocketchat_fileupload_s3_access_key: "{{ var_s3_uploads_credentials.access_key | default('') }}"
     rocketchat_fileupload_s3_secret_key: "{{ var_s3_uploads_credentials.secret_key | default('') }}"
@@ -441,6 +443,22 @@ templates:
 
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_mongo %}
+
+    db_root_pass: "{{ credentials.rocketchat.db.root_password | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_mongo_express %}
+
+    db_gui_password: "{{ var_db_gui_password }}"
 
     {% endif %}
     ##############################################################
