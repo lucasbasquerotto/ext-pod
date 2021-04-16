@@ -30,9 +30,10 @@
 {% set var_data_dir = input.data_dir %}
 
 {% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
+{% set var_elasticsearch_scheme = var_use_secure_elasticsearch | ternary('https', 'http') %}
 {% set var_elasticsearch_port = params.services.elasticsearch.port | default('9200') %}
 {% set var_elasticsearch_hosts = (var_pod_type in ['app', 'db'])
-  | ternary(['http://elasticsearch:9200'], input.dependencies.elasticsearch.host_list | default([]))
+  | ternary([var_elasticsearch_scheme + '://elasticsearch:9200'], input.dependencies.elasticsearch.host_list | default([]))
 %}
 
 {% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}

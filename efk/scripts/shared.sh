@@ -114,7 +114,7 @@ case "$command" in
 			end=\$((SECONDS+\$timeout))
 			success=false
 
-			url='http://elasticsearch:9200/_cluster/health?wait_for_status=yellow'
+			url='https://elasticsearch:9200/_cluster/health?wait_for_status=yellow'
 
 			while [ \$SECONDS -lt \$end ]; do
 				current=\$((end-SECONDS))
@@ -139,7 +139,7 @@ case "$command" in
 			echo "creating the elasticsearch roles..." >&2
 
 			echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
-				-XPOST "http://elasticsearch:9200/_security/role/fluentd" \
+				-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
 				-d'{
 					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
 					"indices": [
@@ -153,7 +153,7 @@ case "$command" in
 				>&2
 
 			curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
-				-XPOST "http://elasticsearch:9200/_security/role/fluentd" \
+				-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
 				-d'{
 					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
 					"indices": [
@@ -174,7 +174,7 @@ case "$command" in
 			if [ "$user" != "$bootstrap_user" ] && [[ ! "$user" == \#* ]]; then
 				"$pod_script_env_file" exec-nontty toolbox \
 					curl -u "$bootstrap_user:$(bootstrap_password)" \
-						-XPOST "http://elasticsearch:9200/_xpack/security/user/${user}/_password" \
+						-XPOST "https://elasticsearch:9200/_xpack/security/user/${user}/_password" \
 						-d"$(echo "$value" | xargs)" \
 						-H "Content-Type: application/json"
 			fi
