@@ -388,9 +388,9 @@ services:
     - "$DATA_DIR/log:/var/log/main"
 
     {#############################################################}
-    {% if (params.local | bool) and (params.named_volumes | bool) %}
+    {% if params.use_internal_ssl | bool %}
 
-    - "uploads:/var/main/data/mediawiki/uploads"
+    - "./env/ssl:/etc/ssl:ro"
 
     {% endif %}
     {#############################################################}

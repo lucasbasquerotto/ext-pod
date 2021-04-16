@@ -433,6 +433,15 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+
+    {#############################################################}
+    {% if params.use_internal_ssl | bool %}
+
+    - "./env/ssl:/etc/ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
     logging: *mainlog
     command: "tail -f /dev/null"
 

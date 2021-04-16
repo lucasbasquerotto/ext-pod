@@ -12,7 +12,9 @@
 
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
+{% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -25,6 +27,9 @@
 
 {% set var_data_dir = input.data_dir %}
 
+{% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
+{% set var_elasticsearch_hosts = input.dependencies.elasticsearch.host_list | default([]) %}
+
 {% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}
 {% set var_custom_ssl_fullchain = params.custom_ssl.fullchain | default('') %}
 {% set var_custom_ssl_privkey = params.custom_ssl.privkey | default('') %}
@@ -36,6 +41,12 @@
     (var_custom_ssl_concat != '')
   )
 %}
+
+{% set var_use_internal_ssl = var_use_secure_elasticsearch %}
+{% set var_internal_ssl_fullchain = params.internal_ssl.fullchain | default('') %}
+{% set var_internal_ssl_privkey = params.internal_ssl.privkey | default('') %}
+{% set var_internal_ssl_concat = params.internal_ssl.concat | default('') %}
+
 {% set var_non_standard_local_ports = not (params.local_standard_ports | default(false) | bool) %}
 {% set var_ports = (params.ports is defined) | ternary(
     params.ports | default({}),
@@ -94,7 +105,7 @@
 {% set var_mongo_hostname = var_mongo_host | urlsplit('hostname') | default('mongo', true) %}
 {% set var_mongo_port = var_mongo_host | urlsplit('port') | default('27017', true) %}
 
-{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file', true) %}
+{% set var_fluentd_output_plugin = params.fluentd_output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
   (params.use_fluentd | default(false) | bool)
   and
@@ -177,6 +188,24 @@ env_files:
 ##############################################################
 
 ##############################################################
+{% if var_use_internal_ssl %}
+
+- src: "{{ var_internal_ssl_fullchain }}"
+  dest: "env/ssl/fullchain.pem"
+  when: "{{ var_internal_ssl_fullchain != '' }}"
+
+- src: "{{ var_internal_ssl_privkey }}"
+  dest: "env/ssl/privkey.pem"
+  when: "{{ var_internal_ssl_privkey != '' }}"
+
+- src: "{{ var_internal_ssl_concat }}"
+  dest: "env/ssl/concat.pem"
+  when: "{{ var_internal_ssl_concat != '' }}"
+
+{% endif %}
+##############################################################
+
+##############################################################
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
@@ -206,7 +235,8 @@ templates:
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     use_filestash: "{{ params.use_filestash | default(false) }}"
     use_bot: "{{ params.use_bot | default(false) }}"
-    use_custom_ssl: "{{ var_use_custom_ssl | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl }}"
+    use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     db_host: "{{ var_mongo_hostname }}"
     db_port: "{{ var_mongo_port }}"
@@ -214,7 +244,7 @@ templates:
     db_user: "{{ credentials.rocketchat.db.user | default('') }}"
     db_root_user: "{{ credentials.rocketchat.db.root_user | default('') }}"
     db_gui_user: "{{ var_db_gui_user }}"
-    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
+    fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
@@ -243,7 +273,7 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
-    fluentd_port: "{{ params.services.fluentd.port | default('24224') }}"
+    fluentd_port: "{{ var_fluentd_port }}"
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
 
@@ -376,6 +406,20 @@ templates:
 ##############################################################
 
 ##############################################################
+{% if var_use_internal_fluentd and (var_fluentd_output_plugin == 'elasticsearch') %}
+
+- src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
+  dest: "env/fluentd/fluent.conf"
+  params:
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
+    elasticsearch_user: "fluentd"
+    elasticsearch_password: "{{ credentials.elasticsearch.fluentd_password | default('') }}"
+    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
+
+{% endif %}
+##############################################################
+
+##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
 - src: "main/vars/values.tpl.txt"
@@ -454,6 +498,7 @@ templates:
     var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
     var_load_use__s3_storage: "{{ params.use_s3_storage | default('') | lower }}"
+    var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
 
     # Enable Tasks
 

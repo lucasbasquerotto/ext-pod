@@ -13,10 +13,11 @@
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
 {% set var_use_kibana = var_is_web %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
-{% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 
 {% set var_is_db = var_pod_type in ['app', 'db'] %}
 {% set var_use_elasticsearch = var_is_db %}
+
+{% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 {% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
 
 {% set var_main_base_dir = params.custom_dir %}
@@ -30,8 +31,8 @@
 {% set var_data_dir = input.data_dir %}
 
 {% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
+{% set var_elasticsearch_external_port = params.services.elasticsearch.port | default('9200') %}
 {% set var_elasticsearch_scheme = var_use_secure_elasticsearch | ternary('https', 'http') %}
-{% set var_elasticsearch_port = params.services.elasticsearch.port | default('9200') %}
 {% set var_elasticsearch_hosts = (var_pod_type in ['app', 'db'])
   | ternary([var_elasticsearch_scheme + '://elasticsearch:9200'], input.dependencies.elasticsearch.host_list | default([]))
 %}
@@ -80,7 +81,7 @@
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 {% set var_shared_network_name = params.shared_network | default(var_ctx_full_name + '-network', true) %}
 
-{% set var_fluentd_output_plugin = params.services.fluentd.output_plugin | default('file', true) %}
+{% set var_fluentd_output_plugin = params.fluentd_output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
   (params.use_fluentd | default(false) | bool)
   and
@@ -214,7 +215,7 @@ templates:
     s3_cli: "{{ params.s3_cli | default('') }}"
     kibana_port: "{{ params.services.kibana.port | default('') }}"
     elasticsearch_java_opts: "{{ params.services.elasticsearch.java_opts | default('') }}"
-    elasticsearch_port: "{{ var_elasticsearch_port }}"
+    elasticsearch_port: "{{ var_elasticsearch_external_port }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
