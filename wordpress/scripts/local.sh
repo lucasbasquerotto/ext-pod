@@ -34,13 +34,14 @@ case "$command" in
 		"$pod_env_shared_file" exec composer composer update --verbose
 		;;
 	"prepare")
-		if [ "${var_custom__app_dev:-}" = "true" ] && [ "${var_custom__use_composer:-}" = "true" ]; then
+		if [ "${var_custom__app_dev:-}" = "true" ]; then
 			if [ -z "${var_dev__repo_dir_wordpress:-}" ]; then
 				error "[error] wordpress directory not defined (var_dev__repo_dir_wordpress)"
 			fi
 
 			app_dir="$pod_layer_dir/$var_dev__repo_dir_wordpress"
 
+			info "preparing wordpress development environment (app)..."
 			sudo chmod +x "$app_dir/"
 			cp "$pod_layer_dir/env/wordpress/.env" "$app_dir/.env"
 			chmod +r "$app_dir/.env"

@@ -40,6 +40,9 @@ schemas:
       use_local_s3:
         type: "bool"
         non_empty: true
+      use_nginx:
+        type: "bool"
+        non_empty: true
       use_varnish:
         type: "bool"
         non_empty: true
@@ -59,6 +62,9 @@ schemas:
         type: "bool"
         non_empty: true
       use_custom_ssl:
+        type: "bool"
+        non_empty: true
+      use_internal_ssl:
         type: "bool"
         non_empty: true
       use_certbot:
