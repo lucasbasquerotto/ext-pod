@@ -184,7 +184,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "docker-compose.yml"
   params:
-    local: "{{ var_local | default(false) | bool | ternary('true', 'false') }}"
+    local: "{{ var_local | ternary('true', 'false') }}"
     main_dir: "{{ var_main_dir_container }}"
     pod_type: "{{ var_pod_type }}"
     shared_network: "{{ var_shared_network_name }}"
@@ -408,7 +408,7 @@ templates:
     var_load_main__data_dir: "{{ input.data_dir }}"
     var_load_main__pod_type: "{{ var_pod_type }}"
     var_load_main__instance_index: "{{ input.instance_index }}"
-    var_load_main__local: "{{ var_local | default('') | lower }}"
+    var_load_main__local: "{{ var_local | lower }}"
 
     var_load_shared__delete_old__days: "3"
     var_load_shared__define_cron: "{{ params.define_cron | default('') | lower }}"

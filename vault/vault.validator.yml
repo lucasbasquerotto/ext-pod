@@ -1,0 +1,6 @@
+- name: "{{ validator_title }} - verify if the variables can be loaded without errors (vars.sh)"
+  become: "{{ validator_item.data.input.root | default(false) }}"
+  command: "./run __skip__"
+  args:
+    chdir: "{{ validator_item.data.input.local_dir }}"
+  changed_when: false

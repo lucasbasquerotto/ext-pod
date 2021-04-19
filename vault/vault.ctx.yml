@@ -1,9 +1,14 @@
 ## general vars - start ###
 
-{% set var_pod_kind = 'rproxy' %}
+{% set var_pod_kind = 'vault' %}
 
 {% set var_local = params.local | default(false) | bool %}
-{% set var_pod_type = 'web' %}
+{% set var_pod_type = params.type | default('') %}
+
+{% if not (var_pod_type in ['app', 'web', 'db']) %}
+  {% set error = {} %}
+  {{ error['error.pod_type.invalid.' + var_pod_type] }}
+{% endif %}
 
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
@@ -102,8 +107,6 @@
   {% endif %}
 {% endif %}
 
-{% set var_rproxy_type = params.rproxy_type | default('') %}
-
 {% set var_s3_minio_gateway_credentials = credentials.minio_gateway | default({}) %}
 {% set var_s3_backup_credentials = credentials.backup_bucket | default({}) %}
 {% set var_s3_backup_replica_credentials = credentials.backup_replica_bucket | default({}) %}
@@ -131,7 +134,7 @@ env_files:
 - when: false
 
 ##############################################################
-{% if var_use_custom_ssl | bool %}
+{% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
 - src: "{{ var_custom_ssl_fullchain }}"
   dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
@@ -167,7 +170,7 @@ env_files:
 ##############################################################
 
 ##############################################################
-{% if (params.auth_file | default('')) != '' %}
+{% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
 - src: "{{ params.auth_file }}"
   dest: "env/nginx/auth/.htpasswd"
@@ -191,7 +194,7 @@ templates:
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
     use_s3: "{{ params.use_s3 | default(false) }}"
     use_local_s3: "{{ var_use_local_s3 }}"
-    rproxy_type: "{{ var_rproxy_type }}"
+    use_nginx: "{{ params.use_nginx | default(false) }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl }}"
@@ -199,18 +202,15 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-    kibana_port: "{{ params.services.kibana.port | default('') }}"
-    elasticsearch_java_opts: "{{ params.services.elasticsearch.java_opts | default('') }}"
-    elasticsearch_port: "{{ params.services.elasticsearch.port | default('') }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
-    internal_elasticsearch: "{{ params.internal_elasticsearch | default(false) }}"
-    backup_bucket_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
+    dev_vault: "{{ var_local and (params.dev_vault | default(false) | bool) }}"
+    vault_external_port: "{{ params.vault_external_port | default('8200') }}"
     ports: {{ var_ports | to_json }}
-    images: {{ params.images | to_json }}
-    memory: {{ params.memory | to_json }}
+    images: {{ params.images | default({}) | to_json }}
+    memory: {{ params.memory | default({}) | to_json }}
 
-- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
+- src: "{{ var_main_dir }}/templates/docker-compose.tpl.run.yml"
   dest: "docker-compose.run.yml"
   params:
     pod_type: "{{ var_pod_type }}"
@@ -220,8 +220,8 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"
-    images: {{ params.images | to_json }}
-    memory: {{ params.memory | to_json }}
+    images: {{ params.images | default({}) | to_json }}
+    memory: {{ params.memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
@@ -240,6 +240,8 @@ templates:
     minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+    dev_vault: "{{ var_local and (params.dev_vault | default(false) | bool) }}"
+    vault_dev_root_token: "{{ credentials.dev_vault.root_token | default('') }}"
 
 ##############################################################
 {% if params.use_s3 | default(false) | bool %}
@@ -263,52 +265,47 @@ templates:
 {% endif %}
 ##############################################################
 
-{% set var_conf_file_ext = (var_rproxy_type == 'haproxy') | ternary('cfg', 'conf') %}
-{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
-{% set var_default_haproxy_conf =
-  { 'ssl': params.use_ssl | default(false), 'webservice_endpoint': 'http://nginx' }
-%}
-{% set var_default_rproxy_conf = (var_rproxy_type == 'haproxy')
-  | ternary(var_default_haproxy_conf, var_default_nginx_conf)
-%}
-{% set var_rproxy_services =
-  ((params.rproxy_services | default([]) | length) > 0)
-  | ternary(
-    params.rproxy_services | default([]),
-    params.rproxy_default_services | default([])
-  )
-%}
-
-- src: "{{ var_shared_dir }}/templates/{{ var_rproxy_type }}/{{ var_rproxy_type }}.tpl.{{ var_conf_file_ext }}"
-  dest: "env/{{ var_rproxy_type }}/{{ var_rproxy_type }}.{{ var_conf_file_ext }}"
-  schema: "{{ var_shared_dir }}/templates/{{ var_rproxy_type }}/{{ var_rproxy_type }}.schema.yml"
-  params:
-    main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services[var_rproxy_type].conf | default(var_default_rproxy_conf) | to_json }}
-    ports: {{ var_ports | to_json }}
-    domains: {{ params.domains | default({}) | to_json }}
-    contents: {{ contents | default({}) | to_json }}
-    dependencies: {{ input.dependencies | default({}) | to_json }}
-    services: {{ var_rproxy_services | to_json }}
-
 ##############################################################
-{% if var_rproxy_type == 'haproxy' %}
+{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
+
+{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 
 - src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   dest: "env/nginx/nginx.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services.nginx.conf | default({}) | to_json }}
+    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
+    contents: {{ contents | default({}) | to_json }}
+    dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
-      - name: "rproxy"
+      - name: "vault"
+        endpoint: "http://vault:8200"
+        upgrade: true
+        private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
+      - name: "private"
+        when: "{{ params.use_private_path | default(false) }}"
+        private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
         locations:
           - location: "= /nginx/basic_status"
             data: "stub_status;"
           - location: "/"
-            data: "root /var/www;"
+            data: "return 404;"
+      - name: "theia"
+        when: "{{ params.use_theia | default(false) }}"
+        endpoint: "http://theia:3000"
+        upgrade: true
+        private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
+      - name: "minio_gateway"
+        when: "{{ params.use_minio_gateway | default(false) }}"
+        endpoint: "http://minio_gateway:9000"
+        private: true
+        use_basic_auth: false
 
 {% endif %}
 ##############################################################
@@ -359,7 +356,7 @@ templates:
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
   params:
-    var_load_script_path: "{{ var_main_dir }}/scripts/rproxy.vars.sh"
+    var_load_script_path: "{{ var_main_dir }}/scripts/vault.vars.sh"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"
@@ -393,8 +390,7 @@ templates:
     var_load_use__main_network: "true"
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
-    var_load_use__haproxy: "{{ (var_rproxy_type == 'haproxy') | lower }}"
-    var_load_use__nginx: "true"
+    var_load_use__nginx: "{{ params.use_nginx | default('') | lower }}"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__local_s3: "{{ var_use_local_s3 | lower }}"
@@ -417,11 +413,6 @@ templates:
 
     # Tasks
 
-    var_load__block_ips: "{{ params.block_ips | default('') | lower }}"
-    var_load__block_ips__max_amount: "{{ params.block_ips.max_amount | default('') }}"
-    var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
-    var_load__block_ips__amount_hour: "{{ params.block_ips.amount_hour | default('') }}"
-
     var_load__certbot__main_domain: "{{ params.main_domain | default('') }}"
     var_load__certbot__domains: "{{ var_certbot_domains }}"
     var_load__certbot__email: "{{ params.certbot.email | default('') }}"
@@ -429,12 +420,6 @@ templates:
     var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
     var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
     var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
-
-    var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
-    var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"
-    var_load__log_summary__max_amount: "{{ params.log_summary.max_amount | default('') }}"
-    var_load__log_summary__verify_size_docker_dir: "{{ params.log_summary.verify_size_docker_dir | default('') | lower }}"
-    var_load__log_summary__verify_size_containers: "{{ params.log_summary.verify_size_containers | default('') | lower }}"
 
     var_load__logs_setup__restore_bucket_path_dir: "{{ params.logs_setup.restore_bucket_path_dir | default('') }}"
     var_load__logs_setup__verify_file_to_skip: "{{ params.logs_setup.verify_file_to_skip | default('') }}"
