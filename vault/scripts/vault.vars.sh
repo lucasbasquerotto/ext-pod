@@ -18,6 +18,7 @@ if [ "${var_load_main__local:-}" = 'true' ]; then
 	export var_load_general__script_env_file='local.sh'
 fi
 
+export var_load_main__allow_custom_db_service='true'
 export var_load__db_main__db_host="${var_load__db_main__db_host:-vault}"
 export var_load__db_main__db_port="${var_load__db_main__db_port:-8200}"
 

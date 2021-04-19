@@ -301,6 +301,9 @@ services:
 
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: $VAULT_DEV_ROOT_TOKEN
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_TOKEN: $VAULT_DEV_ROOT_TOKEN
 
     {% endif %}
     {############################################################################}
@@ -353,9 +356,13 @@ services:
     - IPC_LOCK
 
     {############################################################################}
-    {% if not (params.dev_vault | bool) %}
+    {% if params.dev_vault | bool %}
 
-    command: "vault server"
+    command: "vault server -dev"
+
+    {% else %}
+
+    command: "vault server -config=/vault/config/vault.json"
 
     {% endif %}
     {############################################################################}
