@@ -80,7 +80,7 @@ case "$command" in
 			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
 			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
 		;;
-	"action:exec:"*)
+	"shared:action:"*)
 		action="${command#action:exec:}"
 
 		case "$action" in
@@ -95,7 +95,6 @@ case "$command" in
 			"nginx_reload"|\
 			"pending"|\
 			"replicate_s3"|\
-			"setup"|\
 			"watch")
 				"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 				;;

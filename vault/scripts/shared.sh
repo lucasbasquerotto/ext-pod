@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154
+# shellcheck disable=SC1090,SC2154,SC2153,SC2214
 set -eou pipefail
 
 pod_layer_dir="$var_pod_layer_dir"
@@ -25,9 +25,8 @@ shift;
 
 args=("$@")
 
-# shellcheck disable=SC2214
 while getopts ':-:' OPT; do
-	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
+	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
 		OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
@@ -50,9 +49,7 @@ case "$command" in
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "${var_custom__use_haproxy:-}" = "true" ]; then
-			opts+=( 'log_register.haproxy_basic_status' )
-		elif [ "${var_custom__use_nginx:-}" = "true" ]; then
+		if [ "${var_custom__use_nginx:-}" = "true" ]; then
 			opts+=( 'log_register.nginx_basic_status' )
 		fi
 
@@ -69,12 +66,15 @@ case "$command" in
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "${var_custom__use_haproxy:-}" = "true" ]; then
-			"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
-			"$pod_script_env_file" "shared:log:haproxy:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
-		elif [ "${var_custom__use_nginx:-}" = "true" ]; then
-			"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
-			"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+			if [ "${var_custom__use_nginx:-}" = "true" ]; then
+				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
+			fi
+
+			if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+				"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
+			fi
 		fi
 
 		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"
@@ -87,11 +87,8 @@ case "$command" in
 
 		case "$action" in
 			"backup"|\
-			"block_ips"|\
-			"haproxy_reload"|\
 			"local.backup"|\
 			"log_register.entropy"|\
-			"log_register.haproxy_basic_status"|\
 			"log_register.memory_details"|\
 			"log_register.memory_overview"|\
 			"log_register.nginx_basic_status"|\
