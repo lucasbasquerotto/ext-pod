@@ -398,7 +398,8 @@ services:
     {#############################################################}
 
     environment:
-      cluster.initial_master_nodes: elasticsearch
+      # cluster.initial_master_nodes: elasticsearch
+      discovery.type: single-node
       ES_JAVA_OPTS: "{{ params.elasticsearch_java_opts }}"
 
       {#############################################################}

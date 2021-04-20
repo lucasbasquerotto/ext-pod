@@ -142,7 +142,7 @@ case "$command" in
 
 				echo wget --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2
 
-				if wget --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2; then
+				if wget --header="Host: localhost" --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2; then
 					success=true
 					echo ''
 					echo "> elasticsearch is ready" >&2

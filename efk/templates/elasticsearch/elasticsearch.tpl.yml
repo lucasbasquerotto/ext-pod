@@ -14,6 +14,12 @@ xpack.security.http.ssl.enabled: true
 xpack.security.http.ssl.key: /usr/share/elasticsearch/config/ssl/privkey.pem
 xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/ssl/fullchain.pem
 
+xpack.security.transport.ssl.key: "/usr/share/elasticsearch/config/ssl/privkey.pem"
+xpack.security.transport.ssl.certificate: "/usr/share/elasticsearch/config/ssl/fullchain.pem"
+xpack.security.transport.ssl.certificate_authorities:
+  ["/usr/share/elasticsearch/config/ssl/fullchain.pem"]
+# xpack.security.transport.ssl.client_authentication: none
+
 {% endif %}
 {##############################################################}
 
