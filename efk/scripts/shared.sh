@@ -109,6 +109,21 @@ case "$command" in
 
 		# Wait to be ready and create roles
 
+
+			# wget --user "$bootstrap_user" --password "$(bootstrap_password)"  \
+			# 	--post-data= '{
+			# 		"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
+			# 		"indices": [
+			# 			{
+			# 				"names": [ "fluentd-*" ],
+			# 				"privileges": ["write","create","delete","create_index","manage","manage_ilm"]
+			# 			}
+			# 		]
+			# 	}' \
+			# 	--header="Content-Type: application/json" \
+			# 	"https://elasticsearch:9200/_security/role/fluentd" \
+			# 	>&2
+
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
@@ -125,7 +140,9 @@ case "$command" in
 				msg="\$timeout seconds - \$current second(s) remaining"
 				>&2 echo "wait for elasticsearch to be ready (\$msg)"
 
-				if curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" "\$url" >&2; then
+				echo wget --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2
+
+				if wget --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2; then
 					success=true
 					echo ''
 					echo "> elasticsearch is ready" >&2
@@ -172,6 +189,8 @@ case "$command" in
 		SHELL
 
 		# Create Users
+		echo "creating the elasticsearch roles..." >&2
+
 		while IFS='=' read -r key value; do
 			user="$(echo "$key" | xargs)"
 
