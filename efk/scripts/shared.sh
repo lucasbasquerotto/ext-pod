@@ -179,14 +179,21 @@ case "$command" in
 			user="$(echo "$key" | xargs)"
 
 			if [ "$user" != "$bootstrap_user" ] && [[ ! "$user" == \#* ]]; then
-				"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+				"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL -s "$value" || error "$command"
 					set -eou pipefail
 
 					export CURL_CA_BUNDLE="/etc/ssl/fullchain.pem"
 
+					inner_value="\$1"
+
+					echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
+						-XPOST "https://elasticsearch:9200/_security/user/${user}/_password" \
+						-d"\$inner_value" \
+						-H "Content-Type: application/json" \
+						>&2
 					curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
-						-XPOST "https://elasticsearch:9200/_xpack/security/user/${user}/_password" \
-						-d"$value" \
+						-XPOST "https://elasticsearch:9200/_security/user/${user}/_password" \
+						-d"\$inner_value" \
 						-H "Content-Type: application/json" \
 						>&2
 				SHELL
