@@ -373,19 +373,22 @@ templates:
 - src: "main/vars/values.tpl.txt"
   dest: "env/elasticsearch/users.txt"
   params:
-    elastic: {{
+    elastic: >-
+      {{
         {
           'roles': ['superuser'],
           'password': credentials.elasticsearch.elastic_password | default('')
         } | to_json
       }}
-    kibana: {{
+    kibana: >-
+      {{
         {
           'roles': ['kibana_system'],
           'password': credentials.elasticsearch.kibana_password | default('')
         } | to_json
       }}
-    fluentd: {{
+    fluentd: >-
+      {{
         {
           'roles': ['fluentd'],
           'password': credentials.elasticsearch.fluentd_password | default('')
