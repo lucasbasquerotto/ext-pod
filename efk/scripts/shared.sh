@@ -187,15 +187,16 @@ case "$command" in
 					inner_value="\$1"
 
 					echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
-						-XPOST "https://elasticsearch:9200/_security/user/${user}/_password" \
+						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
 						-d"\$inner_value" \
 						-H "Content-Type: application/json" \
 						>&2
 					curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
-						-XPOST "https://elasticsearch:9200/_security/user/${user}/_password" \
+						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
 						-d"\$inner_value" \
 						-H "Content-Type: application/json" \
 						>&2
+					echo ""
 				SHELL
 			fi
 		done < "$pod_layer_dir/env/elasticsearch/users.txt"

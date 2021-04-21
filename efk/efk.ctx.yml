@@ -383,7 +383,7 @@ templates:
     kibana: >-
       {{
         {
-          'roles': ['kibana_system'],
+          'roles': ['kibana_admin'],
           'password': credentials.elasticsearch.kibana_password | default('')
         } | to_json
       }}
