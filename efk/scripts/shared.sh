@@ -109,21 +109,6 @@ case "$command" in
 
 		# Wait to be ready and create roles
 
-
-			# wget --user "$bootstrap_user" --password "$(bootstrap_password)"  \
-			# 	--post-data= '{
-			# 		"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
-			# 		"indices": [
-			# 			{
-			# 				"names": [ "fluentd-*" ],
-			# 				"privileges": ["write","create","delete","create_index","manage","manage_ilm"]
-			# 			}
-			# 		]
-			# 	}' \
-			# 	--header="Content-Type: application/json" \
-			# 	"https://elasticsearch:9200/_security/role/fluentd" \
-			# 	>&2
-
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
@@ -139,8 +124,6 @@ case "$command" in
 				current=\$((end-SECONDS))
 				msg="\$timeout seconds - \$current second(s) remaining"
 				>&2 echo "wait for elasticsearch to be ready (\$msg)"
-
-				echo wget --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2
 
 				if wget --header="Host: localhost" --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2; then
 					success=true
@@ -186,20 +169,35 @@ case "$command" in
 				}' \
 				-H "Content-Type: application/json" \
 				>&2
+			echo "" >&2
 		SHELL
 
 		# Create Users
-		echo "creating the elasticsearch roles..." >&2
+		echo "creating the elasticsearch users..." >&2
 
 		while IFS='=' read -r key value; do
 			user="$(echo "$key" | xargs)"
 
 			if [ "$user" != "$bootstrap_user" ] && [[ ! "$user" == \#* ]]; then
-				"$pod_script_env_file" exec-nontty toolbox \
-					CURL_CA_BUNDLE="/etc/ssl/fullchain.pem" && curl -u "$bootstrap_user:$(bootstrap_password)" \
-						-XPOST "https://elasticsearch:9200/_xpack/security/user/${user}/_password" \
-						-d"$(echo "$value" | xargs)" \
-						-H "Content-Type: application/json"
+				"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL -s "$value" || error "$command"
+					set -eou pipefail
+
+					export CURL_CA_BUNDLE="/etc/ssl/fullchain.pem"
+
+					inner_value="\$1"
+
+					echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
+						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
+						-d"\$inner_value" \
+						-H "Content-Type: application/json" \
+						>&2
+					curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
+						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
+						-d"\$inner_value" \
+						-H "Content-Type: application/json" \
+						>&2
+					echo ""
+				SHELL
 			fi
 		done < "$pod_layer_dir/env/elasticsearch/users.txt"
 
