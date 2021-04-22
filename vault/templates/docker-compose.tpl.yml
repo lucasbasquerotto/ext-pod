@@ -56,7 +56,7 @@ networks:
 {% if (params.local | bool) and (params.named_volumes | bool) %}
 
 volumes:
-  vault-file: {}
+  vault-data: {}
   vault-logs: {}
 
 {% endif %}
@@ -295,14 +295,14 @@ services:
         VERSION: "{{ params.images.vault_version }}"
         MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
 
     {############################################################################}
     {% if params.dev_vault | bool %}
 
-    environment:
       VAULT_DEV_ROOT_TOKEN_ID: $VAULT_DEV_ROOT_TOKEN
       VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
-      VAULT_ADDR: "http://0.0.0.0:8200"
       VAULT_TOKEN: $VAULT_DEV_ROOT_TOKEN
 
     {% endif %}
@@ -339,12 +339,12 @@ services:
     {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
-    - "vault-file:/vault/file"
+    - "vault-data:/vault/data"
     - "vault-logs:/vault/logs"
 
     {% else %}
 
-    - "$DATA_DIR/vault/file:/vault/file"
+    - "$DATA_DIR/vault/data:/vault/data"
     - "$DATA_DIR/tmp/log/vault:/vault/logs"
 
     {% endif %}
@@ -362,7 +362,7 @@ services:
 
     {% else %}
 
-    command: "vault server -config=/vault/config/vault.json"
+    command: "vault server -config=/vault/config/vault.hcl"
 
     {% endif %}
     {############################################################################}
@@ -489,7 +489,8 @@ services:
     {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
-    - "vault-file:/var/main/data/vault/file"
+    - "vault-data:/var/main/data/vault/data"
+    - "vault-logs:/var/main/data/vault/logs"
 
     {% endif %}
     {#############################################################}

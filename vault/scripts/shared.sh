@@ -43,6 +43,33 @@ shift $((OPTIND-1))
 pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
+	"prepare")
+		"$pod_script_env_file" up toolbox > /dev/null
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+			set -eou pipefail
+
+			base_dir="/var/main/data/vault"
+
+			dir="\$base_dir/data"
+
+			if [ ! -d "\$dir" ]; then
+				mkdir -p "\$dir"
+			fi
+
+			chown 100 "\$dir"
+
+			dir="\$base_dir/logs"
+
+			if [ ! -d "\$dir" ]; then
+				mkdir -p "\$dir"
+			fi
+
+			chown 100 "\$dir"
+		SHELL
+
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
 	"custom:unique:log")
 		opts=()
 		opts+=( 'log_register.memory_overview' )
