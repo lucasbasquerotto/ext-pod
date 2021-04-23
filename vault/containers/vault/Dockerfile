@@ -5,4 +5,4 @@ FROM $IMAGE:$VERSION
 
 ARG MAIN_DIR
 
-COPY $MAIN_DIR/containers/vault/vault.json /vault/config/
+COPY $MAIN_DIR/containers/vault/vault.hcl /vault/config/
