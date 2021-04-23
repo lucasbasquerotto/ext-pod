@@ -1,10 +1,11 @@
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
 {% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
+{% set var_use_vault = var_is_web %}
 {% set var_use_theia = var_is_web and (params.use_theia | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
 {% set var_is_db = params.pod_type in ['app', 'db'] %}
-{% set var_use_vault = var_is_db %}
+{% set var_use_consul = var_is_db and (params.use_consul | bool) %}
 
 {% set var_use_s3 = params.use_s3 | bool %}
 {% set var_use_local_s3 = params.use_local_s3 | bool %}
@@ -58,6 +59,14 @@ networks:
 volumes:
   vault-data: {}
   vault-logs: {}
+
+  {#############################################################}
+  {% if var_use_consul %}
+
+  consul-data: {}
+
+  {% endif %}
+  {#############################################################}
 
 {% endif %}
 {#############################################################}
@@ -362,7 +371,7 @@ services:
 
     {% else %}
 
-    command: "vault server -config=/vault/config/vault.hcl"
+    command: "vault server -config=/vault/config/config.json"
 
     {% endif %}
     {############################################################################}
@@ -373,6 +382,110 @@ services:
     {% if (params.memory.vault | default('')) != '' %}
 
     mem_limit: "{{ params.memory.vault }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_consul %}
+
+  consul_worker:
+    container_name: "${CTX_PREFIX_MAIN}consul_worker"
+    hostname: "consul_worker"
+    build:
+      context: .
+      dockerfile: "{{ params.main_dir }}/containers/consul/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.consul_image }}"
+        VERSION: "{{ params.images.consul_version }}"
+    restart: unless-stopped
+    depends_on:
+    - "consul"
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+    command: "agent -server -join consul -config-file=/consul/config/config.json"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.consul_worker | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.consul_worker }}"
+
+    {% endif %}
+    {#############################################################}
+
+  consul:
+    container_name: "${CTX_PREFIX_MAIN}consul"
+    hostname: "consul"
+    build:
+      context: .
+      dockerfile: "{{ params.main_dir }}/containers/consul/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.consul_image }}"
+        VERSION: "{{ params.images.consul_version }}"
+    restart: unless-stopped
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_use_nginx and (params.pod_type != 'db') %}
+
+    expose:
+    - "8500"
+
+    {% else %}
+
+    ports:
+    - "{{ params.consul_external_port }}:8500"
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+
+    {#############################################################}
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
+
+    - "consul-data:/consul/data"
+
+    {% else %}
+
+    - "$DATA_DIR/consul/data:/consul/data"
+
+    {% endif %}
+    {#############################################################}
+
+    - "$DATA_DIR/tmp/consul:/tmp/main/consul"
+    - "$DATA_DIR/tmp/tmp/consul:/tmp/main/tmp/consul"
+    command: "agent -server -bind 0.0.0.0 -client 0.0.0.0 -bootstrap-expect 1 -config-file=/consul/config/config.json"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.consul | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.consul }}"
 
     {% endif %}
     {#############################################################}

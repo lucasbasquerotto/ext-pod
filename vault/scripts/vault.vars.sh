@@ -19,6 +19,7 @@ if [ "${var_load_main__local:-}" = 'true' ]; then
 fi
 
 export var_load_main__allow_custom_db_service='true'
+
 export var_load__db_main__db_host="${var_load__db_main__db_host:-vault}"
 export var_load__db_main__db_port="${var_load__db_main__db_port:-8200}"
 
@@ -30,6 +31,8 @@ function tmp_error {
 tmp_errors=()
 
 # specific vars...
+
+export var_custom__use_consul="${var_load_use__consul:-}"
 
 tmp_error_count=${#tmp_errors[@]}
 
@@ -44,7 +47,7 @@ fi
 tmp_error_count_aux="$tmp_error_count"
 tmp_error_count=0
 
-# shellcheck disable=SC1090
+# shellcheck disable=SC1090,SC1091
 . "$tmp_pod_layer_dir/shared/scripts/shared.vars.sh"
 
 tmp_shared_error_count="${tmp_error_count:-0}"

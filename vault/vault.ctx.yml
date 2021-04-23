@@ -197,6 +197,7 @@ templates:
     use_nginx: "{{ params.use_nginx | default(false) }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    use_consul: "{{ params.use_consul | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
@@ -206,6 +207,7 @@ templates:
     s3_cli: "{{ params.s3_cli | default('') }}"
     dev_vault: "{{ var_local and (params.dev_vault | default(false) | bool) }}"
     vault_external_port: "{{ params.vault_external_port | default('8200') }}"
+    consul_external_port: "{{ params.consul_external_port | default('8500') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}
@@ -283,6 +285,12 @@ templates:
     services:
       - name: "vault"
         endpoint: "http://vault:8200"
+        upgrade: true
+        private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
+      - name: "consul"
+        when: "{{ params.use_consul | default(false) }}"
+        endpoint: "http://consul:8500"
         upgrade: true
         private: true
         use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
@@ -390,6 +398,7 @@ templates:
     var_load_use__main_network: "true"
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
+    var_load_use__consul: "{{ params.use_consul | default('') | lower }}"
     var_load_use__nginx: "{{ params.use_nginx | default('') | lower }}"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
