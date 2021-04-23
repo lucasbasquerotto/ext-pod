@@ -125,7 +125,14 @@ case "$command" in
 				msg="\$timeout seconds - \$current second(s) remaining"
 				>&2 echo "wait for elasticsearch to be ready (\$msg)"
 
-				if wget --header="Host: localhost" --ca-certificate="/etc/ssl/fullchain.pem" --user "$bootstrap_user" --password "$(bootstrap_password)" "\$url" >&2; then
+				# TODO remove and move action
+				echo wget --header="Host: localhost" --ca-certificate="/etc/ssl/fullchain.pem" \
+						--user "$bootstrap_user" --password "$(bootstrap_password)" \
+						"\$url" >&2
+
+				if wget --header="Host: localhost" --ca-certificate="/etc/ssl/fullchain.pem" \
+						--user "$bootstrap_user" --password "$(bootstrap_password)" \
+						"\$url" >&2; then
 					success=true
 					echo ''
 					echo "> elasticsearch is ready" >&2
@@ -186,11 +193,6 @@ case "$command" in
 
 					inner_value="\$1"
 
-					echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
-						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
-						-d"\$inner_value" \
-						-H "Content-Type: application/json" \
-						>&2
 					curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
 						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
 						-d"\$inner_value" \
