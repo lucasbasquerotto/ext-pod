@@ -51,6 +51,8 @@
 
 {% set var_use_internal_ssl = var_use_secure_elasticsearch %}
 {% set var_internal_ssl_fullchain = params.internal_ssl.fullchain | default('') %}
+{% set var_internal_ssl_cert = params.internal_ssl.cert | default('') %}
+{% set var_internal_ssl_ca = params.internal_ssl.ca | default('') %}
 {% set var_internal_ssl_privkey = params.internal_ssl.privkey | default('') %}
 {% set var_internal_ssl_concat = params.internal_ssl.concat | default('') %}
 
@@ -165,6 +167,14 @@ env_files:
 - src: "{{ var_internal_ssl_fullchain }}"
   dest: "env/ssl/fullchain.pem"
   when: "{{ var_internal_ssl_fullchain != '' }}"
+
+- src: "{{ var_internal_ssl_cert }}"
+  dest: "env/ssl/cert.pem"
+  when: "{{ var_internal_ssl_cert != '' }}"
+
+- src: "{{ var_internal_ssl_ca }}"
+  dest: "env/ssl/ca.pem"
+  when: "{{ var_internal_ssl_ca != '' }}"
 
 - src: "{{ var_internal_ssl_privkey }}"
   dest: "env/ssl/privkey.pem"

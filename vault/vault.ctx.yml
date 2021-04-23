@@ -19,6 +19,7 @@
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 {% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
 {% set var_use_secure_consul = params.use_secure_consul | default(false) | bool %}
+{% set var_consul_port = var_use_secure_consul | ternary('8501', '8500') %}
 
 {% set var_main_base_dir = params.custom_dir %}
 {% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
@@ -47,6 +48,8 @@
 
 {% set var_use_internal_ssl = var_use_secure_consul or var_use_secure_elasticsearch %}
 {% set var_internal_ssl_fullchain = params.internal_ssl.fullchain | default('') %}
+{% set var_internal_ssl_cert = params.internal_ssl.cert | default('') %}
+{% set var_internal_ssl_ca = params.internal_ssl.ca | default('') %}
 {% set var_internal_ssl_privkey = params.internal_ssl.privkey | default('') %}
 {% set var_internal_ssl_concat = params.internal_ssl.concat | default('') %}
 
@@ -156,7 +159,15 @@
         "verify_incoming": true,
         "verify_outgoing": true,
         "verify_server_hostname": true,
-        "cert_file": "/consul/config/certs/fullchain.pem",
+        "auto_encrypt": {
+          "allow_tls": true
+        },
+        "ports": {
+          "http": -1,
+          "https": 8501
+        },
+        "ca_file": "/consul/config/certs/ca.pem",
+        "cert_file": "/consul/config/certs/cert.pem",
         "key_file": "/consul/config/certs/privkey.pem"
       }
     %}
@@ -197,6 +208,14 @@ env_files:
 - src: "{{ var_internal_ssl_fullchain }}"
   dest: "env/ssl/fullchain.pem"
   when: "{{ var_internal_ssl_fullchain != '' }}"
+
+- src: "{{ var_internal_ssl_cert }}"
+  dest: "env/ssl/cert.pem"
+  when: "{{ var_internal_ssl_cert != '' }}"
+
+- src: "{{ var_internal_ssl_ca }}"
+  dest: "env/ssl/ca.pem"
+  when: "{{ var_internal_ssl_ca != '' }}"
 
 - src: "{{ var_internal_ssl_privkey }}"
   dest: "env/ssl/privkey.pem"
@@ -248,7 +267,8 @@ templates:
     s3_cli: "{{ params.s3_cli | default('') }}"
     dev_vault: "{{ var_local and (params.dev_vault | default(false) | bool) }}"
     vault_external_port: "{{ params.vault_external_port | default('8200') }}"
-    consul_external_port: "{{ params.consul_external_port | default('8500') }}"
+    consul_internal_port: "{{ var_consul_port }}"
+    consul_external_port: "{{ params.consul_external_port | default(var_consul_port) }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}
@@ -335,7 +355,7 @@ templates:
         use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "consul"
         when: "{{ params.use_consul | default(false) }}"
-        endpoint: "{{ var_consul_scheme }}://consul:8500"
+        endpoint: "{{ var_consul_scheme }}://consul:{{ var_consul_port }}"
         upgrade: true
         private: true
         use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
@@ -368,8 +388,12 @@ templates:
 {% if var_use_consul %}
 
 - src: "main/vars/dynamic.tpl.json"
-  dest: "env/consul/config.json"
+  dest: "env/consul/config.server.json"
   params: {{ var_consul_config | to_json }}
+
+- src: "main/vars/dynamic.tpl.json"
+  dest: "env/consul/config.worker.json"
+  params: {{ var_consul_config | combine({ "node_name": "consul-worker" }) | to_json }}
 
 {% endif %}
 ##############################################################

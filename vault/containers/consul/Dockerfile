@@ -3,4 +3,6 @@ ARG VERSION
 
 FROM $IMAGE:$VERSION
 
-COPY /env/consul/config.json /consul/config/config.json
+ARG LABEL
+
+COPY /env/consul/config.$LABEL.json /consul/config/config.json

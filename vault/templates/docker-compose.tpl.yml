@@ -409,6 +409,7 @@ services:
       args:
         IMAGE: "{{ params.images.consul_image }}"
         VERSION: "{{ params.images.consul_version }}"
+        LABEL: "worker"
     restart: unless-stopped
     depends_on:
     - "consul"
@@ -433,7 +434,9 @@ services:
     {% endif %}
     {#############################################################}
 
-    command: "agent -server -join consul -config-file=/consul/config/config.json"
+    command: >-
+      agent -server -domain consul -join consul
+      -config-file=/consul/config/config.json
     logging: *mainlog
 
     {#############################################################}
@@ -453,6 +456,7 @@ services:
       args:
         IMAGE: "{{ params.images.consul_image }}"
         VERSION: "{{ params.images.consul_version }}"
+        LABEL: "server"
     restart: unless-stopped
 
     {#############################################################}
@@ -471,12 +475,12 @@ services:
     {% if var_use_nginx and (params.pod_type != 'db') %}
 
     expose:
-    - "8500"
+    - "{{ params.consul_internal_port }}"
 
     {% else %}
 
     ports:
-    - "{{ params.consul_external_port }}:8500"
+    - "{{ params.consul_external_port }}:{{ params.consul_internal_port }}"
 
     {% endif %}
     {#############################################################}
@@ -505,7 +509,9 @@ services:
 
     - "$DATA_DIR/tmp/consul:/tmp/main/consul"
     - "$DATA_DIR/tmp/tmp/consul:/tmp/main/tmp/consul"
-    command: "agent -server -bind 0.0.0.0 -client 0.0.0.0 -bootstrap-expect 1 -config-file=/consul/config/config.json"
+    command: >-
+      agent -server -domain consul -bind 0.0.0.0 -client 0.0.0.0
+      -bootstrap-expect 1 -config-file=/consul/config/config.json
     logging: *mainlog
 
     {#############################################################}
