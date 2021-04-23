@@ -149,6 +149,14 @@ services:
     {% endif %}
     {#############################################################}
 
+    {#############################################################}
+    {% if params.use_secure_consul | bool %}
+
+    - "./env/ssl:/etc/proxy-ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
     - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
     - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
     - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
@@ -415,6 +423,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if params.use_secure_consul | bool %}
+
+    volumes:
+    - "./env/ssl:/consul/config/certs"
+
+    {% endif %}
+    {#############################################################}
+
     command: "agent -server -join consul -config-file=/consul/config/config.json"
     logging: *mainlog
 
@@ -473,6 +491,14 @@ services:
     {% else %}
 
     - "$DATA_DIR/consul/data:/consul/data"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secure_consul | bool %}
+
+    - "./env/ssl:/consul/config/certs"
 
     {% endif %}
     {#############################################################}
