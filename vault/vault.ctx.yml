@@ -333,7 +333,9 @@ templates:
 
 {% set var_default_nginx_conf = {
   'ssl': params.use_ssl | default(false),
-  'proxy_ssl_ca_file': '/etc/proxy-ssl/fullchain.pem'
+  'proxy_ssl_ca_file': '/etc/proxy-ssl/ca.pem',
+  'proxy_ssl_cert_file': '/etc/proxy-ssl/cert.pem',
+  'proxy_ssl_key_file': '/etc/proxy-ssl/privkey.pem'
   }
 %}
 
@@ -359,7 +361,7 @@ templates:
         upgrade: true
         private: true
         use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
-        use_proxy_ssl_ca: "{{ var_use_secure_consul }}"
+        use_proxy_ssl: "{{ var_use_secure_consul }}"
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
