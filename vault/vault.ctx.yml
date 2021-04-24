@@ -18,6 +18,7 @@
 
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 {% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
+{% set var_use_secure_vault = params.use_secure_vault | default(false) | bool %}
 {% set var_use_secure_consul = params.use_secure_consul | default(false) | bool %}
 {% set var_consul_port = var_use_secure_consul | ternary('8501', '8500') %}
 
@@ -46,7 +47,13 @@
   )
 %}
 
-{% set var_use_internal_ssl = var_use_secure_consul or var_use_secure_elasticsearch %}
+{% set var_use_internal_ssl =
+  var_use_secure_vault
+  or
+  var_use_secure_consul
+  or
+  var_use_secure_elasticsearch
+%}
 {% set var_internal_ssl_fullchain = params.internal_ssl.fullchain | default('') %}
 {% set var_internal_ssl_cert = params.internal_ssl.cert | default('') %}
 {% set var_internal_ssl_ca = params.internal_ssl.ca | default('') %}
@@ -134,10 +141,58 @@
 
 {% endif %}
 
+{% set var_vault_config = {
+    "api_addr": "http://0.0.0.0:8200",
+    "cluster_addr": "https://0.0.0.0:8201",
+    "listener": {
+      "tcp": {
+        "address": "0.0.0.0:8200",
+        "tls_disable": not var_use_secure_vault
+      }
+    },
+    "storage": {
+      "file": {
+        "node_id": "node1",
+        "path": "vault/"
+      }
+    },
+    "ui": true
+  }
+%}
+
 {% set var_consul_config = {} %}
 {% set var_consul_scheme = var_use_secure_consul | ternary('https', 'http') %}
 
 {% if var_use_consul %}
+
+  {% set var_vault_consul_config = {
+      "address": "consul:8500",
+      "path": "vault/"
+    }
+  %}
+
+  {% if var_use_secure_consul %}
+
+    {% set var_vault_consul_config = {
+        "address": "consul:8501",
+        "path": "vault/",
+        "scheme": "https",
+        "tls_ca_file": "/vault/config/consul/certs/ca.pem",
+        "tls_cert_file": "/vault/config/consul/certs/cert.pem",
+        "tls_key_file": "/vault/config/consul/certs/privkey.pem"
+      }
+    %}
+
+  {% endif %}
+
+  {% set var_vault_additional_config = {
+      "storage": {
+        "consul": var_vault_consul_config
+      }
+    }
+  %}
+
+  {% set var_vault_config = var_vault_config | combine(var_vault_additional_config) %}
 
   {% set var_consul_config = {
       "node_name": "consul",
@@ -385,6 +440,10 @@ templates:
 
 {% endif %}
 ##############################################################
+
+- src: "main/vars/dynamic.tpl.json"
+  dest: "env/vault/config.json"
+  params: {{ var_vault_config | to_json }}
 
 ##############################################################
 {% if var_use_consul %}

@@ -367,6 +367,14 @@ services:
     {% endif %}
     {#############################################################}
 
+    {#############################################################}
+    {% if var_use_consul and (params.use_secure_consul | bool) %}
+
+    - "./env/ssl:/vault/config/consul/certs"
+
+    {% endif %}
+    {#############################################################}
+
     - "$DATA_DIR/tmp/vault:/tmp/main/vault"
     - "$DATA_DIR/tmp/tmp/vault:/tmp/main/tmp/vault"
     cap_add:

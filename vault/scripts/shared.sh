@@ -43,38 +43,6 @@ shift $((OPTIND-1))
 pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
-	"build")
-		base_dir="$pod_layer_dir/$var_run__general__main_base_dir/vault"
-
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
-			filename='vault-config-file.json'
-			[ "${var_custom__use_consul:-}" = 'true' ] && filename='vault-config-consul.json'
-
-			src_file="$base_dir/containers/vault/$filename"
-			dest_dir="$pod_layer_dir/env/vault"
-
-			if [ ! -d "$dest_dir" ]; then
-				mkdir -p "$dest_dir"
-			fi
-
-			cp "$src_file" "$dest_dir/config.json"
-		fi
-
-		# if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
-		# 	if [ "${var_custom__use_consul:-}" = 'true' ]; then
-		# 		src_file="$base_dir/containers/consul/consul-config.json"
-		# 		dest_dir="$pod_layer_dir/env/consul"
-
-		# 		if [ ! -d "$dest_dir" ]; then
-		# 			mkdir -p "$dest_dir"
-		# 		fi
-
-		# 		cp "$src_file" "$dest_dir/config.json"
-		# 	fi
-		# fi
-
-		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
-		;;
 	"prepare")
 		"$pod_script_env_file" up toolbox > /dev/null
 
