@@ -1,6 +1,7 @@
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
 {% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_vault = var_is_web %}
+{% set var_use_consul_client = var_is_web and (params.use_consul | bool) %}
 {% set var_use_theia = var_is_web and (params.use_theia | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
@@ -406,18 +407,18 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if var_use_consul %}
+  {% if var_use_consul_client %}
 
-  consul_worker:
-    container_name: "${CTX_PREFIX_MAIN}consul_worker"
-    hostname: "consul_worker"
+  consul-client:
+    container_name: "${CTX_PREFIX_MAIN}consul_client"
+    hostname: "consul-client"
     build:
       context: .
       dockerfile: "{{ params.main_dir }}/containers/consul/Dockerfile"
       args:
         IMAGE: "{{ params.images.consul_image }}"
         VERSION: "{{ params.images.consul_version }}"
-        LABEL: "worker"
+        LABEL: "client"
     restart: unless-stopped
     depends_on:
     - "consul"
@@ -443,17 +444,23 @@ services:
     {#############################################################}
 
     command: >-
-      agent -server -domain consul -join consul
-      -config-file=/consul/config/config.json
+      agent -server -domain consul -bind 0.0.0.0 -client 0.0.0.0
+      -join consul -config-file=/consul/config/config.json
     logging: *mainlog
 
     {#############################################################}
-    {% if (params.memory.consul_worker | default('')) != '' %}
+    {% if (params.memory.consul_client | default('')) != '' %}
 
-    mem_limit: "{{ params.memory.consul_worker }}"
+    mem_limit: "{{ params.memory.consul_client }}"
 
     {% endif %}
     {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_consul %}
 
   consul:
     container_name: "${CTX_PREFIX_MAIN}consul"

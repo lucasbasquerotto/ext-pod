@@ -160,13 +160,14 @@
   }
 %}
 
+{% set var_consul_client_config = {} %}
 {% set var_consul_config = {} %}
 {% set var_consul_scheme = var_use_secure_consul | ternary('https', 'http') %}
 
 {% if var_use_consul %}
 
   {% set var_vault_consul_config = {
-      "address": "consul:8500",
+      "address": "consul-client:8500",
       "path": "vault/"
     }
   %}
@@ -174,7 +175,7 @@
   {% if var_use_secure_consul %}
 
     {% set var_vault_consul_config = {
-        "address": "consul:8501",
+        "address": "consul-client:8501",
         "path": "vault/",
         "scheme": "https",
         "tls_ca_file": "/vault/config/consul/certs/ca.pem",
@@ -194,6 +195,16 @@
 
   {% set var_vault_config = var_vault_config | combine(var_vault_additional_config) %}
 
+  {% set var_consul_client_config = {
+      "node_name": "consul-client",
+      "data_dir": "/consul/data",
+      "server": true,
+      "addresses": {
+          "http" : "0.0.0.0"
+      },
+    }
+  %}
+
   {% set var_consul_config = {
       "node_name": "consul",
       "server": true,
@@ -203,13 +214,13 @@
       "data_dir": "/consul/data",
       "addresses": {
           "http" : "0.0.0.0"
-      }
+      },
     }
   %}
 
   {% if var_use_secure_consul %}
 
-    {% set var_consul_additional_config = {
+    {% set var_consul_client_additional_config = {
         "encrypt": credentials.consul.encrypt_key | default(''),
         "verify_incoming": true,
         "verify_outgoing": true,
@@ -223,9 +234,13 @@
         },
         "ca_file": "/consul/config/certs/ca.pem",
         "cert_file": "/consul/config/certs/cert.pem",
-        "key_file": "/consul/config/certs/privkey.pem"
+        "key_file": "/consul/config/certs/privkey.pem",
       }
     %}
+
+    {% set var_consul_additional_config = var_consul_client_additional_config %}
+
+    {% set var_consul_client_config = var_consul_client_config | combine(var_consul_client_additional_config) %}
 
     {% set var_consul_config = var_consul_config | combine(var_consul_additional_config) %}
 
@@ -453,8 +468,8 @@ templates:
   params: {{ var_consul_config | to_json }}
 
 - src: "main/vars/dynamic.tpl.json"
-  dest: "env/consul/config.worker.json"
-  params: {{ var_consul_config | combine({ "node_name": "consul-worker" }) | to_json }}
+  dest: "env/consul/config.client.json"
+  params: {{ var_consul_client_config | to_json }}
 
 {% endif %}
 ##############################################################
