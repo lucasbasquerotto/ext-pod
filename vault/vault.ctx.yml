@@ -141,13 +141,16 @@
 
 {% endif %}
 
+{% set var_vault_scheme = var_use_secure_vault | ternary('https', 'http') %}
 {% set var_vault_config = {
-    "api_addr": "http://0.0.0.0:8200",
-    "cluster_addr": "https://0.0.0.0:8201",
+    "api_addr": var_vault_scheme + "://0.0.0.0:8200",
+    "cluster_addr": var_vault_scheme + "://0.0.0.0:8201",
     "listener": {
       "tcp": {
         "address": "0.0.0.0:8200",
-        "tls_disable": not var_use_secure_vault
+        "tls_disable": not var_use_secure_vault,
+        "tls_cert_file": "/vault/config/certs/fullchain.pem",
+        "tls_key_file": "/vault/config/certs/privkey.pem"
       }
     },
     "storage": {
@@ -331,6 +334,7 @@ templates:
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_secure_vault: "{{ var_use_secure_vault }}"
     use_secure_consul: "{{ var_use_secure_consul }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
@@ -422,10 +426,11 @@ templates:
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "vault"
-        endpoint: "http://vault:8200"
+        endpoint: "{{ var_vault_scheme }}://vault:8200"
         upgrade: true
         private: true
         use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
+        use_proxy_ssl: "{{ var_use_secure_vault }}"
       - name: "consul"
         when: "{{ params.use_consul | default(false) }}"
         endpoint: "{{ var_consul_scheme }}://consul:{{ var_consul_port }}"

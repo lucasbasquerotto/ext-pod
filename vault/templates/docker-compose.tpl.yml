@@ -14,6 +14,8 @@
 {% set var_use_local_s3 = params.use_local_s3 | bool %}
 {% set var_use_internal_fluentd = params.use_internal_fluentd | bool %}
 
+{% set var_vault_scheme = params.use_secure_vault | bool | ternary('https', 'http') %}
+
 version: '2.4'
 
 x-logging:
@@ -153,7 +155,7 @@ services:
     {#############################################################}
 
     {#############################################################}
-    {% if params.use_secure_consul | bool %}
+    {% if (params.use_secure_vault | bool) or (params.use_secure_consul | bool) %}
 
     - "./env/ssl:/etc/proxy-ssl:ro"
 
@@ -316,7 +318,7 @@ services:
         MAIN_DIR: "{{ params.main_dir }}"
     restart: unless-stopped
     environment:
-      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_ADDR: "{{ var_vault_scheme }}://0.0.0.0:8200"
 
     {############################################################################}
     {% if params.dev_vault | bool %}
@@ -355,6 +357,14 @@ services:
     {#############################################################}
 
     volumes:
+
+    {#############################################################}
+    {% if params.use_secure_vault | bool %}
+
+    - "./env/ssl:/vault/config/certs"
+
+    {% endif %}
+    {#############################################################}
 
     {#############################################################}
     {% if var_use_consul and (params.use_secure_consul | bool) %}
