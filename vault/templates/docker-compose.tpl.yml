@@ -2,6 +2,8 @@
 {% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_vault = var_is_web %}
 {% set var_use_consul_client = var_is_web and (params.use_consul | bool) %}
+#TODO verify consul client
+{% set var_use_consul_client = false | bool %}
 {% set var_use_theia = var_is_web and (params.use_theia | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
@@ -355,6 +357,14 @@ services:
     volumes:
 
     {#############################################################}
+    {% if var_use_consul and (params.use_secure_consul | bool) %}
+
+    - "./env/ssl:/vault/config/consul/certs"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "vault-data:/vault/data"
@@ -364,14 +374,6 @@ services:
 
     - "$DATA_DIR/vault/data:/vault/data"
     - "$DATA_DIR/tmp/log/vault:/vault/logs"
-
-    {% endif %}
-    {#############################################################}
-
-    {#############################################################}
-    {% if var_use_consul and (params.use_secure_consul | bool) %}
-
-    - "./env/ssl:/vault/config/consul/certs"
 
     {% endif %}
     {#############################################################}
@@ -444,8 +446,8 @@ services:
     {#############################################################}
 
     command: >-
-      agent -server -domain consul -bind 0.0.0.0 -client 0.0.0.0
-      -join consul -config-file=/consul/config/config.json
+      agent -domain consul -bind 0.0.0.0 -client 0.0.0.0
+      -retry-join consul -config-file=/consul/config/config.json
     logging: *mainlog
 
     {#############################################################}
@@ -503,6 +505,14 @@ services:
     volumes:
 
     {#############################################################}
+    {% if params.use_secure_consul | bool %}
+
+    - "./env/ssl:/consul/config/certs"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "consul-data:/consul/data"
@@ -510,14 +520,6 @@ services:
     {% else %}
 
     - "$DATA_DIR/consul/data:/consul/data"
-
-    {% endif %}
-    {#############################################################}
-
-    {#############################################################}
-    {% if params.use_secure_consul | bool %}
-
-    - "./env/ssl:/consul/config/certs"
 
     {% endif %}
     {#############################################################}

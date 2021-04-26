@@ -167,7 +167,7 @@
 {% if var_use_consul %}
 
   {% set var_vault_consul_config = {
-      "address": "consul-client:8500",
+      "address": "consul:8500",
       "path": "vault/"
     }
   %}
@@ -175,7 +175,7 @@
   {% if var_use_secure_consul %}
 
     {% set var_vault_consul_config = {
-        "address": "consul-client:8501",
+        "address": "consul:8501",
         "path": "vault/",
         "scheme": "https",
         "tls_ca_file": "/vault/config/consul/certs/ca.pem",
@@ -196,9 +196,8 @@
   {% set var_vault_config = var_vault_config | combine(var_vault_additional_config) %}
 
   {% set var_consul_client_config = {
-      "node_name": "consul-client",
+      "node_name": "consul",
       "data_dir": "/consul/data",
-      "server": true,
       "addresses": {
           "http" : "0.0.0.0"
       },
@@ -225,9 +224,6 @@
         "verify_incoming": true,
         "verify_outgoing": true,
         "verify_server_hostname": true,
-        "auto_encrypt": {
-          "allow_tls": true
-        },
         "ports": {
           "http": -1,
           "https": 8501
@@ -238,7 +234,12 @@
       }
     %}
 
-    {% set var_consul_additional_config = var_consul_client_additional_config %}
+    {% set var_consul_additional_config = var_consul_client_additional_config | combine({
+        "auto_encrypt": {
+          "allow_tls": true
+        },
+      })
+    %}
 
     {% set var_consul_client_config = var_consul_client_config | combine(var_consul_client_additional_config) %}
 
