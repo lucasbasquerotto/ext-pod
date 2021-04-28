@@ -393,7 +393,7 @@ templates:
     kibana_custom: >-
       {{
         {
-          'roles': ['fluentd'],
+          'roles': ['superuser', 'monitoring_user', 'kibana_admin'],
           'password': credentials.elasticsearch.kibana_password | default('')
         } | to_json
       }}

@@ -196,6 +196,15 @@ services:
     volumes:
     - "$DATA_DIR/tmp/kibana:/tmp/main/kibana"
     - "$DATA_DIR/tmp/tmp/kibana:/tmp/main/tmp/kibana"
+
+    {#############################################################}
+    {% if params.use_secure_elasticsearch | bool %}
+
+    - "./env/ssl:/usr/share/kibana/config/elasticsearch/ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
     logging: *mainlog
 
     {#############################################################}
