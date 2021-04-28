@@ -90,80 +90,20 @@ case "$command" in
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"custom:elasticsearch:secure")
-		bootstrap_user='elastic'
-
 		"$pod_script_env_file" up toolbox elasticsearch
 
-		function bootstrap_password {
-			"$pod_script_env_file" exec-nontty elasticsearch /bin/bash <<-SHELL || error "$command"
-				set -eou pipefail
-				pass_file="\$(printenv | grep ELASTIC_PASSWORD_FILE | cut -f 2- -d '=')"
+		"$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:ready:elasticsearch"
 
-				if [ -n "\$pass_file" ]; then
-					cat "\$pass_file"
-				else
-					printenv | grep ELASTIC_PASSWORD | cut -f 2- -d '='
-				fi
-			SHELL
-		}
+		password="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:pass:elasticsearch")"
 
-		# Wait to be ready and create roles
+		# Create roles
+		echo "creating the elasticsearch roles..." >&2
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
-			export CURL_CA_BUNDLE="/etc/ssl/fullchain.pem"
-
-			timeout="${var_custom__elasticsearch_timeout:-150}"
-			end=\$((SECONDS+\$timeout))
-			success=false
-
-			url='https://elasticsearch:9200/_cluster/health?wait_for_status=yellow'
-
-			while [ \$SECONDS -lt \$end ]; do
-				current=\$((end-SECONDS))
-				msg="\$timeout seconds - \$current second(s) remaining"
-				>&2 echo "wait for elasticsearch to be ready (\$msg)"
-
-				# TODO remove and move action
-				echo wget --header="Host: localhost" --ca-certificate="/etc/ssl/fullchain.pem" \
-						--user "$bootstrap_user" --password "$(bootstrap_password)" \
-						"\$url" >&2
-
-				if wget --header="Host: localhost" --ca-certificate="/etc/ssl/fullchain.pem" \
-						--user "$bootstrap_user" --password "$(bootstrap_password)" \
-						"\$url" >&2; then
-					success=true
-					echo ''
-					echo "> elasticsearch is ready" >&2
-					break
-				fi
-
-				sleep 5
-			done
-
-			if [ "\$success" != 'true' ]; then
-				echo "timeout while waiting for elasticsearch" >&2
-				exit 2
-			fi
-
-			echo "creating the elasticsearch roles..." >&2
-
-			echo curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
-				-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
-				-d'{
-					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
-					"indices": [
-						{
-							"names": [ "fluentd-*" ],
-							"privileges": ["write","create","delete","create_index","manage","manage_ilm"]
-						}
-					]
-				}' \
-				-H "Content-Type: application/json" \
-				>&2
-
-			curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
+			curl --fail -sS -u "elastic:$password" \
+				--cacert /etc/ssl/fullchain.pem \
 				-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
 				-d'{
 					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
@@ -185,15 +125,14 @@ case "$command" in
 		while IFS='=' read -r key value; do
 			user="$(echo "$key" | xargs)"
 
-			if [ "$user" != "$bootstrap_user" ] && [[ ! "$user" == \#* ]]; then
+			if [ "$user" != 'elastic' ] && [[ ! "$user" == \#* ]]; then
 				"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL -s "$value" || error "$command"
 					set -eou pipefail
 
-					export CURL_CA_BUNDLE="/etc/ssl/fullchain.pem"
-
 					inner_value="\$1"
 
-					curl --fail -sS -u "$bootstrap_user:$(bootstrap_password)" \
+					curl --fail -sS -u "elastic:$password" \
+						--cacert /etc/ssl/fullchain.pem \
 						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
 						-d"\$inner_value" \
 						-H "Content-Type: application/json" \
