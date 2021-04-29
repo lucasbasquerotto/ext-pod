@@ -1,3 +1,5 @@
+{% set var_local = params.local | bool %}
+
 version: "2.4"
 
 x-logging:
@@ -47,6 +49,18 @@ services:
       args:
         IMAGE: "{{ params.images.certbot_image }}"
         VERSION: "{{ params.images.certbot_version }}"
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
     - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
@@ -78,6 +92,16 @@ services:
     restart: "unless-stopped"
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"

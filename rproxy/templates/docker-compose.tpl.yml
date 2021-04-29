@@ -1,3 +1,5 @@
+{% set var_local = params.local | bool %}
+
 {% set var_use_haproxy = params.rproxy_type == 'haproxy' %}
 {% set var_use_theia = params.use_theia | bool %}
 {% set var_use_minio_gateway = params.use_minio_gateway | bool %}
@@ -120,6 +122,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}
@@ -184,6 +196,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}
@@ -238,6 +260,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/.git:/home/project/.git:ro"
     - "$DATA_DIR:/home/project/data:ro"
@@ -318,6 +350,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/minio_gateway:/data"
     - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
@@ -363,6 +405,16 @@ services:
     - "shared"
     expose:
     - "9000"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     environment:
 
       {#############################################################}
@@ -429,6 +481,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
@@ -478,6 +540,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
@@ -516,6 +588,15 @@ services:
     - "{{ params.fluentd_port }}:24224/udp"
     networks:
     - "log"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
 
     {#############################################################}
     {% if params.fluentd_output_plugin == 'elasticsearch' %}

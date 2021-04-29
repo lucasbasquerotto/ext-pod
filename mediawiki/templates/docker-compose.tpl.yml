@@ -1,3 +1,5 @@
+{% set var_local = params.local | bool %}
+
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
 {% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_varnish = var_is_web and (params.use_varnish | bool) %}
@@ -153,6 +155,16 @@ services:
     - "{{ params.ports.private_https_port }}:9443"
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}
@@ -220,6 +232,15 @@ services:
 
     ports:
     - "{{ params.ports.public_http_port }}:80"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
 
     {% endif %}
     {#############################################################}
@@ -311,6 +332,15 @@ services:
     {% endif %}
     {#############################################################}
 
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}
@@ -389,6 +419,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/tmp/phpmyadmin:/tmp/main/phpmyadmin"
     - "$DATA_DIR/tmp/tmp/phpmyadmin:/tmp/main/tmp/phpmyadmin"
@@ -458,6 +498,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/tmp/adminer:/tmp/main/adminer"
     - "$DATA_DIR/tmp/tmp/adminer:/tmp/main/tmp/adminer"
@@ -500,6 +550,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/.git:/home/project/.git:ro"
     - "$DATA_DIR:/home/project/data:ro"
@@ -580,6 +640,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/minio_gateway:/data"
     - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
@@ -623,6 +693,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/tmp/filestash:/tmp/main/filestash"
     - "$DATA_DIR/tmp/tmp/filestash:/tmp/main/tmp/filestash"
@@ -670,6 +750,15 @@ services:
 
     ports:
     - "6379:6379"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
 
     {% endif %}
     {#############################################################}
@@ -722,6 +811,15 @@ services:
 
     ports:
     - "11211:11211"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
 
     {% endif %}
     {#############################################################}
@@ -801,6 +899,15 @@ services:
     {% endif %}
     {#############################################################}
 
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}
@@ -858,6 +965,16 @@ services:
     - "shared"
     expose:
     - "9000"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     environment:
 
       {#############################################################}
@@ -924,6 +1041,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
@@ -981,6 +1108,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
@@ -1019,6 +1156,15 @@ services:
     - "{{ params.fluentd_port }}:24224/udp"
     networks:
     - "log"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
 
     {#############################################################}
     {% if params.fluentd_output_plugin == 'elasticsearch' %}

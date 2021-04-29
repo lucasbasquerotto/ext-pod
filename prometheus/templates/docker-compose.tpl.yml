@@ -1,3 +1,5 @@
+{% set var_local = params.local | bool %}
+
 {% set var_is_web = params.pod_type in ['app', 'web'] %}
 {% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_grafana = var_is_web and (params.use_grafana | bool) %}
@@ -142,6 +144,16 @@ services:
     - "{{ params.ports.private_https_port }}:9443"
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
 
     {#############################################################}
@@ -208,6 +220,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/sync/grafana/dashboards:/etc/grafana/provisioning/dashboards/dynamic"
 
@@ -294,6 +316,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/.git:/home/project/.git:ro"
     - "$DATA_DIR:/home/project/data:ro"
@@ -374,6 +406,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/minio_gateway:/data"
     - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
@@ -417,6 +459,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR/tmp/filestash:/tmp/main/filestash"
     - "$DATA_DIR/tmp/tmp/filestash:/tmp/main/tmp/filestash"
@@ -470,6 +522,15 @@ services:
 
     ports:
     - "{{ params.prometheus_external_port }}:9090"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
 
     {% endif %}
     {#############################################################}
@@ -534,6 +595,16 @@ services:
     - "shared"
     expose:
       - 9100
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     logging: *mainlog
 
     {#############################################################}
@@ -574,6 +645,16 @@ services:
     - "shared"
     expose:
       - 8080
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -619,6 +700,16 @@ services:
     - "shared"
     expose:
     - "9000"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     environment:
 
       {#############################################################}
@@ -685,6 +776,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
@@ -742,6 +843,16 @@ services:
 
     networks:
     - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
@@ -780,6 +891,15 @@ services:
     - "{{ params.fluentd_port }}:24224/udp"
     networks:
     - "log"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
 
     {#############################################################}
     {% if params.fluentd_output_plugin == 'elasticsearch' %}
