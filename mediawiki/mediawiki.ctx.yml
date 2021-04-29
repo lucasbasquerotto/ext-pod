@@ -74,8 +74,8 @@
 %}
 
 {% set var_ctx_full_name = input.identifier %}
-{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false, true), true) | bool %}
-{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | ternary(var_ctx_full_name, input.pod_name) %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false)) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | bool | ternary(var_ctx_full_name, input.pod_name) %}
 {% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
 {% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
 {% set var_shared_network_name = params.shared_network | default(var_ctx_full_name + '-network', true) %}
