@@ -761,7 +761,7 @@ services:
   {% if var_use_s3 %}
 
   s3_cli:
-    container_name: "${CTX_PREFIX_RUN}s3_cli"
+    container_name: "${CTX_PREFIX_MAIN}s3_cli"
     hostname: "s3_cli"
     build:
       context: .
