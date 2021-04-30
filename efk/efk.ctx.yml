@@ -306,7 +306,12 @@ templates:
         endpoint: "http://kibana:5601"
         upgrade: true
         private: true
-        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
+        use_basic_auth: >-
+          {{
+            (params.use_basic_auth_private | default(false) | bool)
+            and
+            (not var_use_secure_elasticsearch)
+          }}
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
@@ -357,8 +362,8 @@ templates:
   dest: "env/kibana/kibana.yml"
   params:
     use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
-    kibana_user: "kibana_custom"
-    kibana_password: "{{ credentials.elasticsearch.kibana_password | default('') }}"
+    kibana_user: "system"
+    kibana_password: "{{ credentials.elasticsearch.kibana_system_password | default('') }}"
     elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
 
 {% endif %}
@@ -390,11 +395,18 @@ templates:
           'password': credentials.elasticsearch.elastic_password | default('')
         } | to_json
       }}
-    kibana_custom: >-
+    system: >-
       {{
         {
-          'roles': ['superuser', 'monitoring_user', 'kibana_admin'],
-          'password': credentials.elasticsearch.kibana_password | default('')
+          'roles': ['kibana_system'],
+          'password': credentials.elasticsearch.kibana_system_password | default('')
+        } | to_json
+      }}
+    admin: >-
+      {{
+        {
+          'roles': ['superuser'],
+          'password': credentials.elasticsearch.kibana_admin_password | default('')
         } | to_json
       }}
     fluentd: >-

@@ -102,6 +102,8 @@ case "$command" in
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			set -eou pipefail
 
+			echo "creating/updating role fluentd..." >&2
+
 			curl --fail -sS -u "elastic:$password" \
 				--cacert /etc/ssl/fullchain.pem \
 				-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
@@ -130,6 +132,8 @@ case "$command" in
 					set -eou pipefail
 
 					inner_value="\$1"
+
+					echo "creating/updating user $user..." >&2
 
 					curl --fail -sS -u "elastic:$password" \
 						--cacert /etc/ssl/fullchain.pem \
