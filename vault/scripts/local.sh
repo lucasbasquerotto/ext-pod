@@ -12,7 +12,8 @@ function error {
 	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}"
 }
 
-trap 'echo "[error] ${BASH_SOURCE[0]}:$LINENO"; exit $LINENO;' ERR
+[ "${var_run__meta__no_stacktrace:-}" != 'true' ] \
+	&& trap 'echo "[error] ${BASH_SOURCE[0]}:$LINENO"; exit $LINENO;' ERR
 
 command="${1:-}"
 

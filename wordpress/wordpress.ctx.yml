@@ -582,6 +582,7 @@ templates:
     var_load_general__define_s3_backup_lifecycle: "{{ params.define_s3_backup_lifecycle | default('') | lower }}"
     var_load_general__define_s3_uploads_lifecycle: "{{ params.define_s3_uploads_lifecycle | default('') | lower }}"
 
+    var_load_meta__no_stacktrace: "{{ params.meta.no_stacktrace | default('') | lower }}"
     var_load_meta__no_info: "{{ params.meta.no_info | default('') | lower }}"
     var_load_meta__no_warn: "{{ params.meta.no_warn | default('') | lower }}"
     var_load_meta__no_error: "{{ params.meta.no_error | default('') | lower }}"
