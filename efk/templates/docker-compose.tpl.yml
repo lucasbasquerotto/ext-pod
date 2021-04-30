@@ -520,6 +520,14 @@ services:
     volumes:
 
     {#############################################################}
+    {% if params.use_secure_elasticsearch | bool %}
+
+    - "./env/ssl:/usr/share/elasticsearch/config/ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "elasticsearch:/usr/share/elasticsearch/data"
@@ -527,14 +535,6 @@ services:
     {% else %}
 
     - "$DATA_DIR/elasticsearch:/usr/share/elasticsearch/data"
-
-    {% endif %}
-    {#############################################################}
-
-    {#############################################################}
-    {% if params.use_secure_elasticsearch | bool %}
-
-    - "./env/ssl:/usr/share/elasticsearch/config/ssl:ro"
 
     {% endif %}
     {#############################################################}
