@@ -7,6 +7,11 @@
 {% set var_use_s3 = params.use_s3 | bool %}
 {% set var_use_local_s3 = params.use_local_s3 | bool %}
 {% set var_use_internal_fluentd = params.use_internal_fluentd | bool %}
+{% set var_fluentd_ssl =
+  (params.fluentd_output_plugin == 'elasticsearch')
+  and
+  (params.use_secure_elasticsearch | bool)
+%}
 
 version: '2.4'
 
@@ -612,6 +617,15 @@ services:
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
     - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
+
+    {#############################################################}
+    {% if var_fluentd_ssl %}
+
+    - "./env/ssl:/etc/ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
     logging: *jsonlog
 
     {#############################################################}
