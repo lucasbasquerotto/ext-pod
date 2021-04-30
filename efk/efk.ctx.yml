@@ -11,7 +11,8 @@
 {% endif %}
 
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
-{% set var_use_kibana = var_is_web %}
+{% set var_use_nginx = var_is_web and (params.use_nginx | default(false) | bool) %}
+{% set var_use_kibana = var_is_web and (params.use_kibana | default(false) | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
 {% set var_is_db = var_pod_type in ['app', 'db'] %}
@@ -213,6 +214,7 @@ templates:
     use_s3: "{{ params.use_s3 | default(false) }}"
     use_local_s3: "{{ var_use_local_s3 }}"
     use_nginx: "{{ params.use_nginx | default(false) }}"
+    use_kibana: "{{ params.use_kibana | default(false) }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
     use_filestash: "{{ params.use_filestash | default(false) }}"
@@ -260,7 +262,6 @@ templates:
     minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
     local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
-    use_elasticsearch: "{{ params.use_elasticsearch | default(false) }}"
     use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     elastic_password: "{{ credentials.elasticsearch.elastic_password | default('') }}"
 
@@ -287,7 +288,7 @@ templates:
 ##############################################################
 
 ##############################################################
-{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
+{% if var_use_nginx and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 
@@ -303,6 +304,7 @@ templates:
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "kibana"
+        when: "{{ var_use_kibana }}"
         endpoint: "http://kibana:5601"
         upgrade: true
         private: true
@@ -512,7 +514,7 @@ templates:
     var_load_use__main_network: "true"
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
-    var_load_use__nginx: "true"
+    var_load_use__nginx: "{{ var_use_nginx | lower }}"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__local_s3: "{{ var_use_local_s3 | lower }}"
