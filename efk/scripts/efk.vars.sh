@@ -197,7 +197,7 @@ fi
 tmp_error_count_aux="$tmp_error_count"
 tmp_error_count=0
 
-# shellcheck disable=SC1090
+# shellcheck disable=SC1090,SC1091
 . "$tmp_pod_layer_dir/shared/scripts/shared.vars.sh"
 
 tmp_shared_error_count="${tmp_error_count:-0}"
