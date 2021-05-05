@@ -3,4 +3,6 @@ ARG VERSION
 
 FROM $IMAGE:$VERSION
 
-COPY /env/ghost/ghost.yml /usr/share/ghost/config/
+ARG ENV
+
+COPY /env/ghost/config.json /var/lib/ghost/config.${ENV}.json

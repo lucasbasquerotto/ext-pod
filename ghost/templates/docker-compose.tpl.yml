@@ -280,7 +280,10 @@ services:
       args:
         IMAGE: "{{ params.images.ghost_image }}"
         VERSION: "{{ params.images.ghost_version }}"
+        ENV: "{{ params.ghost_environment }}"
     restart: "unless-stopped"
+    environment:
+      NODE_ENV: "{{ params.ghost_environment }}"
 
     {#############################################################}
     {% if var_use_internal_fluentd or (params.pod_type == 'app') %}

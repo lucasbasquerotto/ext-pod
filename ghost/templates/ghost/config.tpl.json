@@ -1,0 +1,30 @@
+{
+  "url": "{{ params.url }}",
+  "server": {
+    "port": 2368,
+    "host": "0.0.0.0"
+  },
+  "database": {
+    "client": "mysql",
+    "connection": {
+      "host": "{{ params.db_host }}",
+      "port": {{ params.db_port }},
+      "user": "{{ params.db_user }}",
+      "password": "{{ params.db_password }}",
+      "database": "{{ params.db_name }}"
+    }
+  },
+  "mail": {
+    "transport": "Direct"
+  },
+  "logging": {
+    "transports": [
+      "file",
+      "stdout"
+    ]
+  },
+  "process": "systemd",
+  "paths": {
+    "contentPath": "/var/lib/ghost/content"
+  }
+}
