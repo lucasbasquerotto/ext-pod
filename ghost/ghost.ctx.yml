@@ -175,6 +175,11 @@
 
 {% endif %}
 
+{% set var_ghost_mail =
+  ((credentials.ghost_mail | default({}) | dict2items | length) > 0)
+  | ternary(credentials.ghost_mail | default({}), { 'transport': 'Direct' })
+%}
+
 ### main ###
 
 env_files:
@@ -324,6 +329,7 @@ templates:
   dest: "env/ghost/config.json"
   params:
     url: "{{ var_ghost_external_host }}"
+    mail: {{ var_ghost_mail | to_json }}
     db_host: "{{ var_mysql_hostname }}"
     db_port: "{{ var_mysql_port }}"
     db_name: "{{ credentials.db.name | default('') }}"
