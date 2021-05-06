@@ -392,6 +392,9 @@ templates:
 {% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_ghost_service = params.use_varnish | default(false) | bool
+  | ternary('http://varnish:80', 'http://ghost:2368')
+%}
 
 - src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   dest: "env/nginx/nginx.conf"
@@ -405,7 +408,7 @@ templates:
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "ghost"
-        endpoint: "http://ghost:2368"
+        endpoint: "{{ var_ghost_service }}"
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
