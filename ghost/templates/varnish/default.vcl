@@ -43,16 +43,14 @@ sub vcl_recv {
         }
     }
 
-    if (req.url ~ "/clearcache/myblog") {
-        # Same ACL check as above:
+    # PURGE the entire cache
+    if (req.url ~ "/cache/clear") {
         if (!client.ip ~ purge) {
-            return(synth(403, "Not allowed."));
+            return (synth(405, "Not allowed."));
+        } else {
+            ban("req.url ~ .");
+            return (synth(200, "All cache cleared"));
         }
-        ban("req.http.host == myblog.com");
-
-        # Throw a synthetic page so the
-        # request won't go to the backend.
-        return(synth(200, "Cache cleared"));
     }
 }
 
