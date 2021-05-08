@@ -5,4 +5,4 @@ FROM $IMAGE:$VERSION
 
 ARG ENV
 
-COPY /env/ghost/config.json /var/lib/ghost/config.${ENV}.json
+COPY --chown=node:node /env/ghost/config.json /var/lib/ghost/config.${ENV}.json
