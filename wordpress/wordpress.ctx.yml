@@ -602,6 +602,7 @@ templates:
     var_load_shared__include_cron_watch: "{{ params.include_cron_watch | default('') | lower }}"
     var_load_shared__cron__src: "{{ params.cron_src | default('') }}"
     var_load_shared__cron__dest: "{{ params.cron_dest | default('') }}"
+    var_load_shared__outer_proxy_type: "{{ params.outer_proxy_type | default('') }}"
     var_load_shared__fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
 
     var_load_use__main_network: "true"
@@ -620,6 +621,7 @@ templates:
     var_load_use__redis: "{{ params.use_redis | default('') | lower }}"
     var_load_use__memcached: "{{ params.use_memcached | default('') | lower }}"
     var_load_use__w3tc: "{{ params.use_w3tc | default('') | lower }}"
+    var_load_use__outer_proxy: "{{ params.use_outer_proxy | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
     var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
