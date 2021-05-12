@@ -373,7 +373,12 @@ templates:
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
 
-{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_default_nginx_conf = {
+    'ssl': params.use_ssl | default(false),
+    'use_outer_proxy': params.use_outer_proxy | default(false),
+    'outer_proxy_ip_header': params.outer_proxy_ip_header | default('')
+  }
+%}
 
 - src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   dest: "env/nginx/nginx.conf"
@@ -388,6 +393,7 @@ templates:
     services:
       - name: "rocketchat"
         endpoint: "http://rocketchat:3000"
+        use_outer_proxy: "{{ params.use_outer_proxy | default(false) }}"
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true

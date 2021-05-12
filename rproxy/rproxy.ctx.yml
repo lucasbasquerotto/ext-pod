@@ -274,7 +274,12 @@ templates:
 ##############################################################
 
 {% set var_conf_file_ext = (var_rproxy_type == 'haproxy') | ternary('cfg', 'conf') %}
-{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_default_nginx_conf = {
+    'ssl': params.use_ssl | default(false),
+    'use_outer_proxy': params.use_outer_proxy | default(false),
+    'outer_proxy_ip_header': params.outer_proxy_ip_header | default('')
+  }
+%}
 {% set var_default_haproxy_conf =
   { 'ssl': params.use_ssl | default(false), 'webservice_endpoint': 'http://nginx' }
 %}
