@@ -376,7 +376,8 @@ templates:
 {% set var_default_nginx_conf = {
     'ssl': params.use_ssl | default(false),
     'use_outer_proxy': params.use_outer_proxy | default(false),
-    'outer_proxy_ip_header': params.outer_proxy_ip_header | default('')
+    'outer_proxy_ip_header': params.outer_proxy_ip_header | default(''),
+    'client_max_body_size': params.upload_max_size | default('5M')
   }
 %}
 
