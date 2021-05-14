@@ -6,7 +6,7 @@
 {% set var_pod_type = 'web' %}
 
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
-{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | default(false) | bool) %}
 
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 {% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
