@@ -214,6 +214,7 @@ templates:
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
+    bind_external_port: "{{ params.bind_external_port | default('53') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
@@ -330,7 +331,7 @@ templates:
 {% endif %}
 ##############################################################
 
-- src: "{{ var_shared_dir }}/templates/bind/authoritative.named.tpl.conf"
+- src: "{{ var_main_dir }}/templates/bind/authoritative.named.tpl.conf"
   dest: "env/bind/named.conf"
   params:
     bind_type: "{{ params.bind_type | default('') }}"
@@ -343,7 +344,7 @@ templates:
     bind_email_hostmaster: "{{ params.bind.email_hostmaster | default('') }}"
     bind_serial: "{{ params.bind.serial | default('') }}"
 
-- src: "{{ var_shared_dir }}/templates/bind/zone.tpl.conf"
+- src: "{{ var_main_dir }}/templates/bind/zone.tpl.conf"
   dest: "env/bind/zone.conf"
   params:
     bind_type: "{{ params.bind_type }}"
