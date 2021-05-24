@@ -48,33 +48,26 @@ case "$command" in
 	"build")
 		bind_data_dir="$pod_data_dir/sync/bind"
 
-		bind_conf_file="$bind_data_dir/named.conf"
-		bind_conf_dir="$(dirname "$bind_conf_file")"
-
-		if [ ! -f "$bind_conf_file" ]; then
-			mkdir -p "$bind_conf_dir"
-		fi
-
-		cp "$pod_layer_dir/bind/named.conf" "$bind_conf_file"
-
 		bind_zone_file="$bind_data_dir/$var_custom__bind__type/$var_custom__bind__zone"
 		bind_zone_dir="$(dirname "$bind_zone_file")"
 
 		if [ ! -f "$bind_zone_file" ]; then
 			mkdir -p "$bind_zone_dir"
-			cp "$pod_layer_dir/bind/zone.conf" "$bind_zone_file"
+			cp "$pod_layer_dir/env/bind/zone.conf" "$bind_zone_file"
 		fi
 
-		"$pod_env_shared_file" "$command" "$@"
+		"$pod_shared_run_file" "$command" "$@"
 		;;
 	"up")
-		result="$(ps --no-headers -o comm 1)"
+		if [ "${var_custom__bind__external_port:-}" = '53' ]; then
+			result="$(ps --no-headers -o comm 1)"
 
-		if [ "$result" = "systemd" ]; then
-			sudo systemctl stop systemd-resolved || :
+			if [ "$result" = "systemd" ]; then
+				sudo systemctl stop systemd-resolved || :
+			fi
 		fi
 
-		"$pod_env_shared_file" "$command" "$@"
+		"$pod_shared_run_file" "$command" "$@"
 		;;
 	"new-key")
 		"$pod_script_env_file" run dnssec bash <<-SHELL || error "$command"
@@ -155,11 +148,17 @@ case "$command" in
 			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
 			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
 		;;
+	"action:exec:bind_reload")
+		"$pod_shared_run_file" exec-nontty bind rndc freeze "$var_custom__bind__zone"
+		"$pod_shared_run_file" exec-nontty bind rndc reload "$var_custom__bind__zone"
+		"$pod_shared_run_file" exec-nontty bind rndc thaw "$var_custom__bind__zone"
+		;;
 	"shared:action:"*)
 		action="${command#shared:action:}"
 
 		case "$action" in
 			"backup"|\
+			"bind_reload"|\
 			"local.backup"|\
 			"log_register.entropy"|\
 			"log_register.memory_details"|\

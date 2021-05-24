@@ -36,6 +36,7 @@ fi
 
 export var_custom__bind__type="${var_load_custom__bind_type:-}"
 export var_custom__bind__zone="${var_load_custom__bind_zone:-}"
+export var_custom__bind__external_port="${var_load_custom__bind_external_port:-}"
 
 tmp_error_count=${#tmp_errors[@]}
 

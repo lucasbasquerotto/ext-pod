@@ -179,16 +179,24 @@ services:
 
     networks:
     - "shared"
-
     ports:
     - "{{ params.bind_external_port }}:53"
     - "{{ params.bind_external_port }}:53/udp"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
     volumes:
-    - "$DATA_DIR/sync/bind/named.conf:/etc/bind/named.conf"
     - "$DATA_DIR/sync/bind:/var/main/data/sync/bind"
     - "$DATA_DIR/tmp/bind:/tmp/main/bind"
     - "$DATA_DIR/log/bind:/var/log/main/bind"
-    logging: *jsonlog
+    logging: *mainlog
 
     {#############################################################}
     {% if (params.memory.bind | default('')) != '' %}
@@ -545,7 +553,6 @@ services:
       args:
         IMAGE: "{{ params.images.fluentd_image }}"
         VERSION: "{{ params.images.fluentd_version }}"
-        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
     restart: "unless-stopped"
     ports:
     - "{{ params.fluentd_port }}:24224"

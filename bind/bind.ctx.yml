@@ -392,6 +392,7 @@ templates:
 
     var_load_custom__bind_type: "{{ params.bind_type }}"
     var_load_custom__bind_zone: "{{ params.bind_zone }}"
+    var_load_custom__bind_external_port: "{{ params.bind_external_port | default('53') }}"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"
