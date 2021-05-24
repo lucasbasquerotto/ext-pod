@@ -4,6 +4,7 @@ set -eou pipefail
 
 pod_layer_dir="$var_pod_layer_dir"
 pod_script_env_file="$var_pod_script"
+pod_data_dir="$var_pod_data_dir"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -27,7 +28,7 @@ shift;
 args=("$@")
 
 while getopts ':-:' OPT; do
-	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
 		OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
@@ -44,32 +45,78 @@ shift $((OPTIND-1))
 pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
-	"prepare")
-		"$pod_script_env_file" up toolbox > /dev/null
+	"build")
+		bind_data_dir="$pod_data_dir/sync/bind"
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+		bind_conf_file="$bind_data_dir/named.conf"
+		bind_conf_dir="$(dirname "$bind_conf_file")"
+
+		if [ ! -f "$bind_conf_file" ]; then
+			mkdir -p "$bind_conf_dir"
+		fi
+
+		cp "$pod_layer_dir/bind/named.conf" "$bind_conf_file"
+
+		bind_zone_file="$bind_data_dir/$var_custom__bind__type/$var_custom__bind__zone"
+		bind_zone_dir="$(dirname "$bind_zone_file")"
+
+		if [ ! -f "$bind_zone_file" ]; then
+			mkdir -p "$bind_zone_dir"
+			cp "$pod_layer_dir/bind/zone.conf" "$bind_zone_file"
+		fi
+
+		"$pod_env_shared_file" "$command" "$@"
+		;;
+	"up")
+		result="$(ps --no-headers -o comm 1)"
+
+		if [ "$result" = "systemd" ]; then
+			sudo systemctl stop systemd-resolved || :
+		fi
+
+		"$pod_env_shared_file" "$command" "$@"
+		;;
+	"new-key")
+		"$pod_script_env_file" run dnssec bash <<-SHELL || error "$command"
 			set -eou pipefail
 
-			base_dir="/var/main/data/vault"
+			>&2 rm -rf /tmp/main/bind/keys
+			>&2 mkdir -p /tmp/main/bind/keys
 
-			dir="\$base_dir/data"
+			cd /tmp/main/bind/keys
+			>&2 dnssec-keygen -C -a HMAC-MD5 -b 512 -n USER "$var_custom__bind_zone".
+			>&2 file_name="\$(ls -rt | grep "$var_custom__bind_zone" | tail -n1)"
+			>&2 new_key="\$(cat "\$file_name" | awk '{ print \$7 }')"
+			echo "\$new_key"
+		SHELL
+		;;
+	"print-new-key")
+		new_key="$("$pod_script_env_file" "new-key")"
+		echo "new_key=$new_key"
+		;;
+	"bind:"*)
+		ctx="${command#bind:}"
+		prefix="var_bind_${ctx}"
+		zone_name="${prefix}_zone_name"
 
-			if [ ! -d "\$dir" ]; then
-				mkdir -p "\$dir"
-			fi
-
-			chown 100 "\$dir"
-
-			dir="\$base_dir/logs"
-
-			if [ ! -d "\$dir" ]; then
-				mkdir -p "\$dir"
-			fi
-
-			chown 100 "\$dir"
+		"$pod_script_env_file" exec-nontty toolbox <<-SHELL || error "$command"
+			rm -rf /tmp/main/bind/keys
+			mkdir /tmp/main/bind/keys
 		SHELL
 
-		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		"$pod_script_env_file" run dnssec <<-SHELL || error "$command"
+			cd /tmp/main/bind/keys
+			dnssec-keygen -a NSEC3RSASHA1 -b 2048 -n ZONE "$zone_name"
+			dnssec-keygen -f KSK -a NSEC3RSASHA1 -b 4096 -n ZONE "$zone_name"
+
+			for key in \$(ls K"$zone_name"*.key)
+			do
+				echo "\\\$INCLUDE \$key" >> "$zone_name".zone
+			done
+
+			salt="\$(head -c 1000 /dev/random | sha1sum | cut -b 1-16)"
+			dnssec-signzone -3 "\$salt" -A -N INCREMENT -o "$zone_name" -t "$zone_name".zone
+		SHELL
 		;;
 	"custom:unique:log")
 		opts=()
@@ -77,8 +124,10 @@ case "$command" in
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "${var_custom__use_nginx:-}" = "true" ]; then
-			opts+=( 'log_register.nginx_basic_status' )
+		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+			if [ "${var_custom__use_nginx:-}" = "true" ]; then
+				opts+=( 'log_register.nginx_basic_status' )
+			fi
 		fi
 
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
@@ -98,10 +147,6 @@ case "$command" in
 			if [ "${var_custom__use_nginx:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
-			fi
-
-			if [ "${var_custom__use_haproxy:-}" = "true" ]; then
-				"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
 		fi
 

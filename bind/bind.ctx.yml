@@ -1,0 +1,494 @@
+## general vars - start ###
+
+{% set var_pod_kind = 'bind' %}
+
+{% set var_local = params.local | default(false) | bool %}
+{% set var_pod_type = params.type | default('') %}
+
+{% if not (var_pod_type in ['app', 'web']) %}
+  {% set error = {} %}
+  {{ error['error.pod_type.invalid.' + var_pod_type] }}
+{% endif %}
+
+{% set var_is_web = var_pod_type in ['app', 'web'] %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+
+{% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
+{% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
+
+{% set var_main_base_dir = params.custom_dir %}
+{% set var_main_dir = var_main_base_dir + '/' + var_pod_kind %}
+{% set var_main_base_dir_container = (var_local and (params.custom_dir_sync | default(false) | bool))
+  | ternary(var_main_base_dir + '-sync', var_main_base_dir)
+%}
+{% set var_main_dir_container = var_main_base_dir_container + '/' + var_pod_kind %}
+{% set var_shared_dir = 'shared' %}
+
+{% set var_data_dir = input.data_dir %}
+
+{% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
+{% set var_elasticsearch_hosts = input.dependencies.elasticsearch.host_list | default([]) %}
+
+{% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}
+{% set var_custom_ssl_fullchain = params.custom_ssl.fullchain | default('') %}
+{% set var_custom_ssl_privkey = params.custom_ssl.privkey | default('') %}
+{% set var_custom_ssl_concat = params.custom_ssl.concat | default('') %}
+{% set var_use_custom_ssl = (var_custom_ssl_main_domain != '')
+  and (
+    ((var_custom_ssl_fullchain != '') and (var_custom_ssl_privkey != ''))
+    or
+    (var_custom_ssl_concat != '')
+  )
+%}
+
+{% set var_use_internal_ssl = var_use_secure_elasticsearch %}
+{% set var_internal_ssl_fullchain = params.internal_ssl.fullchain | default('') %}
+{% set var_internal_ssl_cert = params.internal_ssl.cert | default('') %}
+{% set var_internal_ssl_ca = params.internal_ssl.ca | default('') %}
+{% set var_internal_ssl_privkey = params.internal_ssl.privkey | default('') %}
+{% set var_internal_ssl_concat = params.internal_ssl.concat | default('') %}
+
+{% set var_non_standard_local_ports = not (params.local_standard_ports | default(false) | bool) %}
+{% set var_ports = (params.ports is defined) | ternary(
+    params.ports | default({}),
+    (var_local and var_non_standard_local_ports) | ternary(
+      {
+        'public_http_port': '8080',
+        'public_https_port': '8443',
+        'private_http_port': '9080',
+        'private_https_port': '9443'
+      },
+      {
+        'public_http_port': '80',
+        'public_https_port': '443',
+        'private_http_port': '9080',
+        'private_https_port': '9443'
+      }
+    )
+  )
+%}
+
+{% set var_ctx_full_name = input.identifier %}
+{% set var_use_prefix = params.use_pod_prefix | default(params.use_pod_full_prefix | default(false)) | bool %}
+{% set var_pod_prefix = params.use_pod_full_prefix | default(false) | bool | ternary(var_ctx_full_name, input.pod_name) %}
+{% set var_ctx_prefix_main = var_use_prefix | bool | ternary(var_pod_prefix + '-main-', '') %}
+{% set var_ctx_prefix_run = var_use_prefix | bool | ternary(var_pod_prefix + '-run-', '') %}
+{% set var_shared_network_name = params.shared_network | default(var_ctx_full_name + '-network', true) %}
+
+{% set var_fluentd_output_plugin = params.fluentd_output_plugin | default('file', true) %}
+{% set var_use_internal_fluentd =
+  (params.use_fluentd | default(false) | bool)
+  and
+  (not (params.internal | default(false) | bool))
+%}
+
+{% set var_certbot_domains =
+  ((params.certbot_domains | default([]) | length) > 0)
+  | ternary(
+    params.certbot_domains | default([]) | join(' '),
+    params.domains | default({}) | dict2items | map(attribute='value') | join(' ')
+  )
+%}
+
+{% set var_s3_config_src = '' %}
+{% set var_s3_config_dest = '' %}
+
+{% if params.use_s3 | default(false) | bool %}
+  {% if (params.s3_cli | default('')) == 'awscli' %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/awscli/credentials.ini' %}
+    {% set var_s3_config_dest = 'env/awscli/credentials.ini' %}
+  {% elif (params.s3_cli | default('')) == 'rclone' %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/rclone/rclone.conf' %}
+    {% set var_s3_config_dest = 'env/rclone/rclone.conf' %}
+  {% elif (params.s3_cli | default('')) == 'mc' %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/mc/config.json.j2' %}
+    {% set var_s3_config_dest = 'env/mc/config.json' %}
+  {% else %}
+    {% set var_s3_config_src = var_shared_dir + '/templates/unknown_s3_cli' %}
+    {% set var_s3_config_dest = 'env/unknown_s3_cli' %}
+  {% endif %}
+{% endif %}
+
+{% set var_s3_minio_gateway_credentials = credentials.minio_gateway | default({}) %}
+{% set var_s3_backup_credentials = credentials.backup_bucket | default({}) %}
+{% set var_s3_backup_replica_credentials = credentials.backup_replica_bucket | default({}) %}
+
+{% set var_local_s3_credentials = {
+    'endpoint': 'http://s3:9000',
+    'access_key': 'minio',
+    'secret_key': 'minio123',
+    'path_style': true
+  }
+%}
+
+{% if var_use_local_s3 %}
+
+  {% set var_s3_minio_gateway_credentials = var_local_s3_credentials %}
+  {% set var_s3_backup_credentials = var_local_s3_credentials %}
+  {% set var_s3_backup_replica_credentials = var_local_s3_credentials %}
+
+{% endif %}
+
+### main ###
+
+env_files:
+
+- when: false
+
+##############################################################
+{% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
+
+- src: "{{ var_custom_ssl_fullchain }}"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  when: "{{ var_custom_ssl_fullchain != '' }}"
+
+- src: "{{ var_custom_ssl_privkey }}"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  when: "{{ var_custom_ssl_privkey != '' }}"
+
+- src: "{{ var_custom_ssl_concat }}"
+  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+  when: "{{ var_custom_ssl_concat != '' }}"
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if var_use_internal_ssl %}
+
+- src: "{{ var_internal_ssl_fullchain }}"
+  dest: "env/ssl/fullchain.pem"
+  when: "{{ var_internal_ssl_fullchain != '' }}"
+
+- src: "{{ var_internal_ssl_cert }}"
+  dest: "env/ssl/cert.pem"
+  when: "{{ var_internal_ssl_cert != '' }}"
+
+- src: "{{ var_internal_ssl_ca }}"
+  dest: "env/ssl/ca.pem"
+  when: "{{ var_internal_ssl_ca != '' }}"
+
+- src: "{{ var_internal_ssl_privkey }}"
+  dest: "env/ssl/privkey.pem"
+  when: "{{ var_internal_ssl_privkey != '' }}"
+
+- src: "{{ var_internal_ssl_concat }}"
+  dest: "env/ssl/concat.pem"
+  when: "{{ var_internal_ssl_concat != '' }}"
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
+
+- src: "{{ params.auth_file }}"
+  dest: "env/nginx/auth/.htpasswd"
+
+{% endif %}
+##############################################################
+
+templates:
+
+- src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
+  dest: "docker-compose.yml"
+  params:
+    local: "{{ var_local }}"
+    main_dir: "{{ var_main_dir_container }}"
+    pod_type: "{{ var_pod_type }}"
+    shared_network: "{{ var_shared_network_name }}"
+    named_volumes: "{{ params.named_volumes | default(false) }}"
+    internal: "{{ params.internal | default(false) }}"
+    use_secrets: "{{ params.use_secrets | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    use_internal_fluentd: "{{ var_use_internal_fluentd }}"
+    use_s3: "{{ params.use_s3 | default(false) }}"
+    use_local_s3: "{{ var_use_local_s3 }}"
+    use_nginx: "{{ params.use_nginx | default(false) }}"
+    use_theia: "{{ params.use_theia | default(false) }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    use_custom_ssl: "{{ var_use_custom_ssl }}"
+    use_internal_ssl: "{{ var_use_internal_ssl }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    fluentd_port: "{{ var_fluentd_port }}"
+    fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
+    elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
+    ports: {{ var_ports | to_json }}
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
+
+- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
+  dest: "docker-compose.run.yml"
+  params:
+    pod_type: "{{ var_pod_type }}"
+    shared_network: "{{ var_shared_network_name }}"
+    local: "{{ var_local }}"
+    main_dir: "{{ var_main_dir_container }}"
+    use_certbot: "{{ params.use_certbot | default(false) }}"
+    use_fluentd: "{{ params.use_fluentd | default(false) }}"
+    fluentd_port: "{{ var_fluentd_port }}"
+    images: {{ params.images | to_json }}
+    memory: {{ params.memory | to_json }}
+
+- src: "{{ var_main_dir }}/templates/docker-compose.env"
+  dest: ".env"
+  params:
+    ctx_full_name: "{{ var_ctx_full_name }}"
+    ctx_prefix_main: "{{ var_ctx_prefix_main }}"
+    ctx_prefix_run: "{{ var_ctx_prefix_run }}"
+    type: "{{ var_pod_type }}"
+    local: "{{ var_local }}"
+    data_dir: "{{ var_data_dir }}"
+    use_secrets: "{{ params.use_secrets | default(false) }}"
+    use_local_s3: "{{ var_use_local_s3 }}"
+    use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    minio_gateway_endpoint: "{{ var_s3_minio_gateway_credentials.endpoint | default('') }}"
+    minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
+    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
+    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+##############################################################
+{% if params.use_s3 | default(false) | bool %}
+
+- src: "{{ var_s3_config_src }}"
+  dest: "{{ var_s3_config_dest }}"
+  schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
+  params:
+    - alias: "backup"
+      endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
+      region: "{{ var_s3_backup_credentials.region | default('') }}"
+      access_key: "{{ var_s3_backup_credentials.access_key | default('') }}"
+      secret_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
+    - alias: "backup_replica"
+      endpoint: "{{ var_s3_backup_replica_credentials.endpoint | default('') }}"
+      region: "{{ var_s3_backup_replica_credentials.region | default('') }}"
+      access_key: "{{ var_s3_backup_replica_credentials.access_key | default('') }}"
+      secret_key: "{{ var_s3_backup_replica_credentials.secret_key | default('') }}"
+      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
+
+{% set var_default_nginx_conf = {
+    'ssl': params.use_ssl | default(false),
+    'use_outer_proxy': params.use_outer_proxy | default(false),
+    'outer_proxy_ip_header': params.outer_proxy_ip_header | default('')
+  }
+%}
+
+- src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
+  dest: "env/nginx/nginx.conf"
+  schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
+  params:
+    main_domain: "{{ params.main_domain }}"
+    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    ports: {{ var_ports | to_json }}
+    domains: {{ params.domains | default({}) | to_json }}
+    contents: {{ contents | default({}) | to_json }}
+    dependencies: {{ input.dependencies | default({}) | to_json }}
+    services:
+      - name: "private"
+        when: "{{ params.use_private_path | default(false) }}"
+        private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
+        locations:
+          - location: "= /nginx/basic_status"
+            data: "stub_status;"
+          - location: "/"
+            data: "return 404;"
+      - name: "theia"
+        when: "{{ params.use_theia | default(false) }}"
+        endpoint: "http://theia:3000"
+        upgrade: true
+        private: true
+        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
+      - name: "minio_gateway"
+        when: "{{ params.use_minio_gateway | default(false) }}"
+        endpoint: "http://minio_gateway:9000"
+        private: true
+        use_basic_auth: false
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if var_use_internal_fluentd and (var_fluentd_output_plugin == 'elasticsearch') %}
+
+- src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
+  dest: "env/fluentd/fluent.conf"
+  params:
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
+    elasticsearch_user: "fluentd"
+    elasticsearch_password: "{{ credentials.elasticsearch.fluentd_password | default('') }}"
+    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
+
+{% endif %}
+##############################################################
+
+- src: "{{ var_shared_dir }}/templates/bind/authoritative.named.tpl.conf"
+  dest: "env/bind/named.conf"
+  params:
+    bind_type: "{{ params.main.bind_type | default('') }}"
+    bind_zone: "{{ params.main.bind_zone | default('') }}"
+    bind_secret: "{{ credentials.bind.secret | default('') }}"
+    bind_master_ip: "{{ params.dependencies.master.host | default('127.0.0.1') }}"
+    bind_slave_ip: "{{ params.dependencies.slave.host | default('127.0.0.1') }}"
+    bind_master_ns: "{{ params.main.bind.master_ns | default('') }}"
+    bind_slave_ns: "{{ params.main.bind.slave_ns | default('') }}"
+    bind_email_hostmaster: "{{ params.main.bind.email_hostmaster | default('') }}"
+    bind_serial: "{{ params.main.bind.serial | default('') }}"
+
+- src: "{{ var_shared_dir }}/templates/bind/zone.tpl.conf"
+  dest: "env/bind/zone.conf"
+  params:
+    bind_type: "{{ params.main.bind_type }}"
+    bind_zone: "{{ params.main.custom_args.bind.zone }}"
+    bind_master_ip: "{{ params.dependencies.master.host | default('127.0.0.1') }}"
+    bind_slave_ip: "{{ params.dependencies.slave.host | default('127.0.0.1') }}"
+    bind_master_ns: "{{ params.main.custom_args.bind.master_ns | default('') }}"
+    bind_slave_ns: "{{ params.main.custom_args.bind.slave_ns | default('') }}"
+    bind_email_hostmaster: "{{ params.main.custom_args.bind.email_hostmaster | default('') }}"
+    bind_serial: "{{ params.main.custom_args.bind.serial }}"
+
+##############################################################
+{% if params.use_secrets | default(false) | bool %}
+
+- src: "main/vars/values.tpl.txt"
+  dest: "env/secrets.txt"
+  params:
+    empty: ""
+
+    ##############################################################
+    {% if var_use_minio_gateway %}
+
+    minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
+    minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_local_s3 %}
+
+    local_s3_access_key: "{{ var_local_s3_credentials.access_key }}"
+    local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
+
+    {% endif %}
+    ##############################################################
+
+{% endif %}
+##############################################################
+
+- src: "main/vars/vars.tpl.sh"
+  dest: "vars.sh"
+  params:
+    var_load_script_path: "{{ var_main_dir }}/scripts/base.vars.sh"
+
+    var_load_custom__bind_type: "{{ params.main.bind_type }}"
+    var_load_custom__bind_zone: "{{ params.main.custom_args.bind.zone }}"
+
+    var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
+    var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"
+    var_load_general__ctx_prefix_run: "{{ var_ctx_prefix_run }}"
+    var_load_general__shared_network: "{{ var_shared_network_name }}"
+    var_load_general__main_base_dir: "{{ var_main_base_dir }}"
+    var_load_general__main_base_dir_container: "{{ var_main_base_dir_container }}"
+    var_load_general__backup_is_delete_old: "true"
+    var_load_general__s3_cli: "{{ params.s3_cli | default('') }}"
+    var_load_general__define_s3_backup_lifecycle: "{{ params.define_s3_backup_lifecycle | default('') | lower }}"
+
+    var_load_meta__no_stacktrace: "{{ params.meta.no_stacktrace | default('') | lower }}"
+    var_load_meta__no_info: "{{ params.meta.no_info | default('') | lower }}"
+    var_load_meta__no_warn: "{{ params.meta.no_warn | default('') | lower }}"
+    var_load_meta__no_error: "{{ params.meta.no_error | default('') | lower }}"
+    var_load_meta__no_info_wrap: "{{ params.meta.no_info_wrap | default('') | lower }}"
+    var_load_meta__no_summary: "{{ params.meta.no_summary | default('') | lower }}"
+    var_load_meta__no_colors: "{{ params.meta.no_colors | default('') | lower }}"
+
+    var_load_main__data_dir: "{{ input.data_dir }}"
+    var_load_main__pod_type: "{{ var_pod_type }}"
+    var_load_main__instance_index: "{{ input.instance_index }}"
+    var_load_main__local: "{{ var_local | lower }}"
+
+    var_load_shared__delete_old__days: "3"
+    var_load_shared__define_cron: "{{ params.define_cron | default('') | lower }}"
+    var_load_shared__include_cron_watch: "{{ params.include_cron_watch | default('') | lower }}"
+    var_load_shared__cron__src: "{{ params.cron_src | default('') }}"
+    var_load_shared__cron__dest: "{{ params.cron_dest | default('') }}"
+    var_load_shared__outer_proxy_type: "{{ params.outer_proxy_type | default('') }}"
+    var_load_shared__fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
+
+    var_load_use__main_network: "true"
+    var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
+    var_load_use__logrotator: "true"
+    var_load_use__nginx: "{{ params.use_nginx | default('') | lower }}"
+    var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
+    var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
+    var_load_use__local_s3: "{{ var_use_local_s3 | lower }}"
+    var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
+    var_load_use__internal_fluentd: "{{ var_use_internal_fluentd | lower }}"
+    var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
+    var_load_use__outer_proxy: "{{ params.use_outer_proxy | default('') | lower }}"
+    var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
+    var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
+    var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
+    var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
+
+    # Enable Tasks
+
+    var_load_enable__logs_backup: "{{ params.enable_logs_backup | default('') | lower }}"
+    var_load_enable__sync_backup: "{{ params.enable_sync_backup | default('') | lower }}"
+    var_load_enable__backup_replica: "{{ params.enable_backup_replica | default('') | lower }}"
+
+    var_load_enable__logs_setup: "{{ params.enable_logs_setup | default('') | lower }}"
+    var_load_enable__sync_setup: "{{ params.enable_sync_setup | default('') | lower }}"
+
+    # Tasks
+
+    var_load__block_ips: "{{ params.block_ips | default('') | lower }}"
+    var_load__block_ips__max_amount: "{{ params.block_ips.max_amount | default('') }}"
+    var_load__block_ips__amount_day: "{{ params.block_ips.amount_day | default('') }}"
+    var_load__block_ips__amount_hour: "{{ params.block_ips.amount_hour | default('') }}"
+
+    var_load__certbot__main_domain: "{{ params.main_domain | default('') }}"
+    var_load__certbot__domains: "{{ var_certbot_domains }}"
+    var_load__certbot__email: "{{ params.certbot.email | default('') }}"
+    var_load__certbot__rsa_key_size: "{{ params.certbot.rsa_key_size | default('') }}"
+    var_load__certbot__force: "{{ params.certbot.force | default('') | lower }}"
+    var_load__certbot__staging: "{{ params.certbot.staging | default('') | lower }}"
+    var_load__certbot__dev: "{{ params.certbot.dev | default('') | lower }}"
+
+    var_load__log_summary__disabled: "{{ params.log_summary.disabled | default('') | lower }}"
+    var_load__log_summary__days_ago: "{{ params.log_summary.days_ago | default('') }}"
+    var_load__log_summary__max_amount: "{{ params.log_summary.max_amount | default('') }}"
+    var_load__log_summary__verify_size_docker_dir: "{{ params.log_summary.verify_size_docker_dir | default('') | lower }}"
+    var_load__log_summary__verify_size_containers: "{{ params.log_summary.verify_size_containers | default('') | lower }}"
+
+    var_load__logs_setup__restore_bucket_path_dir: "{{ params.logs_setup.restore_bucket_path_dir | default('') }}"
+    var_load__logs_setup__verify_file_to_skip: "{{ params.logs_setup.verify_file_to_skip | default('') }}"
+    var_load__logs_setup__recursive_mode: "{{ params.logs_setup.recursive_mode | default('') }}"
+    var_load__logs_setup__recursive_mode_dir: "{{ params.logs_setup.recursive_mode_dir | default('') }}"
+    var_load__logs_setup__recursive_mode_file: "{{ params.logs_setup.recursive_mode_file | default('') }}"
+
+    var_load__s3_backup__bucket_name: "{{ params.backup_bucket_name | default('') }}"
+    var_load__s3_backup__bucket_path: "{{ params.backup_bucket_path | default('') }}"
+    var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
+    var_load__s3_backup__endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
+    var_load__s3_backup__lifecycle_file: "{{ params.s3_backup_lifecycle_file | default('') }}"
+    var_load__s3_backup__acl: "{{ params.s3_backup_acl | default('') }}"
+
+    var_load__s3_backup_replica__bucket_name: "{{ params.backup_replica_bucket_name | default('') }}"
+    var_load__s3_backup_replica__bucket_path: "{{ params.backup_replica_bucket_path | default('') }}"
+    var_load__s3_backup_replica__cli: "{{ params.s3_cli | default('') }}"
+    var_load__s3_backup_replica__endpoint: "{{ var_s3_backup_replica_credentials.endpoint | default('') }}"
+
+    var_load__sync_setup__restore_bucket_path_dir: "{{ params.sync_setup.restore_bucket_path_dir | default('') }}"
+    var_load__sync_setup__verify_file_to_skip: "{{ params.sync_setup.verify_file_to_skip | default('') }}"
+    var_load__sync_setup__recursive_mode: "{{ params.sync_setup.recursive_mode | default('') }}"
+    var_load__sync_setup__recursive_mode_dir: "{{ params.sync_setup.recursive_mode_dir | default('') }}"
+    var_load__sync_setup__recursive_mode_file: "{{ params.sync_setup.recursive_mode_file | default('') }}"

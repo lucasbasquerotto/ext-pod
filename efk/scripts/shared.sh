@@ -27,7 +27,7 @@ shift;
 args=("$@")
 
 while getopts ':-:' OPT; do
-	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
 		OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
@@ -169,12 +169,12 @@ case "$command" in
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
-        days_ago="${var_custom__log_summary__days_ago:-}"
-        days_ago="${arg_days_ago:-$days_ago}"
+		days_ago="${var_custom__log_summary__days_ago:-}"
+		days_ago="${arg_days_ago:-$days_ago}"
 
-        max_amount="${var_custom__log_summary__max_amount:-}"
-        max_amount="${arg_max_amount:-$max_amount}"
-        max_amount="${max_amount:-100}"
+		max_amount="${var_custom__log_summary__max_amount:-}"
+		max_amount="${arg_max_amount:-$max_amount}"
+		max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"

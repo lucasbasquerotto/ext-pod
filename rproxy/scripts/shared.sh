@@ -60,12 +60,12 @@ case "$command" in
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
-        days_ago="${var_custom__log_summary__days_ago:-}"
-        days_ago="${arg_days_ago:-$days_ago}"
+		days_ago="${var_custom__log_summary__days_ago:-}"
+		days_ago="${arg_days_ago:-$days_ago}"
 
-        max_amount="${var_custom__log_summary__max_amount:-}"
-        max_amount="${arg_max_amount:-$max_amount}"
-        max_amount="${max_amount:-100}"
+		max_amount="${var_custom__log_summary__max_amount:-}"
+		max_amount="${arg_max_amount:-$max_amount}"
+		max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
