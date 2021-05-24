@@ -333,27 +333,27 @@ templates:
 - src: "{{ var_shared_dir }}/templates/bind/authoritative.named.tpl.conf"
   dest: "env/bind/named.conf"
   params:
-    bind_type: "{{ params.main.bind_type | default('') }}"
-    bind_zone: "{{ params.main.bind_zone | default('') }}"
+    bind_type: "{{ params.bind_type | default('') }}"
+    bind_zone: "{{ params.bind_zone | default('') }}"
     bind_secret: "{{ credentials.bind.secret | default('') }}"
     bind_master_ip: "{{ params.dependencies.master.host | default('127.0.0.1') }}"
     bind_slave_ip: "{{ params.dependencies.slave.host | default('127.0.0.1') }}"
-    bind_master_ns: "{{ params.main.bind.master_ns | default('') }}"
-    bind_slave_ns: "{{ params.main.bind.slave_ns | default('') }}"
-    bind_email_hostmaster: "{{ params.main.bind.email_hostmaster | default('') }}"
-    bind_serial: "{{ params.main.bind.serial | default('') }}"
+    bind_master_ns: "{{ params.bind.master_ns | default('') }}"
+    bind_slave_ns: "{{ params.bind.slave_ns | default('') }}"
+    bind_email_hostmaster: "{{ params.bind.email_hostmaster | default('') }}"
+    bind_serial: "{{ params.bind.serial | default('') }}"
 
 - src: "{{ var_shared_dir }}/templates/bind/zone.tpl.conf"
   dest: "env/bind/zone.conf"
   params:
-    bind_type: "{{ params.main.bind_type }}"
-    bind_zone: "{{ params.main.custom_args.bind.zone }}"
+    bind_type: "{{ params.bind_type }}"
+    bind_zone: "{{ params.bind_zone }}"
     bind_master_ip: "{{ params.dependencies.master.host | default('127.0.0.1') }}"
     bind_slave_ip: "{{ params.dependencies.slave.host | default('127.0.0.1') }}"
-    bind_master_ns: "{{ params.main.custom_args.bind.master_ns | default('') }}"
-    bind_slave_ns: "{{ params.main.custom_args.bind.slave_ns | default('') }}"
-    bind_email_hostmaster: "{{ params.main.custom_args.bind.email_hostmaster | default('') }}"
-    bind_serial: "{{ params.main.custom_args.bind.serial }}"
+    bind_master_ns: "{{ params.bind_master_ns | default('') }}"
+    bind_slave_ns: "{{ params.bind_slave_ns | default('') }}"
+    bind_email_hostmaster: "{{ params.bind_email_hostmaster | default('') }}"
+    bind_serial: "{{ params.bind_serial }}"
 
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
@@ -387,10 +387,10 @@ templates:
 - src: "main/vars/vars.tpl.sh"
   dest: "vars.sh"
   params:
-    var_load_script_path: "{{ var_main_dir }}/scripts/base.vars.sh"
+    var_load_script_path: "{{ var_main_dir }}/scripts/bind.vars.sh"
 
-    var_load_custom__bind_type: "{{ params.main.bind_type }}"
-    var_load_custom__bind_zone: "{{ params.main.custom_args.bind.zone }}"
+    var_load_custom__bind_type: "{{ params.bind_type }}"
+    var_load_custom__bind_zone: "{{ params.bind_zone }}"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"
