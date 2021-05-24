@@ -84,7 +84,7 @@ case "$command" in
 			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
 		;;
 	"shared:action:"*)
-		action="${command#action:exec:}"
+		action="${command#shared:action:}"
 
 		case "$action" in
 			"backup"|\
