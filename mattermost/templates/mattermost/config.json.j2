@@ -1,0 +1,14 @@
+{% set var_config = {
+    "Username": params.db_user,
+    "Password": params.db_password,
+    "DataSource": "postgres://"
+      + params.db_user + ":"
+      + params.db_password + "@"
+      + params.db_hostname ":"
+      + params.db_port + "/"
+      + params.db_name
+      + "?sslmode=disable&connect_timeout=10"
+	}
+%}
+
+{{ var_config | to_nice_json }}

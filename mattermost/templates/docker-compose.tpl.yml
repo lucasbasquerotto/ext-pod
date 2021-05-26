@@ -1,0 +1,981 @@
+{% set var_local = params.local | bool %}
+
+{% set var_is_web = params.pod_type in ['app', 'web'] %}
+{% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
+{% set var_use_mattermost = var_is_web %}
+{% set var_use_pgadmin = var_is_web and (params.use_pgadmin | bool) %}
+{% set var_use_adminer = var_is_web and (params.use_adminer | bool) %}
+{% set var_use_theia = var_is_web and (params.use_theia | bool) %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+
+{% set var_is_db = params.pod_type in ['app', 'db'] %}
+{% set var_use_postgres = var_is_db %}
+
+{% set var_use_s3 = params.use_s3 | bool %}
+{% set var_use_local_s3 = params.use_local_s3 | bool %}
+{% set var_use_internal_fluentd = params.use_internal_fluentd | bool %}
+{% set var_fluentd_ssl =
+  (params.fluentd_output_plugin == 'elasticsearch')
+  and
+  (params.use_secure_elasticsearch | bool)
+%}
+
+version: '2.4'
+
+x-logging:
+
+  {#############################################################}
+  {% if params.use_fluentd | bool %}
+
+  mainlog: &mainlog
+    driver: "fluentd"
+    options:
+      tag: "{% raw %}docker.{{.Name}}{% endraw %}"
+      fluentd-address: "localhost:{{ params.fluentd_port }}"
+  jsonlog: &jsonlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+  {% else %}
+
+  mainlog: &mainlog
+    driver: "json-file"
+    options:
+      max-size: "50m"
+
+  {% endif %}
+  {#############################################################}
+
+networks:
+
+  {#############################################################}
+  {% if var_use_internal_fluentd %}
+
+  log:
+    driver: "bridge"
+
+  {% endif %}
+  {#############################################################}
+
+  shared:
+    external: true
+    name: "{{ params.shared_network }}"
+
+{#############################################################}
+{% if (params.local | bool) and (params.named_volumes | bool) %}
+
+volumes:
+  uploads: {}
+  postgres: {}
+
+{% endif %}
+{#############################################################}
+
+{#############################################################}
+{% if params.use_secrets | bool %}
+
+secrets:
+  empty:
+    file: "$DATA_DIR/secrets/empty.txt"
+
+  {#############################################################}
+  {% if var_use_minio_gateway %}
+
+  minio_gateway_access_key:
+    file: "$DATA_DIR/secrets/minio_gateway_access_key.txt"
+  minio_gateway_secret_key:
+    file: "$DATA_DIR/secrets/minio_gateway_secret_key.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_local_s3 %}
+
+  local_s3_access_key:
+    file: "$DATA_DIR/secrets/local_s3_access_key.txt"
+  local_s3_secret_key:
+    file: "$DATA_DIR/secrets/local_s3_secret_key.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_postgres %}
+
+  db_root_password:
+    file: "$DATA_DIR/secrets/db_root_password.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_pgadmin or var_use_adminer %}
+
+  db_gui_password:
+    file: "$DATA_DIR/secrets/db_gui_password.txt"
+
+  {% endif %}
+  {#############################################################}
+
+{% endif %}
+{#############################################################}
+
+services:
+
+  {#############################################################}
+  {% if var_use_nginx %}
+
+  nginx:
+    container_name: "${CTX_PREFIX_MAIN}nginx"
+    hostname: "nginx"
+    build:
+      context: .
+      dockerfile: "shared/containers/nginx/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.nginx_image }}"
+        VERSION: "{{ params.images.nginx_version }}"
+    restart: "unless-stopped"
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    ports:
+    - "{{ params.ports.public_http_port }}:80"
+    - "{{ params.ports.public_https_port }}:443"
+    - "{{ params.ports.private_http_port }}:9080"
+    - "{{ params.ports.private_https_port }}:9443"
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+
+    {#############################################################}
+    {% if params.use_custom_ssl | default(false) | bool %}
+
+    - "./env/certbot/etc:/etc/ssl:ro"
+
+    {% elif params.use_certbot | default(false) | bool %}
+
+    - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
+    - "$DATA_DIR/sync/certbot/www:/var/www/certbot:ro"
+    - "$DATA_DIR/sync/nginx:/var/main/data/sync/nginx:ro"
+    - "$DATA_DIR/tmp/nginx:/tmp/main/nginx"
+    - "$DATA_DIR/tmp/tmp/nginx:/tmp/main/tmp/nginx"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.nginx | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.nginx }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_mattermost %}
+
+  mattermost:
+    container_name: "${CTX_PREFIX_MAIN}mattermost"
+    hostname: "mattermost"
+    build:
+      context: .
+      dockerfile: "{{ params.main_dir }}/containers/mattermost/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.mattermost_image }}"
+        VERSION: "{{ params.images.mattermost_version }}"
+        MAIN_DIR: "{{ params.main_dir }}"
+    restart: "unless-stopped"
+
+    {#############################################################}
+    {% if var_use_internal_fluentd or (params.pod_type == 'app') %}
+
+    depends_on:
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if params.pod_type == 'app' %}
+
+    - "postgres"
+
+    {% endif %}
+    {#############################################################}
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_use_nginx %}
+
+    expose:
+    - "80"
+
+    {% else %}
+
+    ports:
+    - "{{ params.ports.public_http_port }}:80"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+
+    {#############################################################}
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
+
+    - "uploads:/mattermost/data"
+
+    {% else %}
+
+    - "$DATA_DIR/mattermost/uploads:/mattermost/data"
+
+    {% endif %}
+    {#############################################################}
+
+    - "$DATA_DIR/tmp/log/mattermost:/tmp/main/log/mattermost"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.mattermost | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.mattermost }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_pgadmin %}
+
+  pgadmin:
+    container_name: "${CTX_PREFIX_MAIN}pgadmin"
+    hostname: "pgadmin"
+    build:
+      context: .
+      dockerfile: "shared/containers/pgadmin/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.pgadmin_image }}"
+        VERSION: "{{ params.images.pgadmin_version }}"
+    restart: "unless-stopped"
+    environment:
+      PGADMIN_HOST: "{{ params.db_host }}"
+      PGADMIN_PORT: "{{ params.db_port }}"
+      PGADMIN_USER: "{{ params.db_gui_user }}"
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      PGADMIN_PASSWORD_FILE: "/run/secrets/db_gui_password"
+
+      {% else %}
+
+      PGADMIN_PASSWORD: "$DB_GUI_PASSWORD"
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "db_gui_password"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR/tmp/pgadmin:/tmp/main/pgadmin"
+    - "$DATA_DIR/tmp/tmp/pgadmin:/tmp/main/tmp/pgadmin"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.pgadmin | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.pgadmin }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_adminer %}
+
+  adminer:
+    container_name: "${CTX_PREFIX_MAIN}adminer"
+    hostname: "adminer"
+    build:
+      context: .
+      dockerfile: "shared/containers/adminer/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.adminer_image }}"
+        VERSION: "{{ params.images.adminer_version }}"
+    restart: "unless-stopped"
+    environment:
+      ADMINER_DRIVER: server
+      ADMINER_SERVER: "{{ params.db_host }}"
+      ADMINER_DB: "{{ params.db_name }}"
+      ADMINER_USERNAME: "{{ params.db_gui_user }}"
+      ADMINER_AUTOLOGIN: 1
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      ADMINER_PASSWORD_FILE: db_gui_password
+
+      {% else %}
+
+      ADMINER_PASSWORD: $DB_GUI_PASSWORD
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "db_gui_password"
+
+    {% endif %}
+    {#############################################################}
+
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR/tmp/adminer:/tmp/main/adminer"
+    - "$DATA_DIR/tmp/tmp/adminer:/tmp/main/tmp/adminer"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.adminer | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.adminer }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_theia %}
+
+  theia:
+    container_name: "${CTX_PREFIX_MAIN}theia"
+    hostname: "theia"
+    build:
+      context: .
+      dockerfile: "shared/containers/theia/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.theia_image }}"
+        VERSION: "{{ params.images.theia_version }}"
+    restart: "unless-stopped"
+    user: root
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR/.git:/home/project/.git:ro"
+    - "$DATA_DIR:/home/project/data:ro"
+    - "$DATA_DIR/sync:/home/project/sync:cached"
+    - "$DATA_DIR/action:/home/project/action:cached"
+
+    {#############################################################}
+    {% if params.local | bool %}
+
+    - "$DATA_DIR/log:/home/project/log:cached"
+    - "$DATA_DIR/tmp:/home/project/tmp:cached"
+
+    {% endif %}
+    {#############################################################}
+
+    - "$DATA_DIR/tmp/theia:/tmp/main/theia"
+    - "$DATA_DIR/tmp/tmp/theia:/tmp/main/tmp/theia"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.theia | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.theia }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_minio_gateway %}
+
+  minio_gateway:
+    container_name: "${CTX_PREFIX_MAIN}minio_gateway"
+    hostname: "minio_gateway"
+    build:
+      context: .
+      dockerfile: "shared/containers/minio-gateway/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.minio_gateway_image }}"
+        VERSION: "{{ params.images.minio_gateway_version }}"
+    restart: "unless-stopped"
+    environment:
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      MINIO_ACCESS_KEY_FILE: "minio_gateway_access_key"
+      MINIO_SECRET_KEY_FILE: "minio_gateway_secret_key"
+
+      {% else %}
+
+      MINIO_ACCESS_KEY: "$MINIO_GATEWAY_ACCESS_KEY"
+      MINIO_SECRET_KEY: "$MINIO_GATEWAY_SECRET_KEY"
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "minio_gateway_access_key"
+      - "minio_gateway_secret_key"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR/minio_gateway:/data"
+    - "$DATA_DIR/tmp/minio_gateway:/tmp/main/minio_gateway"
+    - "$DATA_DIR/tmp/tmp/minio_gateway:/tmp/main/tmp/minio_gateway"
+    logging: *mainlog
+    command: "gateway s3 '$MINIO_GATEWAY_ENDPOINT'"
+
+    {#############################################################}
+    {% if (params.memory.minio_gateway | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.minio_gateway }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_postgres %}
+
+  postgres:
+    container_name: "${CTX_PREFIX_MAIN}postgres"
+    hostname: "postgres"
+    build:
+      context: .
+      dockerfile: "shared/containers/postgres/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.postgres_image }}"
+        VERSION: "{{ params.images.postgres_version }}"
+    restart: "unless-stopped"
+    environment:
+      POSTGRES_DB: "{{ params.db_name }}"
+
+      {#############################################################}
+      {% if params.use_wale | bool %}
+
+      WALE_S3_PREFIX: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
+      S3_REGION: "{{ params.backup_bucket_region }}"
+
+      {% endif %}
+      {#############################################################}
+
+      {#############################################################}
+      {% if (params.use_wale | bool) and (params.use_secrets | bool) %}
+
+      S3_ACCESS_KEY_ID_FILE: "/run/secrets/wale_s3_access_key_id"
+      S3_SECRET_ACCESS_KEY_FILE: "/run/secrets/wale_s3_secret_access_key"
+
+      {% elif params.use_wale | bool %}
+
+      S3_ACCESS_KEY_ID: "$WALE_S3_ACCESS_KEY_ID"
+      S3_SECRET_ACCESS_KEY: "$WALE_S3_SECRET_ACCESS_KEY"
+
+      {% endif %}
+      {#############################################################}
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      POSTGRES_PASSWORD_FILE: "/run/secrets/db_root_password"
+
+      {% else %}
+
+      POSTGRES_PASSWORD: "$DB_ROOT_PASSWORD"
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "db_root_password"
+
+      {#############################################################}
+      {% if params.use_wale | bool %}
+
+      - "wale_s3_access_key_id"
+      - "wale_s3_secret_access_key"
+
+      {% endif %}
+      {#############################################################}
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if params.pod_type in ['db'] %}
+
+    ports:
+    - "{{ params.db_port }}:5432"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+
+    {#############################################################}
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
+
+    - "postgres:/var/lib/postgresql/data"
+
+    {% else %}
+
+    - "$DATA_DIR/postgres:/var/lib/postgresql/data"
+
+    {% endif %}
+    {#############################################################}
+
+    - "$DATA_DIR/tmp/postgres:/tmp/main/postgres"
+    - "$DATA_DIR/tmp/tmp/postgres:/tmp/main/tmp/postgres"
+    - "$DATA_DIR/tmp/log/postgres:/tmp/main/log/postgres"
+    logging: *mainlog
+
+    {#############################################################}
+    {% if (params.memory.postgres | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.postgres }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_local_s3 %}
+
+  s3:
+    container_name: "${CTX_PREFIX_MAIN}s3"
+    hostname: "s3"
+    build:
+      context: .
+      dockerfile: "shared/containers/minio/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.minio_image }}"
+        VERSION: "{{ params.images.minio_version }}"
+    restart: "unless-stopped"
+
+    {#############################################################}
+    {% if params.use_internal_fluentd | bool %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+    expose:
+    - "9000"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    environment:
+
+      {#############################################################}
+      {% if params.use_secrets | bool %}
+
+      MINIO_ROOT_USER_FILE: "/run/secrets/local_s3_access_key"
+      MINIO_ROOT_PASSWORD_FILE: "/run/secrets/local_s3_secret_key"
+
+      {% else %}
+
+      MINIO_ROOT_USER: $LOCAL_S3_ACCESS_KEY
+      MINIO_ROOT_PASSWORD: $LOCAL_S3_SECRET_KEY
+
+      {% endif %}
+      {#############################################################}
+
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    secrets:
+      - "local_s3_access_key"
+      - "local_s3_secret_key"
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR/s3/data:/data"
+    - "$DATA_DIR/tmp/s3:/tmp/main/minio"
+    - "$DATA_DIR/tmp/tmp/s3:/tmp/main/tmp/minio"
+    logging: *mainlog
+    command: "server /data"
+
+    {#############################################################}
+    {% if (params.memory.local_s3 | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.local_s3 }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  toolbox:
+    container_name: "${CTX_PREFIX_MAIN}toolbox"
+    hostname: "toolbox"
+    build:
+      context: .
+      dockerfile: "shared/containers/toolbox/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.toolbox_image }}"
+        VERSION: "{{ params.images.toolbox_version }}"
+    restart: "unless-stopped"
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+
+    {#############################################################}
+    {% if params.use_internal_ssl | bool %}
+
+    - "./env/ssl:/etc/ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if (params.local | bool) and (params.named_volumes | bool) %}
+
+    - "uploads:/var/main/data/mattermost/uploads"
+
+    {% endif %}
+    {#############################################################}
+
+    logging: *mainlog
+    command: "tail -f /dev/null"
+
+    {#############################################################}
+    {% if (params.memory.toolbox | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.toolbox }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {#############################################################}
+  {% if var_use_s3 %}
+
+  s3_cli:
+    container_name: "${CTX_PREFIX_MAIN}s3_cli"
+    hostname: "s3_cli"
+    build:
+      context: .
+      dockerfile: "shared/containers/{{ params.s3_cli }}/Dockerfile"
+      args:
+        IMAGE: "{{ params.images[params.s3_cli + '_image'] }}"
+        VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
+    restart: "unless-stopped"
+
+    {#############################################################}
+    {% if var_use_internal_fluentd %}
+
+    depends_on:
+    - "fluentd"
+
+    {% endif %}
+    {#############################################################}
+
+    networks:
+    - "shared"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR:/var/main/data"
+    - "$DATA_DIR/tmp:/tmp/main"
+    - "$DATA_DIR/log:/var/log/main"
+    logging: *mainlog
+    entrypoint: ""
+    command: "tail -f /dev/null"
+
+    {#############################################################}
+    {% if (params.memory.s3_cli | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.s3_cli }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_internal_fluentd %}
+
+  fluentd:
+    container_name: "${CTX_PREFIX_MAIN}fluentd"
+    hostname: "fluentd"
+    build:
+      context: .
+      dockerfile: "shared/containers/fluentd/Dockerfile"
+      args:
+        IMAGE: "{{ params.images.fluentd_image }}"
+        VERSION: "{{ params.images.fluentd_version }}"
+        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
+    restart: "unless-stopped"
+    ports:
+    - "{{ params.fluentd_port }}:24224"
+    - "{{ params.fluentd_port }}:24224/udp"
+    networks:
+    - "log"
+
+    {#############################################################}
+    {% if var_local %}
+
+    extra_hosts:
+      host.docker.internal: host-gateway
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
+    {% if params.fluentd_output_plugin == 'elasticsearch' %}
+
+    environment:
+      ELASTICSEARCH_HOSTNAME: "{{ params.elasticsearch_host | urlsplit('hostname') }}"
+      ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
+
+    {% endif %}
+    {#############################################################}
+
+    volumes:
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
+    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
+
+    {#############################################################}
+    {% if var_fluentd_ssl %}
+
+    - "./env/ssl:/etc/ssl:ro"
+
+    {% endif %}
+    {#############################################################}
+
+    logging: *jsonlog
+
+    {#############################################################}
+    {% if (params.memory.fluentd | default('')) != '' %}
+
+    mem_limit: "{{ params.memory.fluentd }}"
+
+    {% endif %}
+    {#############################################################}
+
+  {% endif %}
+  {#############################################################}
