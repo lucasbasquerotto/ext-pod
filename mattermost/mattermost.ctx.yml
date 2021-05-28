@@ -16,7 +16,7 @@
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
 
 {% set var_is_db = var_pod_type in ['app', 'db'] %}
-{% set var_use_mysql = var_is_db %}
+{% set var_use_postgres = var_is_db %}
 
 {% set var_use_local_s3 = var_local and (params.use_local_s3 | default(false) | bool) %}
 {% set var_use_secure_elasticsearch = params.use_secure_elasticsearch | default(false) | bool %}
@@ -93,13 +93,13 @@
   %}
 {% endif %}
 
-{% set var_mysql_host = input.dependencies.mysql.host | default('') %}
-{% set var_mysql_schema = var_mysql_host | urlsplit('scheme') %}
-{% set var_mysql_host = ((var_mysql_host != '') and (var_mysql_schema == ''))
-  | ternary('mysql://' + var_mysql_host, var_mysql_host)
+{% set var_postgres_host = input.dependencies.postgres.host | default('') %}
+{% set var_postgres_schema = var_postgres_host | urlsplit('scheme') %}
+{% set var_postgres_host = ((var_postgres_host != '') and (var_postgres_schema == ''))
+  | ternary('postgres://' + var_postgres_host, var_postgres_host)
 %}
-{% set var_mysql_hostname = var_mysql_host | urlsplit('hostname') | default('mysql', true) %}
-{% set var_mysql_port = var_mysql_host | urlsplit('port') | default('3306', true) %}
+{% set var_postgres_hostname = var_postgres_host | urlsplit('hostname') | default('postgres', true) %}
+{% set var_postgres_port = var_postgres_host | urlsplit('port') | default('5432', true) %}
 
 {% set var_fluentd_output_plugin = params.fluentd_output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
@@ -254,8 +254,9 @@ templates:
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
-    db_host: "{{ var_mysql_hostname }}"
-    db_port: "{{ var_mysql_port }}"
+    use_wale: "{{ params.use_wale | default(false) }}"
+    db_host: "{{ var_postgres_hostname }}"
+    db_port: "{{ var_postgres_port }}"
     db_name: "{{ credentials.wordpress.db.name | default('') }}"
     db_user: "{{ credentials.wordpress.db.user | default('') }}"
     db_gui_user: "{{ var_db_gui_user }}"
@@ -303,11 +304,11 @@ templates:
 ##############################################################
 {% if var_pod_type in ['app', 'web'] %}
 
-- src: "{{ var_main_dir }}/templates/mattermost/config.json.j2"
+- src: "{{ var_main_dir }}/templates/mattermost/config.tpl.json"
   dest: "env/mattermost/config.json"
   params:
-    db_hostname: "{{ var_mysql_hostname }}"
-    db_port: "{{ var_mysql_port }}"
+    db_hostname: "{{ var_postgres_hostname }}"
+    db_port: "{{ var_postgres_port }}"
     db_name: "{{ credentials.postgres.db_name | default('') }}"
     db_user: "{{ credentials.postgres.db_user | default('') }}"
     db_password: "{{ credentials.postgres.db_password | default('') }}"
@@ -318,9 +319,9 @@ templates:
 ##############################################################
 {% if var_pod_type in ['app', 'db'] %}
 
-- src: "{{ var_shared_dir }}/templates/mysql/init.sql"
-  dest: "env/mysql/init.sql"
-  schema: "{{ var_shared_dir }}/templates/mysql/init.mysql.schema.yml"
+- src: "{{ var_shared_dir }}/templates/postgres/init.sql"
+  dest: "env/postgres/init.sql"
+  schema: "{{ var_shared_dir }}/templates/postgres/init.postgres.schema.yml"
   params:
     viewer_password: "{{ credentials.postgres.viewer_password | default('') }}"
     db_name: "{{ credentials.postgres.db_name | default('') }}"
@@ -464,7 +465,7 @@ templates:
     ##############################################################
 
     ##############################################################
-    {% if var_use_mysql %}
+    {% if var_use_postgres %}
 
     db_root_password: "{{ credentials.postgres.root_password | default('') }}"
 
@@ -523,7 +524,7 @@ templates:
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
     var_load_use__nginx: "{{ params.use_nginx | default('') | lower }}"
-    var_load_use__mysql: "true"
+    var_load_use__postgres: "true"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__local_s3: "{{ var_use_local_s3 | lower }}"
@@ -580,8 +581,8 @@ templates:
     var_load__db_backup__compress_type: "{{ params.db_backup.compress_type | default('') }}"
     var_load__db_backup__compress_pass: "{{ credentials.mattermost_db.compress_pass | default('') }}"
 
-    var_load__db_main__db_host: "{{ var_mysql_hostname }}"
-    var_load__db_main__db_port: "{{ var_mysql_port }}"
+    var_load__db_main__db_host: "{{ var_postgres_hostname }}"
+    var_load__db_main__db_port: "{{ var_postgres_port }}"
     var_load__db_main__db_name: "{{ credentials.postgres.db_name | default('') }}"
     var_load__db_main__db_user: "{{ credentials.postgres.db_user | default('') }}"
     var_load__db_main__db_pass: "{{ credentials.postgres.db_password | default('') }}"

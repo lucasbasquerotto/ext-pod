@@ -207,7 +207,6 @@ services:
       args:
         IMAGE: "{{ params.images.mattermost_image }}"
         VERSION: "{{ params.images.mattermost_version }}"
-        MAIN_DIR: "{{ params.main_dir }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -600,20 +599,16 @@ services:
         IMAGE: "{{ params.images.postgres_image }}"
         VERSION: "{{ params.images.postgres_version }}"
     restart: "unless-stopped"
+
+    {#############################################################}
+    {% if params.use_wale | bool %}
+
     environment:
-      POSTGRES_DB: "{{ params.db_name }}"
-
-      {#############################################################}
-      {% if params.use_wale | bool %}
-
       WALE_S3_PREFIX: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
       S3_REGION: "{{ params.backup_bucket_region }}"
 
-      {% endif %}
       {#############################################################}
-
-      {#############################################################}
-      {% if (params.use_wale | bool) and (params.use_secrets | bool) %}
+      {% if params.use_secrets | bool %}
 
       S3_ACCESS_KEY_ID_FILE: "/run/secrets/wale_s3_access_key_id"
       S3_SECRET_ACCESS_KEY_FILE: "/run/secrets/wale_s3_secret_access_key"
@@ -626,17 +621,8 @@ services:
       {% endif %}
       {#############################################################}
 
-      {#############################################################}
-      {% if params.use_secrets | bool %}
-
-      POSTGRES_PASSWORD_FILE: "/run/secrets/db_root_password"
-
-      {% else %}
-
-      POSTGRES_PASSWORD: "$DB_ROOT_PASSWORD"
-
-      {% endif %}
-      {#############################################################}
+    {% endif %}
+    {#############################################################}
 
     {#############################################################}
     {% if params.use_secrets | bool %}
