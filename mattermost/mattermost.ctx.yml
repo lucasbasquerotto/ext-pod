@@ -85,7 +85,7 @@
 
 {% if var_pod_type in ['app', 'web'] %}
   {% set var_db_gui_user = params.db_gui_root_user | default(false) | bool |
-    ternary('root', 'viewer')
+    ternary('postgres', 'viewer')
   %}
   {% set var_db_gui_password = params.db_gui_root_user | default(false) | bool |
     ternary(credentials.postgres.root_password,
@@ -257,9 +257,11 @@ templates:
     use_wale: "{{ params.use_wale | default(false) }}"
     db_host: "{{ var_postgres_hostname }}"
     db_port: "{{ var_postgres_port }}"
-    db_name: "{{ credentials.wordpress.db.name | default('') }}"
-    db_user: "{{ credentials.wordpress.db.user | default('') }}"
+    db_name: "{{ credentials.postgres.db_name | default('') }}"
+    db_user: "{{ credentials.postgres.db_user | default('') }}"
     db_gui_user: "{{ var_db_gui_user }}"
+    pgadmin_email: "{{ credentials.pgadmin.email | default('') }}"
+    pgadmin_password: "{{ credentials.pgadmin.password | default('') }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
@@ -307,6 +309,7 @@ templates:
 - src: "{{ var_main_dir }}/templates/mattermost/config.tpl.json"
   dest: "env/mattermost/config.json"
   params:
+    site_url: "{{ var_mattermost_external_host }}"
     db_hostname: "{{ var_postgres_hostname }}"
     db_port: "{{ var_postgres_port }}"
     db_name: "{{ credentials.postgres.db_name | default('') }}"
@@ -374,7 +377,6 @@ templates:
     'outer_proxy_ip_header': params.outer_proxy_ip_header | default('')
   }
 %}
-{% set var_mattermost_service = 'http://mattermost:80' %}
 
 - src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   dest: "env/nginx/nginx.conf"
@@ -388,7 +390,7 @@ templates:
     dependencies: {{ input.dependencies | default({}) | to_json }}
     services:
       - name: "mattermost"
-        endpoint: "{{ var_mattermost_service }}"
+        endpoint: "http://mattermost:8065"
         use_outer_proxy: "{{ params.use_outer_proxy | default(false) }}"
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"

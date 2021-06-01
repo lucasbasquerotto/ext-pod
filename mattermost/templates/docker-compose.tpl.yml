@@ -301,6 +301,8 @@ services:
         VERSION: "{{ params.images.pgadmin_version }}"
     restart: "unless-stopped"
     environment:
+      PGADMIN_DEFAULT_EMAIL: "{{ params.pgadmin_email }}"
+      PGADMIN_DEFAULT_PASSWORD: "{{ params.pgadmin_password }}"
       PGADMIN_HOST: "{{ params.db_host }}"
       PGADMIN_PORT: "{{ params.db_port }}"
       PGADMIN_USER: "{{ params.db_gui_user }}"
@@ -377,7 +379,7 @@ services:
         VERSION: "{{ params.images.adminer_version }}"
     restart: "unless-stopped"
     environment:
-      ADMINER_DRIVER: server
+      ADMINER_DRIVER: pgsql
       ADMINER_SERVER: "{{ params.db_host }}"
       ADMINER_DB: "{{ params.db_name }}"
       ADMINER_USERNAME: "{{ params.db_gui_user }}"
@@ -599,30 +601,43 @@ services:
         IMAGE: "{{ params.images.postgres_image }}"
         VERSION: "{{ params.images.postgres_version }}"
     restart: "unless-stopped"
-
-    {#############################################################}
-    {% if params.use_wale | bool %}
-
     environment:
-      WALE_S3_PREFIX: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
-      S3_REGION: "{{ params.backup_bucket_region }}"
 
       {#############################################################}
       {% if params.use_secrets | bool %}
 
+      POSTGRES_PASSWORD_FILE: "/run/secrets/db_root_password"
+
+      {% else %}
+
+      POSTGRES_PASSWORD: "$DB_ROOT_PASSWORD"
+
+      {% endif %}
+      {#############################################################}
+
+      {% if params.use_wale | bool %}
+
+      WALE_S3_PREFIX: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
+      S3_REGION: "{{ params.backup_bucket_region }}"
+
+      {% endif %}
+      {#############################################################}
+
+      {#############################################################}
+      {% if (params.use_wale | bool) and (params.use_secrets | bool) %}
+
       S3_ACCESS_KEY_ID_FILE: "/run/secrets/wale_s3_access_key_id"
       S3_SECRET_ACCESS_KEY_FILE: "/run/secrets/wale_s3_secret_access_key"
+      POSTGRES_PASSWORD_FILE: "/run/secrets/db_root_password"
 
       {% elif params.use_wale | bool %}
 
       S3_ACCESS_KEY_ID: "$WALE_S3_ACCESS_KEY_ID"
       S3_SECRET_ACCESS_KEY: "$WALE_S3_SECRET_ACCESS_KEY"
+      POSTGRES_PASSWORD: "$DB_ROOT_PASSWORD"
 
       {% endif %}
       {#############################################################}
-
-    {% endif %}
-    {#############################################################}
 
     {#############################################################}
     {% if params.use_secrets | bool %}
