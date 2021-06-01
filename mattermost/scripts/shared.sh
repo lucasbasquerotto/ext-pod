@@ -45,6 +45,25 @@ shift $((OPTIND-1))
 pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
+	"prepare")
+		data_dir="/var/main/data"
+
+		"$pod_script_env_file" up toolbox
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+				dir="$data_dir/mattermost/uploads"
+
+				if [ ! -d "\$dir" ]; then
+					mkdir -p "\$dir"
+				fi
+
+				chown 2000:2000 "\$dir"
+			fi
+		SHELL
+
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
 	"custom:unique:log")
 		opts=()
 		opts+=( 'log_register.memory_overview' )

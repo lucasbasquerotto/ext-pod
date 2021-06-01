@@ -315,6 +315,12 @@ templates:
     db_name: "{{ credentials.postgres.db_name | default('') }}"
     db_user: "{{ credentials.postgres.db_user | default('') }}"
     db_password: "{{ credentials.postgres.db_password | default('') }}"
+    enable_smtp: "{{ params.use_mattermost_mail | default(false) }}"
+    smtp_address: "{{ credentials.mattermost_mail.address | default('') }}"
+    smtp_port: "{{ credentials.mattermost_mail.port | default('') }}"
+    smtp_tls: "{{ credentials.mattermost_mail.tls | default('') }}"
+    smtp_user_name: "{{ credentials.mattermost_mail.user_name | default('') }}"
+    smtp_password: "{{ credentials.mattermost_mail.password | default('') }}"
 
 {% endif %}
 ##############################################################
