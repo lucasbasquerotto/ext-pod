@@ -318,7 +318,7 @@ templates:
     enable_smtp: "{{ params.use_mattermost_mail | default(false) }}"
     smtp_address: "{{ credentials.mattermost_mail.address | default('') }}"
     smtp_port: "{{ credentials.mattermost_mail.port | default('') }}"
-    smtp_tls: "{{ credentials.mattermost_mail.tls | default('') }}"
+    smtp_connection_security: "{{ credentials.mattermost_mail.connection_security | default('') }}"
     smtp_user_name: "{{ credentials.mattermost_mail.user_name | default('') }}"
     smtp_password: "{{ credentials.mattermost_mail.password | default('') }}"
 

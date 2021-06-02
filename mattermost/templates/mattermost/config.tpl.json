@@ -249,7 +249,7 @@
     "SMTPServer": "{{ params.smtp_address }}",
     "SMTPPort": "{{ params.smtp_port }}",
     "SMTPServerTimeout": 10,
-    "ConnectionSecurity": "{{ params.smtp_tls | bool | ternary('TLS', '') }}",
+    "ConnectionSecurity": "{{ params.smtp_connection_security }}",
     "SendPushNotifications": true,
     "PushNotificationServer": "https://push-test.mattermost.com",
     "PushNotificationContents": "full",

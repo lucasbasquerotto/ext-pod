@@ -46,12 +46,16 @@ pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"prepare")
+		env_dir="/var/main/env"
 		data_dir="/var/main/data"
 
 		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+				file="$env_dir/mattermost/config.json"
+				chown 2000:2000 "\$file"
+
 				dir="$data_dir/mattermost/uploads"
 
 				if [ ! -d "\$dir" ]; then

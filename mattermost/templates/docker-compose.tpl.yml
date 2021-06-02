@@ -260,6 +260,7 @@ services:
     {#############################################################}
 
     volumes:
+    - "./env/mattermost/config.json:/mattermost/config/config.json"
 
     {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
@@ -831,6 +832,7 @@ services:
     {#############################################################}
 
     volumes:
+    - "./env:/var/main/env"
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
