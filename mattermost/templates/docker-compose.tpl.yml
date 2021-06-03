@@ -603,6 +603,7 @@ services:
         VERSION: "{{ params.images.postgres_version }}"
     restart: "unless-stopped"
     environment:
+      PGUSER: "postgres"
 
       {#############################################################}
       {% if params.use_secrets | bool %}
