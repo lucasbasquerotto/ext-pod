@@ -593,7 +593,6 @@ templates:
     var_load__db_main__db_port: "{{ var_postgres_port }}"
     var_load__db_main__db_name: "{{ credentials.postgres.db_name | default('') }}"
     var_load__db_main__db_user: "{{ credentials.postgres.db_user | default('') }}"
-    var_load__db_main__db_pass: "{{ credentials.postgres.db_password | default('') }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
 
     var_load__db_setup__compressed_file_name: "{{ params.db_setup.compressed_file_name | default('') }}"
