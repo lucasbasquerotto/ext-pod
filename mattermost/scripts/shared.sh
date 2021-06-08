@@ -68,6 +68,18 @@ case "$command" in
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
+	"setup")
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+
+		data_dir="/var/main/data"
+
+		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
+			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+				dir="$data_dir/mattermost/uploads"
+				chown -R 2000:2000 "\$dir"
+			fi
+		SHELL
+		;;
 	"custom:unique:log")
 		opts=()
 		opts+=( 'log_register.memory_overview' )
