@@ -102,10 +102,6 @@ case "$command" in
 			fi
 		fi
 
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
-			"$pod_script_env_file" "shared:log:mysql_slow:summary" --days_ago="$days_ago" --max_amount="$max_amount"
-		fi
-
 		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:disk:summary" \
 			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \

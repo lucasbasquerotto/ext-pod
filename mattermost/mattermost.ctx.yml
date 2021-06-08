@@ -398,6 +398,27 @@ templates:
       - name: "mattermost"
         endpoint: "http://mattermost:8065"
         use_outer_proxy: "{{ params.use_outer_proxy | default(false) }}"
+        locations:
+          - location: "~ /api/v[0-9]+/(users/)?websocket$"
+            proxy: true
+            data: |-
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection "upgrade";
+              client_max_body_size 50M;
+              # security
+              server_tokens off;
+              add_header X-Frame-Options SAMEORIGIN;
+              add_header X-Content-Type-Options nosniff;
+              add_header X-XSS-Protection "1; mode=block";
+          - location: "/"
+            proxy: true
+            data: |-
+              client_max_body_size 50M;
+              # security
+              server_tokens off;
+              add_header X-Frame-Options SAMEORIGIN;
+              add_header X-Content-Type-Options nosniff;
+              add_header X-XSS-Protection "1; mode=block";
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
