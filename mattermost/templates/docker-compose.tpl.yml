@@ -314,7 +314,10 @@ services:
       PGADMIN_DEFAULT_EMAIL: "{{ params.pgadmin_email }}"
       PGADMIN_DEFAULT_PASSWORD: "{{ params.pgadmin_password }}"
     secrets:
-      - "pgadmin_pass"
+      - source: "pgadmin_pass"
+        uid: '5050'
+        gid: '5050'
+        mode: 0600
 
     {#############################################################}
     {% if var_use_internal_fluentd %}
