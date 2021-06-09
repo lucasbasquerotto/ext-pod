@@ -73,7 +73,7 @@ volumes:
 {#############################################################}
 
 {#############################################################}
-{% if params.use_secrets | bool %}
+{% if (params.use_secrets | bool) or var_use_pgadmin %}
 
 secrets:
   empty:
@@ -111,7 +111,16 @@ secrets:
   {#############################################################}
 
   {#############################################################}
-  {% if var_use_pgadmin or var_use_adminer %}
+  {% if var_use_pgadmin %}
+
+  pgadmin_pass:
+    file: "$DATA_DIR/secrets/pgadmin_pass.txt"
+
+  {% endif %}
+  {#############################################################}
+
+  {#############################################################}
+  {% if var_use_adminer %}
 
   db_gui_password:
     file: "$DATA_DIR/secrets/db_gui_password.txt"
@@ -304,30 +313,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: "{{ params.pgadmin_email }}"
       PGADMIN_DEFAULT_PASSWORD: "{{ params.pgadmin_password }}"
-      PGADMIN_HOST: "{{ params.db_host }}"
-      PGADMIN_PORT: "{{ params.db_port }}"
-      PGADMIN_USER: "{{ params.db_gui_user }}"
-
-      {#############################################################}
-      {% if params.use_secrets | bool %}
-
-      PGADMIN_PASSWORD_FILE: "/run/secrets/db_gui_password"
-
-      {% else %}
-
-      PGADMIN_PASSWORD: "$DB_GUI_PASSWORD"
-
-      {% endif %}
-      {#############################################################}
-
-    {#############################################################}
-    {% if params.use_secrets | bool %}
-
     secrets:
-      - "db_gui_password"
-
-    {% endif %}
-    {#############################################################}
+      - "pgadmin_pass"
 
     {#############################################################}
     {% if var_use_internal_fluentd %}

@@ -171,6 +171,40 @@
 
 {% endif %}
 
+{% set var_pgadmin_servers_config = {} %}
+
+{% if var_use_pgadmin %}
+
+  {% set var_pgadmin_servers_config_aux = {
+      'Name': 'Mattermost Server',
+      'Group': 'Mattermost',
+      'Host': var_postgres_hostname,
+      'Port': var_postgres_port | int,
+      'MaintenanceDB': 'postgres',
+      'Username': var_db_gui_user,
+      'SSLMode': 'prefer',
+      'PassFile': '/run/secrets/pgadmin_pass',
+      'Timeout': 60
+    }
+  %}
+
+  {% set var_pgadmin_servers_config = {
+      'Servers': {
+        '1': var_pgadmin_servers_config_aux
+      }
+    }
+  %}
+
+{% endif %}
+
+{% set var_pgadmin_pass_content =
+  var_postgres_hostname
+  + ':' + (var_postgres_port | string)
+  + ':' + (credentials.postgres.db_name | default(''))
+  + ':' + var_db_gui_user
+  + ':' + var_db_gui_password
+%}
+
 ### main ###
 
 env_files:
@@ -260,6 +294,7 @@ templates:
     db_name: "{{ credentials.postgres.db_name | default('') }}"
     db_user: "{{ credentials.postgres.db_user | default('') }}"
     db_gui_user: "{{ var_db_gui_user }}"
+    db_gui_password: "{{ var_db_gui_password }}"
     pgadmin_email: "{{ credentials.pgadmin.email | default('') }}"
     pgadmin_password: "{{ credentials.pgadmin.password | default('') }}"
     fluentd_port: "{{ var_fluentd_port }}"
@@ -468,6 +503,16 @@ templates:
 ##############################################################
 
 ##############################################################
+{% if var_use_pgadmin %}
+
+- src: "main/vars/dynamic.tpl.json"
+  dest: "env/pgadmin/servers.json"
+  params: {{ var_pgadmin_servers_config | to_json }}
+
+{% endif %}
+##############################################################
+
+##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
 - src: "main/vars/values.tpl.txt"
@@ -497,6 +542,14 @@ templates:
     {% if var_use_postgres %}
 
     db_root_password: "{{ credentials.postgres.root_password | default('') }}"
+
+    {% endif %}
+    ##############################################################
+
+    ##############################################################
+    {% if var_use_pgadmin %}
+
+    pgadmin_pass: "{{ var_pgadmin_pass_content }}"
 
     {% endif %}
     ##############################################################
@@ -553,6 +606,7 @@ templates:
     var_load_use__secrets: "{{ params.use_secrets | default('') | lower }}"
     var_load_use__logrotator: "true"
     var_load_use__nginx: "{{ params.use_nginx | default('') | lower }}"
+    var_load_use__pgadmin: "{{ var_use_pgadmin | lower }}"
     var_load_use__postgres: "true"
     var_load_use__s3: "{{ params.use_s3 | default('') | lower }}"
     var_load_use__s3_cli_main: "{{ params.use_s3 | default('') | lower }}"
