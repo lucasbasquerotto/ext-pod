@@ -359,7 +359,8 @@ templates:
     s3_bucket_name: "{{ params.uploads_bucket_name | default('') }}"
     s3_bucket_path: "{{ params.uploads_bucket_path | default('') }}"
     s3_bucket_region: "{{ var_s3_uploads_credentials.region | default('') }}"
-    s3_endpoint: "{{ var_s3_uploads_credentials.endpoint | default('') | urlsplit("netloc") }}"
+    s3_endpoint: "{{ var_s3_uploads_credentials.endpoint | default('') | urlsplit('netloc') | default('s3.amazonaws.com', true) }}"
+    s3_ssl: "{{ (var_s3_uploads_credentials.endpoint | default('') | urlsplit('scheme')) != 'http' }}"
 
 {% endif %}
 ##############################################################
