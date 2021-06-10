@@ -286,7 +286,7 @@ templates:
 ##############################################################
 
 ##############################################################
-{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
+{% if (var_pod_type in ['app', 'web']) and (not (params.custom_nginx_conf | default(false) | bool)) %}
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 

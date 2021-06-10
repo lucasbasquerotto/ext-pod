@@ -421,7 +421,7 @@ templates:
 ##############################################################
 
 ##############################################################
-{% if (var_pod_type in ['app', 'web']) and (not params.services.nginx.custom | default(false) | bool) %}
+{% if (var_pod_type in ['app', 'web']) and (not (params.custom_nginx_conf | default(false) | bool)) %}
 
 {% set var_default_nginx_conf = {
     'ssl': params.use_ssl | default(false),
@@ -519,6 +519,19 @@ templates:
 - src: "main/vars/dynamic.tpl.json"
   dest: "env/pgadmin/servers.json"
   params: {{ var_pgadmin_servers_config | to_json }}
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if (var_pod_type in ['app', 'db']) and (not (params.custom_postgres_conf | default(false) | bool)) %}
+
+- src: "{{ var_shared_dir }}/templates/postgres/postgressql.tpl.conf"
+  dest: "env/postgres/postgressql.conf"
+  params:
+    max_connections: "{{ params.services.postgres.max_connections | default('') }}"
+    shared_buffers: "{{ params.services.postgres.shared_buffers | default('') }}"
+    use_wale: "{{ params.use_wale | default(false) }}"
 
 {% endif %}
 ##############################################################
