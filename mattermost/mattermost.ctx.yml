@@ -214,6 +214,18 @@
   (params.use_wale_restore | default(false) | bool)
 %}
 
+{% set var_wale_s3_endpoint = var_s3_backup_credentials.endpoint | default('') %}
+
+{% if var_wale_s3_endpoint != '' %}
+
+  {% set var_wale_s3_endpoint_parts = var_wale_s3_endpoint | urlsplit %}
+  {% set var_wale_s3_endpoint =
+    var_wale_s3_endpoint_parts.scheme + '+path://'
+    + var_wale_s3_endpoint_parts.netloc
+  %}
+
+{% endif %}
+
 ### main ###
 
 env_files:
@@ -551,7 +563,7 @@ templates:
     aws_access_key_id: "{{ var_s3_backup_credentials.access_key | default('') }}"
     aws_secret_access_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
     aws_region: "{{ var_s3_uploads_credentials.region | default('') }}"
-    wale_s3_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
+    wale_s3_endpoint: "{{ var_wale_s3_endpoint }}"
 
 {% endif %}
 ##############################################################
