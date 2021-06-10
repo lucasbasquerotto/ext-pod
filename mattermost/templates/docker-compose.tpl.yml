@@ -584,16 +584,6 @@ services:
     environment:
       PGUSER: "postgres"
 
-      {% if params.use_wale | bool %}
-
-      WALE_S3_PREFIX: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
-      S3_REGION: "{{ params.backup_bucket_region | default('us-east-1', true) }}"
-      S3_ACCESS_KEY_ID: "$WALE_S3_ACCESS_KEY_ID"
-      S3_SECRET_ACCESS_KEY: "$WALE_S3_SECRET_ACCESS_KEY"
-
-      {% endif %}
-      {#############################################################}
-
       {#############################################################}
       {% if params.use_secrets | bool %}
 
@@ -646,6 +636,7 @@ services:
     {#############################################################}
 
     volumes:
+    - "./env/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
 
     {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
@@ -659,10 +650,12 @@ services:
     {% endif %}
     {#############################################################}
 
+    - "$DATA_DIR/wale:/etc/wal-e.d/env:ro"
     - "$DATA_DIR/tmp/postgres:/tmp/main/postgres"
     - "$DATA_DIR/tmp/tmp/postgres:/tmp/main/tmp/postgres"
     - "$DATA_DIR/tmp/log/postgres:/tmp/main/log/postgres"
     logging: *mainlog
+    command: -c 'config_file=/etc/postgresql/postgresql.conf'
 
     {#############################################################}
     {% if (params.memory.postgres | default('')) != '' %}

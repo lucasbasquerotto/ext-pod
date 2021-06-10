@@ -202,6 +202,18 @@
   + ':' + var_db_gui_password
 %}
 
+{% set var_use_wale_restore =
+  params.use_wale_restore
+  | default(params.use_wale | default(false))
+  | bool
+%}
+
+{% set var_use_wale_general =
+  (params.use_wale | default(false) | bool)
+  or
+  (params.use_wale_restore | default(false) | bool)
+%}
+
 ### main ###
 
 env_files:
@@ -285,7 +297,6 @@ templates:
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
-    use_wale: "{{ params.use_wale | default(false) }}"
     db_host: "{{ var_postgres_hostname }}"
     db_port: "{{ var_postgres_port }}"
     db_name: "{{ credentials.postgres.db_name | default('') }}"
@@ -298,9 +309,6 @@ templates:
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
-    backup_bucket_name: "{{ params.backup_bucket_name | default('') }}"
-    backup_bucket_path: "{{ params.backup_bucket_path | default('') }}"
-    backup_bucket_region: "{{ var_s3_uploads_credentials.region | default('') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
@@ -337,9 +345,6 @@ templates:
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
     db_root_password: "{{ credentials.postgres.root_password | default('') }}"
     db_gui_password: "{{ var_db_gui_password }}"
-    use_wale: "{{ params.use_wale | default(false) }}"
-    wale_s3_access_key_id: "{{ var_s3_backup_credentials.access_key | default('') }}"
-    wale_s3_secret_access_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
 
 ##############################################################
 {% if var_pod_type in ['app', 'web'] %}
@@ -526,12 +531,27 @@ templates:
 ##############################################################
 {% if (var_pod_type in ['app', 'db']) and (not (params.custom_postgres_conf | default(false) | bool)) %}
 
-- src: "{{ var_shared_dir }}/templates/postgres/postgressql.tpl.conf"
-  dest: "env/postgres/postgressql.conf"
+- src: "{{ var_shared_dir }}/templates/postgres/postgresql.tpl.conf"
+  dest: "env/postgres/postgresql.conf"
   params:
     max_connections: "{{ params.services.postgres.max_connections | default('') }}"
     shared_buffers: "{{ params.services.postgres.shared_buffers | default('') }}"
     use_wale: "{{ params.use_wale | default(false) }}"
+
+{% endif %}
+##############################################################
+
+##############################################################
+{% if (var_pod_type in ['app', 'db']) and var_use_wale_general %}
+
+- src: "{{ var_shared_dir }}/templates/wal-e/wale.tpl.conf"
+  dest: "env/postgres/wale.conf"
+  params:
+    wale_s3_prefix: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
+    aws_access_key_id: "{{ var_s3_backup_credentials.access_key | default('') }}"
+    aws_secret_access_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
+    aws_region: "{{ var_s3_uploads_credentials.region | default('') }}"
+    wale_s3_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
 
 {% endif %}
 ##############################################################
@@ -645,6 +665,7 @@ templates:
     var_load_use__s3_storage: "{{ params.use_s3_storage | default('') | lower }}"
     var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
     var_load_use__wale: "{{ params.use_wale | default(false) | lower }}"
+    var_load_use__wale_restore: "{{ var_use_wale_restore | lower }}"
 
     # Enable Tasks
 

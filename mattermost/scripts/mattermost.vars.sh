@@ -27,7 +27,7 @@ if [ "${var_load_enable__db_backup:-}" = 'true' ] && [ "${var_load_use__wale:-}"
 	export var_load_enable__custom_db_backup='true'
 fi
 
-if [ "${var_load_enable__db_setup:-}" = 'true' ] && [ "${var_load_use__wale:-}" = 'true' ]; then
+if [ "${var_load_enable__db_setup:-}" = 'true' ] && [ "${var_load_use__wale_restore:-}" = 'true' ]; then
 	export var_load_enable__db_setup='false'
 	export var_load_enable__custom_db_setup='true'
 fi
@@ -58,7 +58,7 @@ if [ "$tmp_is_db" = 'true' ]; then
 		export var_task__db_backup__backup_db__db_subtask_cmd='db:backup:wale:postgres'
 	fi
 
-	if [ "${var_load_enable__custom_db_setup:-}" = 'true' ] && [ "${var_load_use__wale:-}" = 'true' ]; then
+	if [ "${var_load_enable__custom_db_setup:-}" = 'true' ] && [ "${var_load_use__wale_restore:-}" = 'true' ]; then
 		if [ -z "${var_load__db_setup__pitr:-}" ]; then
 			tmp_errors+=("wale: var_load__db_setup__pitr (point in time recovery of the backup) is not defined")
 		fi
