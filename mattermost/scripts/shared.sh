@@ -63,6 +63,22 @@ case "$command" in
 				fi
 
 				chown 2000:2000 "\$dir"
+
+				if [ "${var_custom__use_pgadmin:-}" = 'true' ]; then
+					src_file="$data_dir/secrets/pgadmin_pass.txt"
+					dest_dir="$data_dir/pgadmin/secrets"
+					dest_file="\$dest_dir/pgadmin_pass"
+
+					if [ ! -d "\$dest_dir" ]; then
+						mkdir -p "\$dest_dir"
+					fi
+
+					chown 5050:5050 "\$dest_dir"
+
+					cp "\$src_file" "\$dest_file"
+					chown 5050:5050 "\$dest_file"
+					chmod 600 "\$dest_file"
+				fi
 			fi
 		SHELL
 

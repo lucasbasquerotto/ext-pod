@@ -198,10 +198,7 @@
 {% endif %}
 
 {% set var_pgadmin_pass_content =
-  var_postgres_hostname
-  + ':' + (var_postgres_port | string)
-  + ':' + (credentials.postgres.db_name | default(''))
-  + ':' + var_db_gui_user
+  '*:*:*:' + var_db_gui_user
   + ':' + var_db_gui_password
 %}
 

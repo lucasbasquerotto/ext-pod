@@ -20,7 +20,7 @@
   (params.use_secure_elasticsearch | bool)
 %}
 
-version: '2.4'
+version: '3.7'
 
 x-logging:
 
@@ -106,15 +106,6 @@ secrets:
 
   db_root_password:
     file: "$DATA_DIR/secrets/db_root_password.txt"
-
-  {% endif %}
-  {#############################################################}
-
-  {#############################################################}
-  {% if var_use_pgadmin %}
-
-  pgadmin_pass:
-    file: "$DATA_DIR/secrets/pgadmin_pass.txt"
 
   {% endif %}
   {#############################################################}
@@ -313,11 +304,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: "{{ params.pgadmin_email }}"
       PGADMIN_DEFAULT_PASSWORD: "{{ params.pgadmin_password }}"
-    secrets:
-      - source: "pgadmin_pass"
-        uid: '5050'
-        gid: '5050'
-        mode: 0600
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
 
     {#############################################################}
     {% if var_use_internal_fluentd %}
@@ -341,6 +329,7 @@ services:
     {#############################################################}
 
     volumes:
+    - "$DATA_DIR/pgadmin/secrets:/var/run/secrets:ro"
     - "$DATA_DIR/tmp/pgadmin:/tmp/main/pgadmin"
     - "$DATA_DIR/tmp/tmp/pgadmin:/tmp/main/tmp/pgadmin"
     logging: *mainlog
@@ -372,7 +361,7 @@ services:
     environment:
       ADMINER_DRIVER: pgsql
       ADMINER_SERVER: "{{ params.db_host }}"
-      ADMINER_DB: "{{ params.db_name }}"
+      ADMINER_DB: "postgres"
       ADMINER_USERNAME: "{{ params.db_gui_user }}"
       ADMINER_AUTOLOGIN: 1
 
