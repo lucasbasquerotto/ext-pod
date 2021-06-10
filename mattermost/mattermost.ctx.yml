@@ -353,6 +353,13 @@ templates:
     smtp_connection_security: "{{ credentials.mattermost_mail.connection_security | default('') }}"
     smtp_user_name: "{{ credentials.mattermost_mail.user_name | default('') }}"
     smtp_password: "{{ credentials.mattermost_mail.password | default('') }}"
+    use_s3_storage: "{{ params.use_s3_storage | default(false) }}"
+    s3_access_key: "{{ var_s3_uploads_credentials.access_key | default('') }}"
+    s3_secret_key: "{{ var_s3_uploads_credentials.secret_key | default('') }}"
+    s3_bucket_name: "{{ params.uploads_bucket_name | default('') }}"
+    s3_bucket_path: "{{ params.uploads_bucket_path | default('') }}"
+    s3_bucket_region: "{{ var_s3_uploads_credentials.region | default('') }}"
+    s3_endpoint: "{{ var_s3_uploads_credentials.endpoint | default('') | urlsplit("netloc") }}"
 
 {% endif %}
 ##############################################################

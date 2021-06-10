@@ -361,7 +361,7 @@ services:
     environment:
       ADMINER_DRIVER: pgsql
       ADMINER_SERVER: "{{ params.db_host }}"
-      ADMINER_DB: "postgres"
+      ADMINER_DB: "{{ params.db_name }}"
       ADMINER_USERNAME: "{{ params.db_gui_user }}"
       ADMINER_AUTOLOGIN: 1
 
