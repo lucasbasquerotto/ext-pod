@@ -51,7 +51,7 @@ case "$command" in
 		"$pod_script_env_file" up "$var_run__general__toolbox_service"
 
 		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL || error "$command"
-			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
 				dir="$data_dir/mediawiki/uploads"
 
 				if [ ! -d "\$dir" ]; then
@@ -72,11 +72,11 @@ case "$command" in
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"migrate")
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
 			"$pod_shared_run_file" up mysql
 		fi
 
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
 			"$pod_shared_run_file" up mediawiki
 
 			info "$command - verify the need to setup the mediawiki database"
@@ -99,7 +99,7 @@ case "$command" in
 		db_port="$var_run__migrate__db_port"
 		db_remote=""
 
-		if [ "$var_custom__pod_type" != "app" ] && [ "$var_custom__pod_type" != "db" ]; then
+		if [ "$var_main__pod_type" != "app" ] && [ "$var_main__pod_type" != "db" ]; then
 			db_service="mysql_cli"
 			db_cmd="run"
 			db_remote="true"
@@ -123,42 +123,42 @@ case "$command" in
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "${var_custom__use_nginx:-}" = "true" ]; then
+		if [ "${var_main__use_nginx:-}" = "true" ]; then
 			opts+=( 'log_register.nginx_basic_status' )
 		fi
 
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
-		days_ago="${var_custom__log_summary__days_ago:-}"
+		days_ago="${var_log__summary__days_ago:-}"
 		days_ago="${arg_days_ago:-$days_ago}"
 
-		max_amount="${var_custom__log_summary__max_amount:-}"
+		max_amount="${var_log__summary__max_amount:-}"
 		max_amount="${arg_max_amount:-$max_amount}"
 		max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
-			if [ "${var_custom__use_nginx:-}" = "true" ]; then
+		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
 
-			if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+			if [ "${var_main__use_haproxy:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
 		fi
 
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
 			"$pod_script_env_file" "shared:log:mysql_slow:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		fi
 
 		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:disk:summary" \
-			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
-			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
+			--verify_size_docker_dir="${var_log__summary__verify_size_docker_dir:-}" \
+			--verify_size_containers="${var_log__summary__verify_size_containers:-}"
 		;;
 	"shared:action:"*)
 		action="${command#shared:action:}"

@@ -29,7 +29,7 @@ function tmp_error {
 
 tmp_errors=()
 
-export var_custom__use_secure_elasticsearch="${var_load_use__secure_elasticsearch:-}"
+export var_main__use_secure_elasticsearch="${var_load_use__secure_elasticsearch:-}"
 
 # specific vars...
 

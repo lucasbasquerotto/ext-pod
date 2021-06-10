@@ -36,8 +36,8 @@ if [ "${var_load_main__pod_type:-}" = 'app' ] || [ "${var_load_main__pod_type:-}
 	tmp_is_web='true'
 fi
 
-export var_custom__use_s3_storage="${var_load_use__s3_storage:-}"
-export var_custom__use_composer="${var_load_use__composer:-}"
+export var_main__use_s3_storage="${var_load_use__s3_storage:-}"
+export var_main__use_composer="${var_load_use__composer:-}"
 
 export var_run__migrate__use_varnish="${var_load_use__varnish:-}"
 export var_run__migrate__use_redis="${var_load_use__redis:-}"

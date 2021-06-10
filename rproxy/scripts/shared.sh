@@ -51,37 +51,37 @@ case "$command" in
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+		if [ "${var_main__use_haproxy:-}" = "true" ]; then
 			opts+=( 'log_register.haproxy_basic_status' )
-		elif [ "${var_custom__use_nginx:-}" = "true" ]; then
+		elif [ "${var_main__use_nginx:-}" = "true" ]; then
 			opts+=( 'log_register.nginx_basic_status' )
 		fi
 
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
-		days_ago="${var_custom__log_summary__days_ago:-}"
+		days_ago="${var_log__summary__days_ago:-}"
 		days_ago="${arg_days_ago:-$days_ago}"
 
-		max_amount="${var_custom__log_summary__max_amount:-}"
+		max_amount="${var_log__summary__max_amount:-}"
 		max_amount="${arg_max_amount:-$max_amount}"
 		max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+		if [ "${var_main__use_haproxy:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 			"$pod_script_env_file" "shared:log:haproxy:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
-		elif [ "${var_custom__use_nginx:-}" = "true" ]; then
+		elif [ "${var_main__use_nginx:-}" = "true" ]; then
 			"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 			"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
 		fi
 
 		"$pod_script_env_file" "shared:log:file_descriptors:summary" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:disk:summary" \
-			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
-			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
+			--verify_size_docker_dir="${var_log__summary__verify_size_docker_dir:-}" \
+			--verify_size_containers="${var_log__summary__verify_size_containers:-}"
 		;;
 	"shared:action:"*)
 		action="${command#shared:action:}"

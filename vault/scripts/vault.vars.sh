@@ -32,7 +32,7 @@ tmp_errors=()
 
 # specific vars...
 
-export var_custom__use_consul="${var_load_use__consul:-}"
+export var_main__use_consul="${var_load_use__consul:-}"
 
 tmp_error_count=${#tmp_errors[@]}
 

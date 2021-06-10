@@ -34,7 +34,7 @@ case "$command" in
 		"$pod_script_env_file" "local:clear-all"
 		;;
 	"clear-remote")
-		if [ "${var_custom__use_s3:-}" = 'true' ]; then
+		if [ "${var_main__use_s3:-}" = 'true' ]; then
 			"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
 
 			if [ "${var_run__enable__backup_replica:-}" = 'true' ]; then

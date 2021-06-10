@@ -52,7 +52,7 @@ case "$command" in
 		"$pod_script_env_file" up wordpress
 
 		if [ "${var_custom__app_dev:-}" = "true" ]; then
-			if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
 				"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
 					set -eou pipefail
 
@@ -86,7 +86,7 @@ case "$command" in
 		"$pod_env_shared_file" "$command" "$@"
 		;;
 	"migrate")
-		if [ "${var_custom__app_dev:-}" = "true" ] && [ "${var_custom__use_composer:-}" = "true" ]; then
+		if [ "${var_custom__app_dev:-}" = "true" ] && [ "${var_main__use_composer:-}" = "true" ]; then
 			"$pod_env_shared_file" up mysql composer
 			"$pod_env_shared_file" exec composer composer install --verbose
 		fi
@@ -100,7 +100,7 @@ case "$command" in
 		"$pod_script_env_file" "local:clear-all"
 		;;
 	"clear-remote")
-		if [ "${var_custom__use_s3:-}" = 'true' ]; then
+		if [ "${var_main__use_s3:-}" = 'true' ]; then
 			"$pod_script_env_file" "s3:subtask:s3_uploads" --s3_cmd=rb
 			"$pod_script_env_file" "s3:subtask:s3_backup" --s3_cmd=rb
 

@@ -57,7 +57,7 @@ case "$command" in
 
 		"$pod_script_env_file" up toolbox
 
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
+		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
 			"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
 				set -eou pipefail
 
@@ -86,9 +86,9 @@ case "$command" in
 		opts+=( "--use_varnish=${var_run__migrate__use_varnish:-}" )
 		opts+=( "--use_redis=${var_run__migrate__use_redis:-}" )
 		opts+=( "--use_memcached=${var_run__migrate__use_memcached:-}" )
-		opts+=( "--use_s3_storage=${var_custom__use_s3_storage:-}" )
+		opts+=( "--use_s3_storage=${var_main__use_s3_storage:-}" )
 
-		"$pod_env_shared_exec_file" "migrate:$var_custom__pod_type" "${opts[@]}"
+		"$pod_env_shared_exec_file" "migrate:$var_main__pod_type" "${opts[@]}"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
@@ -126,43 +126,43 @@ case "$command" in
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "${var_custom__use_nginx:-}" = "true" ]; then
+		if [ "${var_main__use_nginx:-}" = "true" ]; then
 			opts+=( 'log_register.nginx_basic_status' )
 		fi
 
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
-		days_ago="${var_custom__log_summary__days_ago:-}"
+		days_ago="${var_log__summary__days_ago:-}"
 		days_ago="${arg_days_ago:-$days_ago}"
 
-		max_amount="${var_custom__log_summary__max_amount:-}"
+		max_amount="${var_log__summary__max_amount:-}"
 		max_amount="${arg_max_amount:-$max_amount}"
 		max_amount="${max_amount:-100}"
 
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "web" ]; then
-			if [ "${var_custom__use_nginx:-}" = "true" ]; then
+		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:nginx:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
 
-			if [ "${var_custom__use_haproxy:-}" = "true" ]; then
+			if [ "${var_main__use_haproxy:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:haproxy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 			fi
 		fi
 
-		if [ "$var_custom__pod_type" = "app" ] || [ "$var_custom__pod_type" = "db" ]; then
+		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
 			"$pod_script_env_file" "shared:log:mysql_slow:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 		fi
 
 		"$pod_script_env_file" "shared:log:file_descriptors:summary" --task_info="$title" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:disk:summary" \
 			--task_info="$title" \
-			--verify_size_docker_dir="${var_custom__log_summary__verify_size_docker_dir:-}" \
-			--verify_size_containers="${var_custom__log_summary__verify_size_containers:-}"
+			--verify_size_docker_dir="${var_log__summary__verify_size_docker_dir:-}" \
+			--verify_size_containers="${var_log__summary__verify_size_containers:-}"
 		;;
 	"shared:action:"*)
 		action="${command#shared:action:}"
