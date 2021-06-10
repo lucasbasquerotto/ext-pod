@@ -584,6 +584,16 @@ services:
     environment:
       PGUSER: "postgres"
 
+      {% if params.use_wale | bool %}
+
+      WALE_S3_PREFIX: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
+      S3_REGION: "{{ params.backup_bucket_region | default('us-east-1', true) }}"
+      S3_ACCESS_KEY_ID: "$WALE_S3_ACCESS_KEY_ID"
+      S3_SECRET_ACCESS_KEY: "$WALE_S3_SECRET_ACCESS_KEY"
+
+      {% endif %}
+      {#############################################################}
+
       {#############################################################}
       {% if params.use_secrets | bool %}
 
@@ -596,44 +606,11 @@ services:
       {% endif %}
       {#############################################################}
 
-      {% if params.use_wale | bool %}
-
-      WALE_S3_PREFIX: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
-      S3_REGION: "{{ params.backup_bucket_region }}"
-
-      {% endif %}
-      {#############################################################}
-
-      {#############################################################}
-      {% if (params.use_wale | bool) and (params.use_secrets | bool) %}
-
-      S3_ACCESS_KEY_ID_FILE: "/run/secrets/wale_s3_access_key_id"
-      S3_SECRET_ACCESS_KEY_FILE: "/run/secrets/wale_s3_secret_access_key"
-      POSTGRES_PASSWORD_FILE: "/run/secrets/db_root_password"
-
-      {% elif params.use_wale | bool %}
-
-      S3_ACCESS_KEY_ID: "$WALE_S3_ACCESS_KEY_ID"
-      S3_SECRET_ACCESS_KEY: "$WALE_S3_SECRET_ACCESS_KEY"
-      POSTGRES_PASSWORD: "$DB_ROOT_PASSWORD"
-
-      {% endif %}
-      {#############################################################}
-
     {#############################################################}
     {% if params.use_secrets | bool %}
 
     secrets:
       - "db_root_password"
-
-      {#############################################################}
-      {% if params.use_wale | bool %}
-
-      - "wale_s3_access_key_id"
-      - "wale_s3_secret_access_key"
-
-      {% endif %}
-      {#############################################################}
 
     {% endif %}
     {#############################################################}
@@ -910,7 +887,6 @@ services:
       args:
         IMAGE: "{{ params.images.fluentd_image }}"
         VERSION: "{{ params.images.fluentd_version }}"
-        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
     restart: "unless-stopped"
     ports:
     - "{{ params.fluentd_port }}:24224"

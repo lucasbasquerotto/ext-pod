@@ -298,6 +298,9 @@ templates:
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
+    backup_bucket_name: "{{ params.backup_bucket_name | default('') }}"
+    backup_bucket_path: "{{ params.backup_bucket_path | default('') }}"
+    backup_bucket_region: "{{ var_s3_uploads_credentials.region | default('') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | to_json }}
     memory: {{ params.memory | to_json }}
@@ -334,6 +337,9 @@ templates:
     local_s3_secret_key: "{{ var_local_s3_credentials.secret_key }}"
     db_root_password: "{{ credentials.postgres.root_password | default('') }}"
     db_gui_password: "{{ var_db_gui_password }}"
+    use_wale: "{{ params.use_wale | default(false) }}"
+    wale_s3_access_key_id: "{{ var_s3_backup_credentials.access_key | default('') }}"
+    wale_s3_secret_access_key: "{{ var_s3_backup_credentials.secret_key | default('') }}"
 
 ##############################################################
 {% if var_pod_type in ['app', 'web'] %}
@@ -625,7 +631,7 @@ templates:
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
     var_load_use__s3_storage: "{{ params.use_s3_storage | default('') | lower }}"
     var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
-    var_load_use__wale: "{{ params.use_wale | default(false) }}"
+    var_load_use__wale: "{{ params.use_wale | default(false) | lower }}"
 
     # Enable Tasks
 
@@ -676,6 +682,7 @@ templates:
     var_load__db_main__db_user: "{{ credentials.postgres.db_user | default('') }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
 
+    var_load__db_setup__pitr: "{{ params.db_setup.pitr | default('') }}"
     var_load__db_setup__compressed_file_name: "{{ params.db_setup.compressed_file_name | default('') }}"
     var_load__db_setup__db_file_name: "{{ params.db_setup.db_file_name | default('') }}"
     var_load__db_setup__verify_file_to_skip: "{{ params.db_setup.verify_file_to_skip | default('') }}"

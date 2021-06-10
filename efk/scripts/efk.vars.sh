@@ -111,7 +111,6 @@ if [ "$tmp_is_db" = 'true' ]; then
 		fi
 	fi
 
-
 	if [ "${var_load_enable__custom_db_setup:-}" = 'true' ]; then
 		if [ -z "${var_load__db_setup__snapshot_name:-}" ]; then
 			tmp_errors+=("var_load__db_setup__snapshot_name is not defined")
@@ -127,7 +126,6 @@ if [ "$tmp_is_db" = 'true' ]; then
 		tmp_default_index_prefix='fluentd-'
 		tmp_db_index_prefix="${var_load__db_setup__index_prefix:-$tmp_default_index_prefix}"
 		tmp_restore_remote_file="${var_load__db_setup__restore_remote_file:-}"
-		export var_task__db_setup__setup_db__db_args="${var_load__db_setup__db_args:-}"
 
 		if [ "${var_load__db_setup__use_s3:-}" = 'true' ]; then
 			tmp_db_subtask_cmd_local=''

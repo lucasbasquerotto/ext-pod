@@ -1154,7 +1154,6 @@ services:
       args:
         IMAGE: "{{ params.images.fluentd_image }}"
         VERSION: "{{ params.images.fluentd_version }}"
-        OUTPUT_PLUGIN: "{{ params.fluentd_output_plugin }}"
     restart: "unless-stopped"
     ports:
     - "{{ params.fluentd_port }}:24224"
