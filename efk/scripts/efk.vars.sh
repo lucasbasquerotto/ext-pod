@@ -90,7 +90,7 @@ if [ "$tmp_is_db" = 'true' ]; then
 		fi
 
 		export var_task__db_backup__backup_db__task_name='db_main'
-		export var_task__db_backup__backup_db__db_subtask_cmd='db:backup:elasticsearch'
+		export var_task__db_backup__backup_db__db_subtask_cmd='db:main:elasticsearch:backup'
 		export var_task__db_backup__backup_db__db_task_base_dir="$tmp_db_dir"
 		export var_task__db_backup__backup_db__repository_name="$tmp_db_repository_name"
 		export var_task__db_backup__backup_db__snapshot_name="$tmp_db_snapshot_name"
@@ -147,12 +147,12 @@ if [ "$tmp_is_db" = 'true' ]; then
 		export var_task__db_setup__setup_task__subtask_cmd_remote="$tmp_db_subtask_cmd_remote"
 		export var_task__db_setup__setup_task__subtask_cmd_local="$tmp_db_subtask_cmd_local"
 
-		export var_task__db_setup__setup_verify__db_subtask_cmd='db:restore:verify:elasticsearch'
+		export var_task__db_setup__setup_verify__db_subtask_cmd='db:main:elasticsearch:restore:verify'
 		export var_task__db_setup__setup_verify__task_name="db_main"
 		export var_task__db_setup__setup_verify__db_index_prefix="$tmp_db_index_prefix"
 
 		export var_task__db_setup__setup_db__task_name='db_main'
-		export var_task__db_setup__setup_db__db_subtask_cmd='db:restore:elasticsearch'
+		export var_task__db_setup__setup_db__db_subtask_cmd='db:main:elasticsearch:restore'
 		export var_task__db_setup__setup_db__db_task_base_dir="$tmp_db_dir"
 		export var_task__db_setup__setup_db__repository_name="$tmp_db_repository_name"
 		export var_task__db_setup__setup_db__snapshot_name="$tmp_db_snapshot_name"

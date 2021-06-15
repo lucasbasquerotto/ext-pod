@@ -105,7 +105,7 @@ case "$command" in
 			db_remote="true"
 		fi
 
-		"$pod_shared_run_file" "run:db:main:tables:count:mysql" \
+		"$pod_shared_run_file" "db:main:mysql:tables:count" \
 			--db_service="$db_service" \
 			--db_cmd="$db_cmd" \
 			--db_host="$db_host" \

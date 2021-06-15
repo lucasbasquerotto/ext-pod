@@ -93,9 +93,9 @@ case "$command" in
 	"custom:elasticsearch:secure")
 		"$pod_script_env_file" up toolbox elasticsearch
 
-		"$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:ready:elasticsearch"
+		"$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:ready"
 
-		password="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:pass:elasticsearch")"
+		password="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:pass")"
 
 		# Create roles
 		echo "creating the elasticsearch roles..." >&2

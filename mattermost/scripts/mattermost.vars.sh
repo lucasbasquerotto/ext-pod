@@ -8,8 +8,8 @@ tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='mattermost'
 export var_load_main__db_service='postgres'
-export var_load_main__db_backup_type="file:${var_load_main__db_service:-}"
-export var_load_main__db_restore_type="file:${var_load_main__db_service:-}"
+export var_load_main__db_backup_task="db:main:${var_load_main__db_service:-}:backup:file"
+export var_load_main__db_restore_task="db:main:${var_load_main__db_service:-}:restore:file"
 export var_load_main__db_backup_is_file='true'
 export var_load_main__db_backup_extension='dump'
 
@@ -55,7 +55,7 @@ if [ "$tmp_is_db" = 'true' ]; then
 		export var_task__db_backup__backup_task__no_src_needed='true'
 
 		export var_task__db_backup__backup_db__task_name='db_main'
-		export var_task__db_backup__backup_db__db_subtask_cmd='db:backup:wale:postgres'
+		export var_task__db_backup__backup_db__db_subtask_cmd='db:main:postgres:backup:wale'
 	fi
 
 	if [ "${var_load_enable__custom_db_setup:-}" = 'true' ] && [ "${var_load_use__wale_restore:-}" = 'true' ]; then
@@ -72,11 +72,11 @@ if [ "$tmp_is_db" = 'true' ]; then
 		export var_task__db_setup__setup_task__subtask_cmd_remote='setup:db'
 		export var_task__db_setup__setup_task__subtask_cmd_local=''
 
-		export var_task__db_setup__setup_verify__db_subtask_cmd='db:restore:verify:postgres'
+		export var_task__db_setup__setup_verify__db_subtask_cmd='db:main:postgres:restore:verify'
 		export var_task__db_setup__setup_verify__task_name="db_main"
 
 		export var_task__db_setup__setup_db__task_name='db_main'
-		export var_task__db_setup__setup_db__db_subtask_cmd='db:restore:wale:postgres'
+		export var_task__db_setup__setup_db__db_subtask_cmd='db:main:postgres:restore:wale'
 		export var_task__db_setup__setup_db__pit="${var_load__db_setup__pitr:-}"
 		export var_task__db_setup__setup_db__db_args="${var_load__db_setup__db_args:-}"
 	fi
