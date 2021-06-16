@@ -651,6 +651,7 @@ templates:
     var_load__s3_backup__bucket_path: "{{ params.backup_bucket_path | default('') }}"
     var_load__s3_backup__cli: "{{ params.s3_cli | default('') }}"
     var_load__s3_backup__endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
+    var_load__s3_backup__lifecycle_dir: "env/{{ params.s3_cli | default('') }}/etc"
     var_load__s3_backup__lifecycle_file: "{{ params.s3_backup_lifecycle_file | default('') }}"
     var_load__s3_backup__acl: "{{ params.s3_backup_acl | default('') }}"
 
@@ -663,6 +664,7 @@ templates:
     var_load__s3_uploads__bucket_path: "{{ params.uploads_bucket_path | default('') }}"
     var_load__s3_uploads__cli: "{{ params.s3_cli | default('') }}"
     var_load__s3_uploads__endpoint: "{{ var_s3_uploads_credentials.endpoint | default('') }}"
+    var_load__s3_uploads__lifecycle_dir: "env/{{ params.s3_cli | default('') }}/etc"
     var_load__s3_uploads__lifecycle_file: "{{ params.s3_uploads_lifecycle_file | default('') }}"
     var_load__s3_uploads__acl: "{{ params.s3_uploads_acl | default('') }}"
 

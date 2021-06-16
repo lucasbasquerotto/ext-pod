@@ -51,7 +51,7 @@ if [ "$tmp_is_db" = 'true' ]; then
 	if [ "${var_load_enable__custom_db_backup:-}" = 'true' ] && [ "${var_load_use__wale:-}" = 'true' ]; then
 		export var_task__db_backup__task__type='backup'
 		export var_task__db_backup__backup_task__subtask_cmd_local=''
-		export var_task__db_backup__backup_task__subtask_cmd_remote='backup:db'
+		export var_task__db_backup__backup_task__subtask_cmd_remote='shared:db:task:backup_db'
 		export var_task__db_backup__backup_task__no_src_needed='true'
 
 		export var_task__db_backup__backup_db__task_name='db_main'
@@ -68,8 +68,8 @@ if [ "$tmp_is_db" = 'true' ]; then
 
 		export var_task__db_setup__task__type="setup"
 		export var_task__db_setup__setup_task__verify_file_to_skip="$tmp_file_to_skip"
-		export var_task__db_setup__setup_task__subtask_cmd_verify='setup:verify:db'
-		export var_task__db_setup__setup_task__subtask_cmd_remote='setup:db'
+		export var_task__db_setup__setup_task__subtask_cmd_verify='shared:db:task:setup_verify'
+		export var_task__db_setup__setup_task__subtask_cmd_remote='shared:db:task:setup_db'
 		export var_task__db_setup__setup_task__subtask_cmd_local=''
 
 		export var_task__db_setup__setup_verify__db_subtask_cmd='db:main:postgres:restore:verify'

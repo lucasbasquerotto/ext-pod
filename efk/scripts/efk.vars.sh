@@ -50,10 +50,10 @@ if [ "$tmp_is_db" = 'true' ]; then
 
 		if [ "${var_load__db_backup__s3_snapshot:-}" = 'true' ]; then
 			tmp_db_subtask_cmd_local=''
-			tmp_db_subtask_cmd_remote='backup:db'
+			tmp_db_subtask_cmd_remote='shared:db:task:backup_db'
 			tmp_db_snapshot_type='s3'
 		else
-			tmp_db_subtask_cmd_local='backup:db'
+			tmp_db_subtask_cmd_local='shared:db:task:backup_db'
 			tmp_db_subtask_cmd_remote='backup:remote:default'
 			tmp_db_snapshot_type='fs'
 		fi
@@ -129,10 +129,10 @@ if [ "$tmp_is_db" = 'true' ]; then
 
 		if [ "${var_load__db_setup__use_s3:-}" = 'true' ]; then
 			tmp_db_subtask_cmd_local=''
-			tmp_db_subtask_cmd_remote='setup:db'
+			tmp_db_subtask_cmd_remote='shared:db:task:setup_db'
 			tmp_db_snapshot_type="${var_load__db_setup__snapshot_type:-s3}"
 		else
-			tmp_db_subtask_cmd_local='setup:db'
+			tmp_db_subtask_cmd_local='shared:db:task:setup_db'
 			tmp_db_subtask_cmd_remote=''
 			tmp_db_snapshot_type="${var_load__db_setup__snapshot_type:-fs}"
 
@@ -143,7 +143,7 @@ if [ "$tmp_is_db" = 'true' ]; then
 
 		export var_task__db_setup__task__type="setup"
 		export var_task__db_setup__setup_task__verify_file_to_skip="$tmp_file_to_skip"
-		export var_task__db_setup__setup_task__subtask_cmd_verify='setup:verify:db'
+		export var_task__db_setup__setup_task__subtask_cmd_verify='shared:db:task:setup_verify'
 		export var_task__db_setup__setup_task__subtask_cmd_remote="$tmp_db_subtask_cmd_remote"
 		export var_task__db_setup__setup_task__subtask_cmd_local="$tmp_db_subtask_cmd_local"
 
