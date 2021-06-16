@@ -591,6 +591,8 @@ templates:
     var_load__db_main__db_root_user: "{{ credentials.rocketchat.db.root_user }}"
     var_load__db_main__db_root_pass: "{{ credentials.rocketchat.db.root_password }}"
     var_load__db_main__db_name: "{{ credentials.rocketchat.db.name | default('') }}"
+    var_load__db_main__db_host: "{{ var_mongo_hostname }}"
+    var_load__db_main__db_port: "{{ var_mongo_port }}"
     var_load__db_main__db_user: "{{ credentials.rocketchat.db.user | default('') }}"
     var_load__db_main__db_pass: "{{ credentials.rocketchat.db.password | default('') }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
