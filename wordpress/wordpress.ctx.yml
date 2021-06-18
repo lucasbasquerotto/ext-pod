@@ -689,6 +689,11 @@ templates:
     var_load__db_main__db_name: "{{ credentials.wordpress.db.name | default('') }}"
     var_load__db_main__db_user: "{{ credentials.wordpress.db.user | default('') }}"
     var_load__db_main__db_pass: "{{ credentials.wordpress.db.password | default('') }}"
+    var_load__db_main__db_pass_aux: >-
+      {{
+        params.use_secrets | default(false) | bool
+        | ternary('', credentials.wordpress.db.password | default(''))
+      }}
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
 
     var_load__db_setup__compressed_file_name: "{{ params.db_setup.compressed_file_name | default('') }}"
