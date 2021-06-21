@@ -14,6 +14,16 @@
   (params.use_secure_elasticsearch | bool)
 %}
 
+{################################################################################################}
+{% macro include_scripts() %}
+
+    - "./main/scripts:/var/main/scripts/main/scripts:ro"
+    - "./shared/scripts:/var/main/scripts/shared/scripts:ro"
+    - "./{{ params.main_dir }}/scripts:/var/main/scripts/{{ params.main_dir }}/scripts:ro"
+
+{% endmacro %}
+{################################################################################################}
+
 version: '3.7'
 
 x-logging:
@@ -426,6 +436,8 @@ services:
 
     {% endif %}
     {#############################################################}
+
+    {{ include_scripts() }}
 
     logging: *mainlog
     command: "tail -f /dev/null"

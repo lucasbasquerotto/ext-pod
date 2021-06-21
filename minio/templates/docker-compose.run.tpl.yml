@@ -1,5 +1,15 @@
 {% set var_local = params.local | bool %}
 
+{################################################################################################}
+{% macro include_scripts() %}
+
+    - "./main/scripts:/var/main/scripts/main/scripts:ro"
+    - "./shared/scripts:/var/main/scripts/shared/scripts:ro"
+    - "./{{ params.main_dir }}/scripts:/var/main/scripts/{{ params.main_dir }}/scripts:ro"
+
+{% endmacro %}
+{################################################################################################}
+
 version: "2.4"
 
 x-logging:
@@ -64,6 +74,9 @@ services:
     volumes:
     - "$DATA_DIR/sync/certbot/etc/:/etc/letsencrypt/"
     - "$DATA_DIR/sync/certbot/www/:/var/www/certbot/"
+
+    {{ include_scripts() }}
+
     logging: *mainlog
 
     {#############################################################}
