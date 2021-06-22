@@ -25,16 +25,6 @@ fi
 shift;
 
 case "$command" in
-	"test")
-		echo "pod_layer_dir=$var_pod_layer_dir"
-		echo "================================================================"
-		echo "vars1=$(printenv)"
-		echo "----------------------------------------------------------------"
-		. "$var_pod_layer_dir/vars.sh"
-		echo "vars2=$(printenv)"
-		echo "================================================================"
-		"$pod_script_env_file" "inner:test"
-		;;
 	"clear")
 		"$pod_script_env_file" "local:clear"
 		;;
