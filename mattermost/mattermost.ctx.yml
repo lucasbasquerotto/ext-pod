@@ -292,6 +292,7 @@ templates:
   params:
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
+    main_real_dir: "{{ var_main_dir }}"
     pod_type: "{{ var_pod_type }}"
     shared_network: "{{ var_shared_network_name }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
@@ -333,6 +334,7 @@ templates:
     shared_network: "{{ var_shared_network_name }}"
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
+    main_real_dir: "{{ var_main_dir }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"

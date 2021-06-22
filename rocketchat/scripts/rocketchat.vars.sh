@@ -7,21 +7,25 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='rocketchat'
-export var_load_main__db_service='mongo'
-export var_load_main__db_restore_task="db:main:${var_load_main__db_service:-}:restore:dir"
-export var_load_main__db_backup_include_src='true'
 
-export var_load_general__orchestration='compose'
-export var_load_general__toolbox_service='toolbox'
+if [ "${var_load_main__inner:-}" != 'true' ]; then
+	export var_load_main__db_service='mongo'
+	export var_load_main__db_restore_task="db:main:${var_load_main__db_service:-}:restore:dir"
+	export var_load_main__db_backup_include_src='true'
+
+	export var_load_general__orchestration='compose'
+	export var_load_general__toolbox_service='toolbox'
+
+	tmp_authentication_database="${var_load__db_main__authentication_database:-admin}"
+	export var_load__db_main__authentication_database="$tmp_authentication_database"
+fi
+
 export var_load_general__script_dir="$tmp_dir"
 export var_load_general__script_env_file='remote.sh'
 
 if [ "${var_load_main__local:-}" = 'true' ]; then
 	export var_load_general__script_env_file='local.sh'
 fi
-
-tmp_authentication_database="${var_load__db_main__authentication_database:-admin}"
-export var_load__db_main__authentication_database="$tmp_authentication_database"
 
 function tmp_error {
 	echo "${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}" >&2

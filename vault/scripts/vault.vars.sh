@@ -7,21 +7,25 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='vault'
-export var_load_main__db_service='vault'
 
-export var_load_general__orchestration='compose'
-export var_load_general__toolbox_service='toolbox'
+if [ "${var_load_main__inner:-}" != 'true' ]; then
+	export var_load_main__db_service='vault'
+
+	export var_load_general__orchestration='compose'
+	export var_load_general__toolbox_service='toolbox'
+
+	export var_load_main__allow_custom_db_service='true'
+
+	export var_load__db_main__db_host="${var_load__db_main__db_host:-vault}"
+	export var_load__db_main__db_port="${var_load__db_main__db_port:-8200}"
+fi
+
 export var_load_general__script_dir="$tmp_dir"
 export var_load_general__script_env_file='remote.sh'
 
 if [ "${var_load_main__local:-}" = 'true' ]; then
 	export var_load_general__script_env_file='local.sh'
 fi
-
-export var_load_main__allow_custom_db_service='true'
-
-export var_load__db_main__db_host="${var_load__db_main__db_host:-vault}"
-export var_load__db_main__db_port="${var_load__db_main__db_port:-8200}"
 
 function tmp_error {
 	echo "${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}" >&2
@@ -32,7 +36,9 @@ tmp_errors=()
 
 # specific vars...
 
-export var_main__use_consul="${var_load_use__consul:-}"
+if [ "${var_load_main__inner:-}" != 'true' ]; then
+	export var_main__use_consul="${var_load_use__consul:-}"
+fi
 
 tmp_error_count=${#tmp_errors[@]}
 

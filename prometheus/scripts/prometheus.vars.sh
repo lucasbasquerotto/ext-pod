@@ -7,19 +7,23 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='prometheus'
-export var_load_main__db_service='prometheus'
 
-export var_load_general__orchestration='compose'
-export var_load_general__toolbox_service='toolbox'
+if [ "${var_load_main__inner:-}" != 'true' ]; then
+	export var_load_main__db_service='prometheus'
+
+	export var_load_general__orchestration='compose'
+	export var_load_general__toolbox_service='toolbox'
+
+	export var_load__db_main__db_host="${var_load__db_main__db_host:-prometheus}"
+	export var_load__db_main__db_port="${var_load__db_main__db_port:-9090}"
+fi
+
 export var_load_general__script_dir="$tmp_dir"
 export var_load_general__script_env_file='remote.sh'
 
 if [ "${var_load_main__local:-}" = 'true' ]; then
 	export var_load_general__script_env_file='local.sh'
 fi
-
-export var_load__db_main__db_host="${var_load__db_main__db_host:-prometheus}"
-export var_load__db_main__db_port="${var_load__db_main__db_port:-9090}"
 
 function tmp_error {
 	echo "${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}" >&2

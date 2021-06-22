@@ -7,16 +7,20 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='minio'
-# export var_load_main__db_service='minio'
-# export var_load_main__db_backup_include_src='true'
 
-export var_load_general__orchestration='compose'
-export var_load_general__toolbox_service='toolbox'
+if [ "${var_load_main__inner:-}" != 'true' ]; then
+	# export var_load_main__db_service='minio'
+	# export var_load_main__db_backup_include_src='true'
+
+	export var_load_general__orchestration='compose'
+	export var_load_general__toolbox_service='toolbox'
+
+	export var_load__db_backup_sync__src_relpath='minio'
+	export var_load__db_setup_sync__dest_dir_relpath='minio'
+fi
+
 export var_load_general__script_dir="$tmp_dir"
 export var_load_general__script_env_file='remote.sh'
-
-export var_load__db_backup_sync__src_relpath='minio'
-export var_load__db_setup_sync__dest_dir_relpath='minio'
 
 if [ "${var_load_main__local:-}" = 'true' ]; then
 	export var_load_general__script_env_file='local.sh'

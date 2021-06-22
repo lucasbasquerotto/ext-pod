@@ -7,14 +7,18 @@ tmp_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp_pod_layer_dir="$var_pod_layer_dir"
 
 export var_load_name='ghost'
-export var_load_main__db_service='mysql'
-export var_load_main__db_backup_task="db:main:${var_load_main__db_service:-}:backup:file"
-export var_load_main__db_restore_task="db:main:${var_load_main__db_service:-}:restore:file"
-export var_load_main__db_restore_is_file='true'
-export var_load_main__db_backup_is_file='true'
 
-export var_load_general__orchestration='compose'
-export var_load_general__toolbox_service='toolbox'
+if [ "${var_load_main__inner:-}" != 'true' ]; then
+	export var_load_main__db_service='mysql'
+	export var_load_main__db_backup_task="db:main:${var_load_main__db_service:-}:backup:file"
+	export var_load_main__db_restore_task="db:main:${var_load_main__db_service:-}:restore:file"
+	export var_load_main__db_restore_is_file='true'
+	export var_load_main__db_backup_is_file='true'
+
+	export var_load_general__orchestration='compose'
+	export var_load_general__toolbox_service='toolbox'
+fi
+
 export var_load_general__script_dir="$tmp_dir"
 export var_load_general__script_env_file='remote.sh'
 
