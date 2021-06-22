@@ -25,11 +25,11 @@
 {################################################################################################}
 {% macro include_scripts() %}
 
-    - "./run:/var/main/scripts/run:ro"
-    - "./env/vars.inner.sh:/var/main/scripts/vars.sh:ro"
-    - "./main/scripts:/var/main/scripts/main/scripts:ro"
-    - "./shared/scripts:/var/main/scripts/shared/scripts:ro"
-    - "./{{ params.main_real_dir }}/scripts:/var/main/scripts/{{ params.main_real_dir }}/scripts:ro"
+    - "./run:{{ params.inner_scripts_dir }}/run:ro"
+    - "./env/vars.inner.sh:{{ params.inner_scripts_dir }}/vars.sh:ro"
+    - "./main/scripts:{{ params.inner_scripts_dir }}/main/scripts:ro"
+    - "./shared/scripts:{{ params.inner_scripts_dir }}/shared/scripts:ro"
+    - "./{{ params.main_real_dir }}/scripts:{{ params.inner_scripts_dir }}/{{ params.main_real_dir }}/scripts:ro"
 
 {% endmacro %}
 {################################################################################################}
@@ -876,6 +876,9 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+
+    {{ include_scripts() }}
+
     logging: *mainlog
     entrypoint: ""
     command: "tail -f /dev/null"

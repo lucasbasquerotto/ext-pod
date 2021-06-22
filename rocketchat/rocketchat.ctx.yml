@@ -30,6 +30,7 @@
 {% set var_shared_dir = 'shared' %}
 
 {% set var_data_dir = input.data_dir %}
+{% set var_inner_scripts_dir = params.inner_scripts_dir | default('') %}
 
 {% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
 {% set var_elasticsearch_hosts = input.dependencies.elasticsearch.host_list | default([]) %}
@@ -232,10 +233,11 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "docker-compose.yml"
   params:
+    pod_type: "{{ var_pod_type }}"
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     main_real_dir: "{{ var_main_dir }}"
-    pod_type: "{{ var_pod_type }}"
+    inner_scripts_dir: "{{ var_inner_scripts_dir }}"
     shared_network: "{{ var_shared_network_name }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     internal: "{{ params.internal | default(false) }}"
@@ -287,6 +289,7 @@ templates:
     local: "{{ var_local  }}"
     main_dir: "{{ var_main_dir_container }}"
     main_real_dir: "{{ var_main_dir }}"
+    inner_scripts_dir: "{{ var_inner_scripts_dir }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"
@@ -495,6 +498,20 @@ templates:
   params:
     var_load_script_path: "{{ var_main_dir }}/scripts/rocketchat.vars.sh"
 
+    var_load_main__data_dir: "{{ input.data_dir }}"
+    var_load_main__inner_scripts_dir: "{{ var_inner_scripts_dir }}"
+    var_load_main__pod_type: "{{ var_pod_type }}"
+    var_load_main__instance_index: "{{ input.instance_index }}"
+    var_load_main__local: "{{ var_local | lower }}"
+
+    var_load_meta__no_stacktrace: "{{ params.meta.no_stacktrace | default('') | lower }}"
+    var_load_meta__no_info: "{{ params.meta.no_info | default('') | lower }}"
+    var_load_meta__no_warn: "{{ params.meta.no_warn | default('') | lower }}"
+    var_load_meta__no_error: "{{ params.meta.no_error | default('') | lower }}"
+    var_load_meta__no_info_wrap: "{{ params.meta.no_info_wrap | default('') | lower }}"
+    var_load_meta__no_summary: "{{ params.meta.no_summary | default('') | lower }}"
+    var_load_meta__no_colors: "{{ params.meta.no_colors | default('') | lower }}"
+
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"
     var_load_general__ctx_prefix_run: "{{ var_ctx_prefix_run }}"
@@ -505,19 +522,6 @@ templates:
     var_load_general__s3_cli: "{{ params.s3_cli | default('') }}"
     var_load_general__define_s3_backup_lifecycle: "{{ params.define_s3_backup_lifecycle | default('') | lower }}"
     var_load_general__define_s3_uploads_lifecycle: "{{ params.define_s3_uploads_lifecycle | default('') | lower }}"
-
-    var_load_meta__no_stacktrace: "{{ params.meta.no_stacktrace | default('') | lower }}"
-    var_load_meta__no_info: "{{ params.meta.no_info | default('') | lower }}"
-    var_load_meta__no_warn: "{{ params.meta.no_warn | default('') | lower }}"
-    var_load_meta__no_error: "{{ params.meta.no_error | default('') | lower }}"
-    var_load_meta__no_info_wrap: "{{ params.meta.no_info_wrap | default('') | lower }}"
-    var_load_meta__no_summary: "{{ params.meta.no_summary | default('') | lower }}"
-    var_load_meta__no_colors: "{{ params.meta.no_colors | default('') | lower }}"
-
-    var_load_main__data_dir: "{{ input.data_dir }}"
-    var_load_main__pod_type: "{{ var_pod_type }}"
-    var_load_main__instance_index: "{{ input.instance_index }}"
-    var_load_main__local: "{{ var_local | lower }}"
 
     var_load_shared__delete_old__days: "3"
     var_load_shared__define_cron: "{{ params.define_cron | default('') | lower }}"
