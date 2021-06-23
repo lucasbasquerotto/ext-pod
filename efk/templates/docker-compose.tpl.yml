@@ -531,6 +531,8 @@ services:
 
     volumes:
 
+    {{ include_scripts() }}
+
     {#############################################################}
     {% if params.use_secure_elasticsearch | bool %}
 

@@ -656,6 +656,9 @@ services:
     {#############################################################}
 
     volumes:
+
+    {{ include_scripts() }}
+
     - "./env/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
 
     {#############################################################}

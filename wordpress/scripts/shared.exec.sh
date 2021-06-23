@@ -90,7 +90,8 @@ case "$command" in
 
 				if [ -n "$arg_setup_remote_seed_data" ]; then
 					info "$command - import remote seed data"
-					"$pod_script_env_file" exec-nontty wordpress "$inner_run_file" "inner:custom:prepare"
+					"$pod_script_env_file" exec-nontty wordpress \
+						"$inner_run_file" "inner:setup:new:remote:seed" ${args[@]+"${args[@]}"}
 				fi
 			fi
 		fi
@@ -109,7 +110,8 @@ case "$command" in
 		;;
 	"migrate:web")
 		"$pod_script_env_file" up wordpress
-		"$pod_script_env_file" exec-nontty wordpress "$inner_run_file" "inner:migrate:web"
+		"$pod_script_env_file" exec-nontty wordpress \
+			"$inner_run_file" "inner:migrate:web" ${args[@]+"${args[@]}"}
 		;;
 	"inner:migrate:web")
 		s3_plugins=( 'amazon-s3-and-cloudfront' 'amazon-s3-and-cloudfront-tweaks' )
@@ -182,25 +184,27 @@ case "$command" in
 			>&2 echo "activate all plugins"
 			wp --allow-root plugin activate --all
 		elif [ -n "${arg_wp_plugins_to_activate:-}" ]; then
-			>&2 echo "activate specified plugins: ${arg_wp_plugins_to_activate:-}"
-			wp --allow-root plugin activate ${arg_wp_plugins_to_activate:-} \
+			mapfile -td ' ' plugins < <(printf '%s' "${arg_wp_plugins_to_activate:-}")
+			>&2 echo "activate specified plugins: ${plugins[*]}"
+			wp --allow-root plugin activate "${plugins[@]}" \
 				&& error="0" || error="1"
 
 			if [ "$error" != "0" ]; then
 				>&2 echo "ignore previous error and activate specified plugins"
-				wp --allow-root plugin activate ${arg_wp_plugins_to_activate:-}
+				wp --allow-root plugin activate "${plugins[@]}"
 				>&2 echo "specified plugins activated"
 			fi
 		fi
 
 		if [ -n "${arg_wp_plugins_to_deactivate:-}" ]; then
-			>&2 echo "deactivate specified plugins: ${arg_wp_plugins_to_deactivate:-}"
-			wp --allow-root plugin deactivate ${arg_wp_plugins_to_deactivate:-} \
+			mapfile -td ' ' plugins < <(printf '%s' "${arg_wp_plugins_to_deactivate:-}")
+			>&2 echo "deactivate specified plugins: ${plugins[*]}"
+			wp --allow-root plugin deactivate "${plugins[@]}" \
 				&& error="0" || error="1"
 
 			if [ "$error" != "0" ]; then
 				>&2 echo "ignore previous error and deactivate specified plugins"
-				wp --allow-root plugin deactivate ${arg_wp_plugins_to_deactivate:-}
+				wp --allow-root plugin deactivate "${plugins[@]}"
 				>&2 echo "specified plugins deactivated"
 			fi
 		fi

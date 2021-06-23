@@ -9,6 +9,12 @@ schemas:
       main_dir:
         type: "str"
         non_empty: true
+      main_real_dir:
+        type: "str"
+        non_empty: true
+      inner_scripts_dir:
+        type: "str"
+        non_empty: true
       pod_type:
         type: "str"
         non_empty: true
