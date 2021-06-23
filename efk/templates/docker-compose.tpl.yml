@@ -688,6 +688,7 @@ services:
     {#############################################################}
 
     volumes:
+    - "./env/elasticsearch:/var/main/env/elasticsearch:ro"
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"

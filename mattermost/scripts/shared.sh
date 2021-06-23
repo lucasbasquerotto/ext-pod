@@ -1,9 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC2154
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -34,6 +37,8 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		pod_type ) arg_pod_type="${OPTARG:-}";;
+		use_pgadmin ) arg_use_pgadmin="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
 		??* ) ;; ## ignore
@@ -46,55 +51,73 @@ pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"prepare")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+		# shellcheck disable=SC2154
+		use_pgadmin="$var_main__use_pgadmin"
+
 		env_dir="/var/main/env"
 		data_dir="/var/main/data"
 
 		"$pod_script_env_file" up toolbox
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
-			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
-				file="$env_dir/mattermost/config.json"
-				chown 2000:2000 "\$file"
-
-				dir="$data_dir/mattermost/uploads"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-				fi
-
-				chown 2000:2000 "\$dir"
-
-				if [ "${var_main__use_pgadmin:-}" = 'true' ]; then
-					src_file="$data_dir/secrets/pgadmin_pass.txt"
-					dest_dir="$data_dir/pgadmin/secrets"
-					dest_file="\$dest_dir/pgadmin_pass"
-
-					if [ ! -d "\$dest_dir" ]; then
-						mkdir -p "\$dest_dir"
-					fi
-
-					chown 5050:5050 "\$dest_dir"
-
-					cp "\$src_file" "\$dest_file"
-					chown 5050:5050 "\$dest_file"
-					chmod 600 "\$dest_file"
-				fi
-			fi
-		SHELL
+		"$pod_script_env_file" exec-nontty toolbox \
+			"$inner_run_file" "inner:custom:prepare" \
+			--pod_type="$pod_type" \
+			--use_pgadmin="$use_pgadmin"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"setup")
-		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
-
+	"inner:custom:prepare")
+		env_dir="/var/main/env"
 		data_dir="/var/main/data"
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
-			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
-				dir="$data_dir/mattermost/uploads"
-				chown -R 2000:2000 "\$dir"
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			file="$env_dir/mattermost/config.json"
+			chown 2000:2000 "$file"
+
+			dir="$data_dir/mattermost/uploads"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
 			fi
-		SHELL
+
+			chown 2000:2000 "$dir"
+
+			if [ "${arg_use_pgadmin:-}" = 'true' ]; then
+				src_file="$data_dir/secrets/pgadmin_pass.txt"
+				dest_dir="$data_dir/pgadmin/secrets"
+				dest_file="$dest_dir/pgadmin_pass"
+
+				if [ ! -d "$dest_dir" ]; then
+					mkdir -p "$dest_dir"
+				fi
+
+				chown 5050:5050 "$dest_dir"
+
+				cp "$src_file" "$dest_file"
+				chown 5050:5050 "$dest_file"
+				chmod 600 "$dest_file"
+			fi
+		fi
+		;;
+	"setup")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+
+		"$pod_script_env_file" exec-nontty toolbox \
+			"$inner_run_file" "inner:custom:setup" \
+			--pod_type="$pod_type"
+		;;
+	"inner:custom:setup")
+		data_dir="/var/main/data"
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			dir="$data_dir/mattermost/uploads"
+			chown -R 2000:2000 "\$dir"
+		fi
 		;;
 	"custom:unique:log")
 		opts=()

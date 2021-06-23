@@ -1,9 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC2153,SC2214
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -26,6 +29,7 @@ shift;
 
 args=("$@")
 
+# shellcheck disable=SC2214
 while getopts ':-:' OPT; do
 	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
@@ -33,6 +37,8 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		pod_type ) arg_pod_type="${OPTARG:-}";;
+		db_pass ) arg_db_pass="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
 		??* ) ;; ## ignore
@@ -45,41 +51,49 @@ pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"prepare")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		data_dir="/var/main/data"
 		tmp_dir="/tmp/main"
 
 		"$pod_script_env_file" up toolbox
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
-			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
-				dir="$data_dir/elasticsearch"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-					chown 1000:1000 "\$dir"
-				fi
-
-				dir="$tmp_dir/elasticsearch"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-					chown 1000:1000 "\$dir"
-				fi
-
-				dir="$tmp_dir/elasticsearch/snapshots"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-					chown 1000:1000 "\$dir"
-				fi
-			fi
-		SHELL
+		"$pod_script_env_file" exec-nontty toolbox \
+			"$inner_run_file" "inner:custom:prepare" --pod_type="$pod_type"
 
 		vm_max_map_count="${var_migrate_es_vm_max_map_count:-262144}"
 		info "$command increasing vm max map count to $vm_max_map_count"
 		sudo sysctl -w vm.max_map_count="$vm_max_map_count"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
+	"inner:custom:prepare")
+		data_dir="/var/main/data"
+		tmp_dir="/tmp/main"
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "db" ]; then
+			dir="$data_dir/elasticsearch"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+				chown 1000:1000 "$dir"
+			fi
+
+			dir="$tmp_dir/elasticsearch"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+				chown 1000:1000 "$dir"
+			fi
+
+			dir="$tmp_dir/elasticsearch/snapshots"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+				chown 1000:1000 "$dir"
+			fi
+		fi
 		;;
 	"shared:setup")
 		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
@@ -95,57 +109,10 @@ case "$command" in
 
 		"$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:ready"
 
-		password="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:pass")"
+		db_pass="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:pass")"
 
-		# Create roles
-		echo "creating the elasticsearch roles..." >&2
-
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
-			set -eou pipefail
-
-			echo "creating/updating role fluentd..." >&2
-
-			curl --fail -sS -u "elastic:$password" \
-				--cacert /etc/ssl/fullchain.pem \
-				-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
-				-d'{
-					"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
-					"indices": [
-						{
-							"names": [ "fluentd-*" ],
-							"privileges": ["write","create","delete","create_index","manage","manage_ilm"]
-						}
-					]
-				}' \
-				-H "Content-Type: application/json" \
-				>&2
-			echo "" >&2
-		SHELL
-
-		# Create Users
-		echo "creating the elasticsearch users..." >&2
-
-		while IFS='=' read -r key value; do
-			user="$(echo "$key" | xargs)"
-
-			if [ "$user" != 'elastic' ] && [[ ! "$user" == \#* ]]; then
-				"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL -s "$value" || error "$command"
-					set -eou pipefail
-
-					inner_value="\$1"
-
-					echo "creating/updating user $user..." >&2
-
-					curl --fail -sS -u "elastic:$password" \
-						--cacert /etc/ssl/fullchain.pem \
-						-XPOST "https://elasticsearch:9200/_security/user/${user}" \
-						-d"\$inner_value" \
-						-H "Content-Type: application/json" \
-						>&2
-					echo ""
-				SHELL
-			fi
-		done < "$pod_layer_dir/env/elasticsearch/users.txt"
+		"$pod_script_env_file" exec-nontty toolbox \
+			"$inner_run_file" "inner:custom:elasticsearch:secure:main" --db_pass="$db_pass"
 
 		# Define Keystore
 		if [ "${var_load__custom__s3_snapshot:-}" ]; then
@@ -155,6 +122,48 @@ case "$command" in
 						bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)"
 			done < "$pod_layer_dir/env/elasticsearch/keystore.txt"
 		fi
+		;;
+	"inner:custom:elasticsearch:secure:main")
+		# Create roles
+		echo "creating the elasticsearch roles..." >&2
+
+		info "creating/updating role fluentd..."
+
+		curl --fail -sS -u "elastic:$arg_db_pass" \
+			--cacert /etc/ssl/fullchain.pem \
+			-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
+			-d'{
+				"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
+				"indices": [
+					{
+						"names": [ "fluentd-*" ],
+						"privileges": ["write","create","delete","create_index","manage","manage_ilm"]
+					}
+				]
+			}' \
+			-H "Content-Type: application/json" \
+			>&2
+
+		echo "" >&2
+
+		# Create Users
+		info "creating the elasticsearch users..."
+
+		while IFS='=' read -r key value; do
+			user="$(echo "$key" | xargs)"
+
+			if [ "$user" != 'elastic' ] && [[ ! "$user" == \#* ]]; then
+				info "creating/updating user $user..."
+
+				curl --fail -sS -u "elastic:$arg_db_pass" \
+					--cacert /etc/ssl/fullchain.pem \
+					-XPOST "https://elasticsearch:9200/_security/user/${user}" \
+					-d"$value" \
+					-H "Content-Type: application/json" \
+					>&2
+				echo ""
+			fi
+		done < "/var/main/env/elasticsearch/users.txt"
 		;;
 	"custom:unique:log")
 		opts=()

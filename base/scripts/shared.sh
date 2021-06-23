@@ -1,8 +1,9 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC2153,SC2214
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
 
 function info {
@@ -26,6 +27,7 @@ shift;
 
 args=("$@")
 
+# shellcheck disable=SC2214
 while getopts ':-:' OPT; do
 	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
@@ -50,7 +52,10 @@ case "$command" in
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
+		if [ "$pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
 			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				opts+=( 'log_register.nginx_basic_status' )
 			fi

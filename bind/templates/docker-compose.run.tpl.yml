@@ -147,6 +147,9 @@ services:
     volumes:
     - "$DATA_DIR/dnssec:/var/main/data/dnssec"
     - "$DATA_DIR/tmp/dnssec:/tmp/main/dnssec"
+
+    {{ include_scripts() }}
+
     logging: *mainlog
 
     {#############################################################}

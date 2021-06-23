@@ -1,9 +1,10 @@
 #!/bin/bash
-# shellcheck disable=SC2154
 set -eou pipefail
 
 # shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
+pod_env_shared_file="$var_run__general__script_dir/shared.sh"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -23,8 +24,6 @@ if [ -z "$command" ]; then
 fi
 
 shift;
-
-pod_env_shared_file="$var_run__general__script_dir/shared.sh"
 
 case "$command" in
 	"clear")

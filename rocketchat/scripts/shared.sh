@@ -1,9 +1,14 @@
 #!/bin/bash
-# shellcheck disable=SC2154
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
+
+pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -34,6 +39,7 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		pod_type ) arg_pod_type="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
 		??* ) ;; ## ignore
@@ -42,27 +48,32 @@ while getopts ':-:' OPT; do
 done
 shift $((OPTIND-1))
 
-pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
-
 case "$command" in
 	"prepare")
-		data_dir="/var/main/data"
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
 
+		# shellcheck disable=SC2154
 		"$pod_script_env_file" up "$var_run__general__toolbox_service"
 
-		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL || error "$command"
-			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
-				dir="$data_dir/rocketchat/uploads"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-				fi
-
-				chown 999 "\$dir"
-			fi
-		SHELL
+		"$pod_script_env_file" exec-nontty toolbox \
+			"$inner_run_file" "inner:custom:prepare" \
+			--pod_type="$pod_type"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
+	"inner:custom:prepare")
+		data_dir="/var/main/data"
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			dir="$data_dir/rocketchat/uploads"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+			fi
+
+			chown 999 "$dir"
+		fi
 		;;
 	"custom:unique:log")
 		opts=()
@@ -77,6 +88,9 @@ case "$command" in
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		days_ago="${var_log__summary__days_ago:-}"
 		days_ago="${arg_days_ago:-$days_ago}"
 
@@ -87,7 +101,7 @@ case "$command" in
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
 			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"

@@ -1,8 +1,9 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC2153,SC2214
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
 
 function info {
@@ -26,6 +27,7 @@ shift;
 
 args=("$@")
 
+# shellcheck disable=SC2214
 while getopts ':-:' OPT; do
 	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
@@ -45,12 +47,15 @@ pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"custom:unique:log")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		opts=()
 		opts+=( 'log_register.memory_overview' )
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
 			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				opts+=( 'log_register.nginx_basic_status' )
 			fi
@@ -59,6 +64,9 @@ case "$command" in
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		days_ago="${var_log__summary__days_ago:-}"
 		days_ago="${arg_days_ago:-$days_ago}"
 
@@ -69,7 +77,7 @@ case "$command" in
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
 			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"

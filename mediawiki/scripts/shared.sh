@@ -1,9 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC2154
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -34,6 +37,7 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		pod_type ) arg_pod_type="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
 		??* ) ;; ## ignore
@@ -46,37 +50,47 @@ pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"prepare")
-		data_dir="/var/main/data"
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
 
+		# shellcheck disable=SC2154
 		"$pod_script_env_file" up "$var_run__general__toolbox_service"
 
-		"$pod_script_env_file" exec-nontty "$var_run__general__toolbox_service" /bin/bash <<-SHELL || error "$command"
-			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
-				dir="$data_dir/mediawiki/uploads"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-				fi
-
-				chown -R 33:33 "\$dir"
-
-				dir="$data_dir/tmp/log/mediawiki"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-					chmod 777 "\$dir"
-				fi
-			fi
-		SHELL
+		"$pod_script_env_file" exec-nontty toolbox \
+			"$inner_run_file" "inner:custom:prepare" \
+			--pod_type="$pod_type"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
+	"inner:custom:prepare")
+		data_dir="/var/main/data"
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			dir="$data_dir/mediawiki/uploads"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+			fi
+
+			chown -R 33:33 "$dir"
+
+			dir="$data_dir/tmp/log/mediawiki"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+				chmod 777 "$dir"
+			fi
+		fi
+		;;
 	"migrate")
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "db" ]; then
 			"$pod_shared_run_file" up mysql
 		fi
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
 			"$pod_shared_run_file" up mediawiki
 
 			info "$command - verify the need to setup the mediawiki database"
@@ -95,9 +109,19 @@ case "$command" in
 	"migrate:db:table:count")
 		db_service="mysql"
 		db_cmd=""
+		# shellcheck disable=SC2154
 		db_host="$var_run__migrate__db_host"
+		# shellcheck disable=SC2154
 		db_port="$var_run__migrate__db_port"
 		db_remote=""
+		# shellcheck disable=SC2154
+		db_name="$var_run__migrate__db_name"
+		# shellcheck disable=SC2154
+		db_user="$var_run__migrate__db_user"
+		# shellcheck disable=SC2154
+		db_pass="$var_run__migrate__db_pass"
+		# shellcheck disable=SC2154
+		db_connect_wait_secs="$var_run__migrate__db_connect_wait_secs"
 
 		if [ "$var_main__pod_type" != "app" ] && [ "$var_main__pod_type" != "db" ]; then
 			db_service="mysql_cli"
@@ -110,11 +134,11 @@ case "$command" in
 			--db_cmd="$db_cmd" \
 			--db_host="$db_host" \
 			--db_port="$db_port" \
-			--db_name="$var_run__migrate__db_name" \
-			--db_user="$var_run__migrate__db_user" \
-			--db_pass="$var_run__migrate__db_pass" \
+			--db_name="$db_name" \
+			--db_user="$db_user" \
+			--db_pass="$db_pass" \
 			--db_remote="$db_remote" \
-			--db_connect_wait_secs="$var_run__migrate__db_connect_wait_secs" \
+			--db_connect_wait_secs="$db_connect_wait_secs" \
 			--connection_sleep="${var_run__migrate__connection_sleep:-}"
 		;;
 	"custom:unique:log")

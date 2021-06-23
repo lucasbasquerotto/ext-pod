@@ -68,11 +68,9 @@ case "$command" in
 		fi
     ;;
   "restore")
-		docker exec -i -w /var/www/discourse "$var_restore_container_name" sh -x <<-SHELL || error "$command"
-			discourse enable_restore
-			discourse restore $var_restore_filename
-			discourse disable_restore
-		SHELL
+		docker exec -i -w /var/www/discourse "$var_restore_container_name" discourse enable_restore
+		docker exec -i -w /var/www/discourse "$var_restore_container_name" discourse restore $var_restore_filename
+		docker exec -i -w /var/www/discourse "$var_restore_container_name" discourse disable_restore
     ;;
   *)
     "$pod_env_shared_file" "$command" "$@"

@@ -1,9 +1,16 @@
 #!/bin/bash
-# shellcheck disable=SC2154
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
+pod_env_shared_exec_file="$var_run__general__script_dir/shared.exec.sh"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
+
+pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -34,6 +41,7 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		pod_type ) arg_pod_type="${OPTARG:-}";;
 		task_info ) arg_task_info="${OPTARG:-}";;
 		task_name ) arg_task_name="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
@@ -48,32 +56,36 @@ title=''
 [ -n "${arg_task_info:-}" ] && title="${arg_task_info:-} > "
 title="${title}${command}"
 
-pod_env_shared_exec_file="$var_run__general__script_dir/shared.exec.sh"
-pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
-
 case "$command" in
 	"prepare")
-		data_dir="/var/main/data"
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
 
 		"$pod_script_env_file" up toolbox
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
-			"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
-				set -eou pipefail
-
-				dir="$data_dir/wordpress/uploads"
-
-				if [ ! -d "\$dir" ]; then
-					mkdir -p "\$dir"
-				fi
-
-				chown -R 33:33 "\$dir"
-			SHELL
-		fi
+		"$pod_script_env_file" exec-nontty toolbox \
+			"$inner_run_file" "inner:custom:prepare" \
+			--pod_type="$pod_type"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
+	"inner:custom:prepare")
+		data_dir="/var/main/data"
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			dir="$data_dir/wordpress/uploads"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+			fi
+
+			chown -R 33:33 "$dir"
+		fi
+		;;
 	"migrate")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		opts=()
 
 		opts+=( "--wp_activate_all_plugins=${var_run__migrate__wp_activate_all_plugins:-}" )
@@ -88,11 +100,11 @@ case "$command" in
 		opts+=( "--use_memcached=${var_run__migrate__use_memcached:-}" )
 		opts+=( "--use_s3_storage=${var_main__use_s3_storage:-}" )
 
-		"$pod_env_shared_exec_file" "migrate:$var_main__pod_type" "${opts[@]}"
+		"$pod_env_shared_exec_file" "migrate:$pod_type" "${opts[@]}"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"migrate:"*)
+	"migrate:"*|"inner:migrate:"*)
 		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"setup:new")
@@ -133,6 +145,9 @@ case "$command" in
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		days_ago="${var_log__summary__days_ago:-}"
 		days_ago="${arg_days_ago:-$days_ago}"
 
@@ -143,7 +158,7 @@ case "$command" in
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
 			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:nginx:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
@@ -154,7 +169,7 @@ case "$command" in
 			fi
 		fi
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "db" ]; then
 			"$pod_script_env_file" "shared:log:mysql_slow:summary" --task_info="$title" --days_ago="$days_ago" --max_amount="$max_amount"
 		fi
 
@@ -187,6 +202,9 @@ case "$command" in
 				error "$command: unsupported action: $action"
 				;;
 		esac
+		;;
+	"inner:setup:new:"*)
+		"$pod_env_shared_exec_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	*)
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}

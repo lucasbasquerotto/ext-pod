@@ -1,11 +1,14 @@
 #!/bin/bash
-# shellcheck disable=SC2154
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
-
+# shellcheck disable=SC2154
 pod_env_shared_file="$var_run__general__script_dir/shared.sh"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -35,6 +38,9 @@ case "$command" in
 		"$pod_env_shared_file" exec composer composer update --verbose
 		;;
 	"prepare")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		if [ "${var_custom__app_dev:-}" = "true" ]; then
 			if [ -z "${var_dev__repo_dir_wordpress:-}" ]; then
 				error "[error] wordpress directory not defined (var_dev__repo_dir_wordpress)"
@@ -52,38 +58,38 @@ case "$command" in
 		"$pod_script_env_file" up wordpress
 
 		if [ "${var_custom__app_dev:-}" = "true" ]; then
-			if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
-				"$pod_script_env_file" exec-nontty wordpress /bin/bash <<-SHELL || error "$command"
-					set -eou pipefail
-
-					dir="/var/www/html/web"
-
-					if [ ! -d "\$dir" ]; then
-						mkdir -p "\$dir"
-					fi
-
-					chmod 777 "\$dir"
-
-					dir="/var/www/html/web/app"
-
-					if [ ! -d "\$dir" ]; then
-						mkdir -p "\$dir"
-					fi
-
-					chmod 777 "\$dir"
-
-					dir="/var/www/html/web/app/plugins"
-
-					if [ ! -d "\$dir" ]; then
-						mkdir -p "\$dir"
-					fi
-
-					chmod -R 777 "\$dir"
-				SHELL
+			if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
+				"$pod_script_env_file" exec-nontty wordpress \
+					"$inner_run_file" "inner:custom:local:prepare"
 			fi
 		fi
 
 		"$pod_env_shared_file" "$command" "$@"
+		;;
+	"inner:custom:local:prepare")
+		dir="/var/www/html/web"
+
+		if [ ! -d "$dir" ]; then
+			mkdir -p "$dir"
+		fi
+
+		chmod 777 "$dir"
+
+		dir="/var/www/html/web/app"
+
+		if [ ! -d "$dir" ]; then
+			mkdir -p "$dir"
+		fi
+
+		chmod 777 "$dir"
+
+		dir="/var/www/html/web/app/plugins"
+
+		if [ ! -d "$dir" ]; then
+			mkdir -p "$dir"
+		fi
+
+		chmod -R 777 "$dir"
 		;;
 	"migrate")
 		if [ "${var_custom__app_dev:-}" = "true" ] && [ "${var_main__use_composer:-}" = "true" ]; then

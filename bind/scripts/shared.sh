@@ -1,10 +1,14 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC2153,SC2214
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
 pod_data_dir="$var_pod_data_dir"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -27,6 +31,7 @@ shift;
 
 args=("$@")
 
+# shellcheck disable=SC2214
 while getopts ':-:' OPT; do
 	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
@@ -48,6 +53,7 @@ case "$command" in
 	"build")
 		bind_data_dir="$pod_data_dir/sync/bind"
 
+		# shellcheck disable=SC2154
 		bind_zone_file="$bind_data_dir/$var_custom__bind__type/$var_custom__bind__zone"
 		bind_zone_dir="$(dirname "$bind_zone_file")"
 
@@ -70,46 +76,24 @@ case "$command" in
 		"$pod_shared_run_file" "$command" "$@"
 		;;
 	"new-key")
-		"$pod_script_env_file" run dnssec bash <<-SHELL || error "$command"
-			set -eou pipefail
+		"$pod_script_env_file" run dnssec \
+			"$inner_run_file" "inner:custom:new-key" ${args[@]+"${args[@]}"}
+		;;
+	"inner:custom:new-key")
+		>&2 rm -rf /tmp/main/bind/keys
+		>&2 mkdir -p /tmp/main/bind/keys
 
-			>&2 rm -rf /tmp/main/bind/keys
-			>&2 mkdir -p /tmp/main/bind/keys
-
-			cd /tmp/main/bind/keys
-			>&2 dnssec-keygen -C -a HMAC-MD5 -b 512 -n USER "$var_custom__bind_zone".
-			>&2 file_name="\$(ls -rt | grep "$var_custom__bind_zone" | tail -n1)"
-			>&2 new_key="\$(cat "\$file_name" | awk '{ print \$7 }')"
-			echo "\$new_key"
-		SHELL
+		cd /tmp/main/bind/keys
+		# shellcheck disable=SC2154
+		>&2 dnssec-keygen -C -a HMAC-MD5 -b 512 -n USER "$var_custom__bind_zone".
+		# shellcheck disable=SC2010
+		>&2 file_name="$(ls -rt | grep "$var_custom__bind_zone" | tail -n1)"
+		>&2 new_key="$(awk '{ print $7 }' "$file_name")"
+		echo "$new_key"
 		;;
 	"print-new-key")
 		new_key="$("$pod_script_env_file" "new-key")"
 		echo "new_key=$new_key"
-		;;
-	"bind:"*)
-		ctx="${command#bind:}"
-		prefix="var_bind_${ctx}"
-		zone_name="${prefix}_zone_name"
-
-		"$pod_script_env_file" exec-nontty toolbox <<-SHELL || error "$command"
-			rm -rf /tmp/main/bind/keys
-			mkdir /tmp/main/bind/keys
-		SHELL
-
-		"$pod_script_env_file" run dnssec <<-SHELL || error "$command"
-			cd /tmp/main/bind/keys
-			dnssec-keygen -a NSEC3RSASHA1 -b 2048 -n ZONE "$zone_name"
-			dnssec-keygen -f KSK -a NSEC3RSASHA1 -b 4096 -n ZONE "$zone_name"
-
-			for key in \$(ls K"$zone_name"*.key)
-			do
-				echo "\\\$INCLUDE \$key" >> "$zone_name".zone
-			done
-
-			salt="\$(head -c 1000 /dev/random | sha1sum | cut -b 1-16)"
-			dnssec-signzone -3 "\$salt" -A -N INCREMENT -o "$zone_name" -t "$zone_name".zone
-		SHELL
 		;;
 	"custom:unique:log")
 		opts=()
@@ -117,7 +101,10 @@ case "$command" in
 		opts+=( 'log_register.memory_details' )
 		opts+=( 'log_register.entropy' )
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
+		if [ "$pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
 			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				opts+=( 'log_register.nginx_basic_status' )
 			fi

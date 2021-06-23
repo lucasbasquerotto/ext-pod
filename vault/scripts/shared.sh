@@ -1,9 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC1090,SC2154,SC2153,SC2214
 set -eou pipefail
 
+# shellcheck disable=SC2154
 pod_layer_dir="$var_pod_layer_dir"
+# shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
+# shellcheck disable=SC2154
+inner_run_file="$var_inner_scripts_dir/run"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -26,6 +29,7 @@ shift;
 
 args=("$@")
 
+# shellcheck disable=SC2214
 while getopts ':-:' OPT; do
 	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"       # extract long option name
@@ -47,29 +51,28 @@ case "$command" in
 	"prepare")
 		"$pod_script_env_file" up toolbox > /dev/null
 
-		"$pod_script_env_file" exec-nontty toolbox /bin/bash <<-SHELL || error "$command"
-			set -eou pipefail
-
-			base_dir="/var/main/data/vault"
-
-			dir="\$base_dir/data"
-
-			if [ ! -d "\$dir" ]; then
-				mkdir -p "\$dir"
-			fi
-
-			chown 100 "\$dir"
-
-			dir="\$base_dir/logs"
-
-			if [ ! -d "\$dir" ]; then
-				mkdir -p "\$dir"
-			fi
-
-			chown 100 "\$dir"
-		SHELL
+		"$pod_script_env_file" exec-nontty toolbox "$inner_run_file" "inner:custom:prepare"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+		;;
+	"inner:custom:prepare")
+		base_dir="/var/main/data/vault"
+
+		dir="$base_dir/data"
+
+		if [ ! -d "$dir" ]; then
+			mkdir -p "$dir"
+		fi
+
+		chown 100 "$dir"
+
+		dir="$base_dir/logs"
+
+		if [ ! -d "$dir" ]; then
+			mkdir -p "$dir"
+		fi
+
+		chown 100 "$dir"
 		;;
 	"custom:unique:log")
 		opts=()
@@ -84,6 +87,9 @@ case "$command" in
 		"$pod_script_env_file" "unique:all" "${opts[@]}"
 		;;
 	"action:exec:log_summary")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		days_ago="${var_log__summary__days_ago:-}"
 		days_ago="${arg_days_ago:-$days_ago}"
 
@@ -94,7 +100,7 @@ case "$command" in
 		"$pod_script_env_file" "shared:log:memory_overview:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 		"$pod_script_env_file" "shared:log:entropy:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 
-		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "web" ]; then
+		if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
 			if [ "${var_main__use_nginx:-}" = "true" ]; then
 				"$pod_script_env_file" "shared:log:nginx:summary" --days_ago="$days_ago" --max_amount="$max_amount"
 				"$pod_script_env_file" "shared:log:nginx:summary:connections" --days_ago="$days_ago" --max_amount="$max_amount"
