@@ -119,9 +119,10 @@ case "$command" in
 		# shellcheck disable=SC2154
 		db_user="$var_run__migrate__db_user"
 		# shellcheck disable=SC2154
-		db_pass="$var_run__migrate__db_pass"
-		# shellcheck disable=SC2154
 		db_connect_wait_secs="$var_run__migrate__db_connect_wait_secs"
+
+		pass_arg=()
+		[ -n "${var_run__migrate__db_pass:-}" ] && pass_arg+=( --password="${var_run__migrate__db_pass:-}" )
 
 		if [ "$var_main__pod_type" != "app" ] && [ "$var_main__pod_type" != "db" ]; then
 			db_service="mysql_cli"
@@ -136,7 +137,7 @@ case "$command" in
 			--db_port="$db_port" \
 			--db_name="$db_name" \
 			--db_user="$db_user" \
-			--db_pass="$db_pass" \
+			${pass_arg[@]+"${pass_arg[@]}"} \
 			--db_remote="$db_remote" \
 			--db_connect_wait_secs="$db_connect_wait_secs" \
 			--connection_sleep="${var_run__migrate__connection_sleep:-}"

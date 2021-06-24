@@ -102,6 +102,10 @@
 {% set var_mysql_hostname = var_mysql_host | urlsplit('hostname') | default('mysql', true) %}
 {% set var_mysql_port = var_mysql_host | urlsplit('port') | default('3306', true) %}
 
+{% set var_db_pass_script = params.use_secrets | default(false) | bool
+  | ternary('', credentials.db.password | default(''))
+%}
+
 {% set var_fluentd_output_plugin = params.fluentd_output_plugin | default('file', true) %}
 {% set var_use_internal_fluentd =
   (params.use_fluentd | default(false) | bool)
@@ -617,7 +621,7 @@ templates:
     var_load__db_main__db_port: "{{ var_mysql_port }}"
     var_load__db_main__db_name: "{{ credentials.db.name | default('') }}"
     var_load__db_main__db_user: "{{ credentials.db.user | default('') }}"
-    var_load__db_main__db_pass: "{{ credentials.db.password | default('') }}"
+    var_load__db_main__db_pass: "{{ var_db_pass_script }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
 
     var_load__db_setup__compressed_file_name: "{{ params.db_setup.compressed_file_name | default('') }}"

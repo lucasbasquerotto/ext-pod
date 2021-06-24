@@ -14,7 +14,6 @@ schemas:
         non_empty: true
       inner_scripts_dir:
         type: "str"
-        non_empty: true
       app_dev:
         type: "str"
         non_empty: true
