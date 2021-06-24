@@ -60,7 +60,7 @@ case "$command" in
 		if [ "${var_custom__app_dev:-}" = "true" ]; then
 			if [ "$pod_type" = "app" ] || [ "$pod_type" = "web" ]; then
 				"$pod_script_env_file" exec-nontty wordpress \
-					"$inner_run_file" "inner:custom:local:prepare"
+					bash "$inner_run_file" "inner:custom:local:prepare"
 			fi
 		fi
 

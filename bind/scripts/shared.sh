@@ -77,7 +77,7 @@ case "$command" in
 		;;
 	"new-key")
 		"$pod_script_env_file" run dnssec \
-			"$inner_run_file" "inner:custom:new-key" ${args[@]+"${args[@]}"}
+			bash "$inner_run_file" "inner:custom:new-key" ${args[@]+"${args[@]}"}
 		;;
 	"inner:custom:new-key")
 		>&2 rm -rf /tmp/main/bind/keys

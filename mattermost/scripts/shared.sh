@@ -62,7 +62,7 @@ case "$command" in
 		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox \
-			"$inner_run_file" "inner:custom:prepare" \
+			bash "$inner_run_file" "inner:custom:prepare" \
 			--pod_type="$pod_type" \
 			--use_pgadmin="$use_pgadmin"
 
@@ -108,7 +108,7 @@ case "$command" in
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 
 		"$pod_script_env_file" exec-nontty toolbox \
-			"$inner_run_file" "inner:custom:setup" \
+			bash "$inner_run_file" "inner:custom:setup" \
 			--pod_type="$pod_type"
 		;;
 	"inner:custom:setup")
@@ -116,7 +116,7 @@ case "$command" in
 
 		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
 			dir="$data_dir/mattermost/uploads"
-			chown -R 2000:2000 "\$dir"
+			chown -R 2000:2000 "$dir"
 		fi
 		;;
 	"custom:unique:log")

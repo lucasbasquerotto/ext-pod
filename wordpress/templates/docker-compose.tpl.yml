@@ -1216,6 +1216,9 @@ services:
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
+
+    {{ include_scripts() }}
+
     logging: *mainlog
     entrypoint: ""
     command: "tail -f /dev/null"

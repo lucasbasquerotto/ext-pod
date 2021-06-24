@@ -60,7 +60,7 @@ case "$command" in
 		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox \
-			"$inner_run_file" "inner:custom:prepare" --pod_type="$pod_type"
+			bash "$inner_run_file" "inner:custom:prepare" --pod_type="$pod_type"
 
 		vm_max_map_count="${var_migrate_es_vm_max_map_count:-262144}"
 		info "$command increasing vm max map count to $vm_max_map_count"
@@ -112,7 +112,7 @@ case "$command" in
 		db_pass="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:pass")"
 
 		"$pod_script_env_file" exec-nontty toolbox \
-			"$inner_run_file" "inner:custom:elasticsearch:secure:main" --db_pass="$db_pass"
+			bash "$inner_run_file" "inner:custom:elasticsearch:secure:main" --db_pass="$db_pass"
 
 		# Define Keystore
 		if [ "${var_load__custom__s3_snapshot:-}" ]; then

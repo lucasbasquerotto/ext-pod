@@ -51,7 +51,7 @@ case "$command" in
 	"prepare")
 		"$pod_script_env_file" up toolbox > /dev/null
 
-		"$pod_script_env_file" exec-nontty toolbox "$inner_run_file" "inner:custom:prepare"
+		"$pod_script_env_file" exec-nontty toolbox bash "$inner_run_file" "inner:custom:prepare"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;

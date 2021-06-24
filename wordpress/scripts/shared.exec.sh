@@ -91,7 +91,7 @@ case "$command" in
 				if [ -n "$arg_setup_remote_seed_data" ]; then
 					info "$command - import remote seed data"
 					"$pod_script_env_file" exec-nontty wordpress \
-						"$inner_run_file" "inner:setup:new:remote:seed" ${args[@]+"${args[@]}"}
+						bash "$inner_run_file" "inner:setup:new:remote:seed" ${args[@]+"${args[@]}"}
 				fi
 			fi
 		fi
@@ -111,7 +111,7 @@ case "$command" in
 	"migrate:web")
 		"$pod_script_env_file" up wordpress
 		"$pod_script_env_file" exec-nontty wordpress \
-			"$inner_run_file" "inner:migrate:web" ${args[@]+"${args[@]}"}
+			bash "$inner_run_file" "inner:migrate:web" ${args[@]+"${args[@]}"}
 		;;
 	"inner:migrate:web")
 		s3_plugins=( 'amazon-s3-and-cloudfront' 'amazon-s3-and-cloudfront-tweaks' )

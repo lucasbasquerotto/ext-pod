@@ -945,8 +945,6 @@ services:
     - "$DATA_DIR/tmp/tmp/mysql:/tmp/main/tmp/mysql"
     - "$DATA_DIR/tmp/log/mysql:/tmp/main/log/mysql"
 
-    {{ include_scripts() }}
-
     logging: *mainlog
 
     {#############################################################}

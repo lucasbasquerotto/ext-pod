@@ -678,8 +678,6 @@ services:
     - "$DATA_DIR/tmp/tmp/postgres:/tmp/main/tmp/postgres"
     - "$DATA_DIR/tmp/log/postgres:/tmp/main/log/postgres"
 
-    {{ include_scripts() }}
-
     logging: *mainlog
     command: -c 'config_file=/etc/postgresql/postgresql.conf'
 
