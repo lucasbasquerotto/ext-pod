@@ -17,7 +17,7 @@ function error {
 }
 
 [ "${var_run__meta__no_stacktrace:-}" != 'true' ] \
-	&& trap 'echo "[error] ${BASH_SOURCE[0]}:$LINENO" >&2; exit $LINENO;' ERR
+	&& trap 'echo "[error] ${BASH_SOURCE[0]}:$LINENO" >&2; exit 3;' ERR
 
 command="${1:-}"
 
