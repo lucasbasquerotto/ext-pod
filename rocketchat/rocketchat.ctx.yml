@@ -112,7 +112,7 @@
 {% set var_mongo_port = var_mongo_host | urlsplit('port') | default('27017', true) %}
 
 {% set var_db_pass_script = params.use_secrets | default(false) | bool
-  | ternary('', credentials.rocketchat.db.password | default(''))
+  | ternary(credentials.rocketchat.db.password | default(''), credentials.rocketchat.db.password | default(''))
 %}
 
 {% set var_fluentd_output_plugin = params.fluentd_output_plugin | default('file', true) %}

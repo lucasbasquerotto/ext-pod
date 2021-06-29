@@ -544,6 +544,14 @@ templates:
     {% endif %}
     ##############################################################
 
+- src: "{{ var_shared_dir }}/templates/mysql/.my.tpl.cnf"
+  dest: "env/mysql/.my.cnf"
+  schema: "{{ var_shared_dir }}/templates/mysql/.my.cnf.schema.yml"
+  mode: "600"
+  params:
+    user: "{{ credentials.mediawiki.db.user | default('') }}"
+    password: "{{ credentials.mediawiki.db.password | default('') }}"
+
 {% endif %}
 ##############################################################
 
