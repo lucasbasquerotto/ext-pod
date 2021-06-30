@@ -517,7 +517,7 @@ templates:
 - src: "{{ var_shared_dir }}/templates/mysql/.my.tpl.cnf"
   dest: "env/mysql/.my.cnf"
   schema: "{{ var_shared_dir }}/templates/mysql/.my.cnf.schema.yml"
-  mode: 600
+  mode: "600"
   params:
     user: "{{ credentials.db.user | default('') }}"
     password: "{{ credentials.db.password | default('') }}"

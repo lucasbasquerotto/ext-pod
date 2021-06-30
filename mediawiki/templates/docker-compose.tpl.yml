@@ -930,6 +930,14 @@ services:
     {{ include_scripts() }}
 
     {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    - "./env/mysql/.my.cnf:/root/.my.cnf:ro"
+
+    {% endif %}
+    {#############################################################}
+
+    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "mysql:/var/lib/mysql"
