@@ -578,7 +578,6 @@ templates:
 
     var_load__db_main__db_host: "{{ params.db_main.host | default('') }}"
     var_load__db_main__db_port: "{{ params.db_main.port | default('') }}"
-    var_load__db_main__db_user: "elastic"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
     var_load__db_main__db_tls: "{{ var_use_secure_elasticsearch | lower }}"
     var_load__db_main__db_tls_ca_cert: "{{ var_use_secure_elasticsearch | ternary('/etc/ssl/fullchain.pem', '') }}"
