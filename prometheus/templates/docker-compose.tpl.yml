@@ -44,7 +44,7 @@ x-logging:
   mainlog: &mainlog
     driver: "fluentd"
     options:
-      tag: "{% raw %}docker.{{.Name}}{% endraw %}"
+      tag: "{% raw %}container.{{.Name}}{% endraw %}"
       fluentd-address: "localhost:{{ params.fluentd_port }}"
   jsonlog: &jsonlog
     driver: "json-file"

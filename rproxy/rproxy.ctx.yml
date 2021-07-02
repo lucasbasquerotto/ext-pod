@@ -220,8 +220,8 @@ templates:
     backup_bucket_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
     ports: {{ var_ports | to_json }}
-    images: {{ params.images | to_json }}
-    memory: {{ params.memory | to_json }}
+    images: {{ params.images | default({}) | to_json }}
+    memory: {{ params.memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   dest: "docker-compose.run.yml"
@@ -235,8 +235,8 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"
-    images: {{ params.images | to_json }}
-    memory: {{ params.memory | to_json }}
+    images: {{ params.images | default({}) | to_json }}
+    memory: {{ params.memory | default({}) | to_json }}
 
 - src: "{{ var_main_dir }}/templates/docker-compose.env"
   dest: ".env"
