@@ -30,7 +30,7 @@
 {% set var_shared_dir = 'shared' %}
 
 {% set var_data_dir = input.data_dir %}
-{% set var_inner_scripts_dir = params.inner_scripts_dir | default('') %}
+{% set var_inner_scripts_dir = params.inner_scripts_dir | default('/var/main/scripts', true) %}
 
 {% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
 {% set var_elasticsearch_external_port = params.services.elasticsearch.port | default('9200') %}
