@@ -59,8 +59,7 @@ services:
       context: .
       dockerfile: "shared/containers/certbot/Dockerfile"
       args:
-        IMAGE: "{{ params.images.certbot_image }}"
-        VERSION: "{{ params.images.certbot_version }}"
+        IMAGE: "{{ params.images.certbot }}"
     networks:
     - "shared"
 
@@ -105,8 +104,7 @@ services:
       context: .
       dockerfile: "shared/containers/mongo/Dockerfile"
       args:
-        IMAGE: "{{ params.images.mongo_image }}"
-        VERSION: "{{ params.images.mongo_version }}"
+        IMAGE: "{{ params.images.mongo }}"
     networks:
     - "shared"
 
@@ -143,8 +141,7 @@ services:
       context: .
       dockerfile: "shared/containers/python3/Dockerfile"
       args:
-        IMAGE: "{{ params.images.logrotator_image }}"
-        VERSION: "{{ params.images.logrotator_version }}"
+        IMAGE: "{{ params.images.logrotator }}"
     restart: "unless-stopped"
     networks:
     - "shared"

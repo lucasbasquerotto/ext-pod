@@ -146,8 +146,7 @@ services:
       context: .
       dockerfile: "shared/containers/nginx/Dockerfile"
       args:
-        IMAGE: "{{ params.images.nginx_image }}"
-        VERSION: "{{ params.images.nginx_version }}"
+        IMAGE: "{{ params.images.nginx }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -217,8 +216,7 @@ services:
       context: .
       dockerfile: "{{ params.main_dir }}/containers/mattermost/Dockerfile"
       args:
-        IMAGE: "{{ params.images.mattermost_image }}"
-        VERSION: "{{ params.images.mattermost_version }}"
+        IMAGE: "{{ params.images.mattermost }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -310,8 +308,7 @@ services:
       context: .
       dockerfile: "shared/containers/pgadmin/Dockerfile"
       args:
-        IMAGE: "{{ params.images.pgadmin_image }}"
-        VERSION: "{{ params.images.pgadmin_version }}"
+        IMAGE: "{{ params.images.pgadmin }}"
     restart: "unless-stopped"
     environment:
       PGADMIN_DEFAULT_EMAIL: "{{ params.pgadmin_email }}"
@@ -367,8 +364,7 @@ services:
       context: .
       dockerfile: "shared/containers/adminer/Dockerfile"
       args:
-        IMAGE: "{{ params.images.adminer_image }}"
-        VERSION: "{{ params.images.adminer_version }}"
+        IMAGE: "{{ params.images.adminer }}"
     restart: "unless-stopped"
     environment:
       ADMINER_DRIVER: pgsql
@@ -446,8 +442,7 @@ services:
       context: .
       dockerfile: "shared/containers/theia/Dockerfile"
       args:
-        IMAGE: "{{ params.images.theia_image }}"
-        VERSION: "{{ params.images.theia_version }}"
+        IMAGE: "{{ params.images.theia }}"
     restart: "unless-stopped"
     user: root
 
@@ -512,8 +507,7 @@ services:
       context: .
       dockerfile: "shared/containers/minio-gateway/Dockerfile"
       args:
-        IMAGE: "{{ params.images.minio_gateway_image }}"
-        VERSION: "{{ params.images.minio_gateway_version }}"
+        IMAGE: "{{ params.images.minio_gateway }}"
     restart: "unless-stopped"
     environment:
 
@@ -590,8 +584,7 @@ services:
       context: .
       dockerfile: "shared/containers/postgres/Dockerfile"
       args:
-        IMAGE: "{{ params.images.postgres_image }}"
-        VERSION: "{{ params.images.postgres_version }}"
+        IMAGE: "{{ params.images.postgres }}"
     restart: "unless-stopped"
     environment:
       PGUSER: "postgres"
@@ -702,8 +695,7 @@ services:
       context: .
       dockerfile: "shared/containers/minio/Dockerfile"
       args:
-        IMAGE: "{{ params.images.minio_image }}"
-        VERSION: "{{ params.images.minio_version }}"
+        IMAGE: "{{ params.images.minio }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -780,8 +772,7 @@ services:
       context: .
       dockerfile: "shared/containers/toolbox/Dockerfile"
       args:
-        IMAGE: "{{ params.images.toolbox_image }}"
-        VERSION: "{{ params.images.toolbox_version }}"
+        IMAGE: "{{ params.images.toolbox }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -850,8 +841,7 @@ services:
       context: .
       dockerfile: "shared/containers/{{ params.s3_cli }}/Dockerfile"
       args:
-        IMAGE: "{{ params.images[params.s3_cli + '_image'] }}"
-        VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
+        IMAGE: "{{ params.images[params.s3_cli] }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -907,8 +897,7 @@ services:
       context: .
       dockerfile: "shared/containers/fluentd/Dockerfile"
       args:
-        IMAGE: "{{ params.images.fluentd_image }}"
-        VERSION: "{{ params.images.fluentd_version }}"
+        IMAGE: "{{ params.images.fluentd }}"
     restart: "unless-stopped"
     ports:
     - "{{ params.fluentd_port }}:24224"

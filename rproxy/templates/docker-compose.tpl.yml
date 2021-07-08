@@ -111,8 +111,7 @@ services:
       context: .
       dockerfile: "shared/containers/haproxy/Dockerfile"
       args:
-        IMAGE: "{{ params.images.haproxy_image }}"
-        VERSION: "{{ params.images.haproxy_version }}"
+        IMAGE: "{{ params.images.haproxy }}"
     restart: "unless-stopped"
     depends_on:
     - "nginx"
@@ -186,8 +185,7 @@ services:
       context: .
       dockerfile: "shared/containers/nginx/Dockerfile"
       args:
-        IMAGE: "{{ params.images.nginx_image }}"
-        VERSION: "{{ params.images.nginx_version }}"
+        IMAGE: "{{ params.images.nginx }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -261,8 +259,7 @@ services:
       context: .
       dockerfile: "shared/containers/theia/Dockerfile"
       args:
-        IMAGE: "{{ params.images.theia_image }}"
-        VERSION: "{{ params.images.theia_version }}"
+        IMAGE: "{{ params.images.theia }}"
     restart: "unless-stopped"
     user: root
 
@@ -327,8 +324,7 @@ services:
       context: .
       dockerfile: "shared/containers/minio-gateway/Dockerfile"
       args:
-        IMAGE: "{{ params.images.minio_gateway_image }}"
-        VERSION: "{{ params.images.minio_gateway_version }}"
+        IMAGE: "{{ params.images.minio_gateway }}"
     restart: "unless-stopped"
     environment:
 
@@ -405,8 +401,7 @@ services:
       context: .
       dockerfile: "shared/containers/minio/Dockerfile"
       args:
-        IMAGE: "{{ params.images.minio_image }}"
-        VERSION: "{{ params.images.minio_version }}"
+        IMAGE: "{{ params.images.minio }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -483,8 +478,7 @@ services:
       context: .
       dockerfile: "shared/containers/toolbox/Dockerfile"
       args:
-        IMAGE: "{{ params.images.toolbox_image }}"
-        VERSION: "{{ params.images.toolbox_version }}"
+        IMAGE: "{{ params.images.toolbox }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -544,8 +538,7 @@ services:
       context: .
       dockerfile: "shared/containers/{{ params.s3_cli }}/Dockerfile"
       args:
-        IMAGE: "{{ params.images[params.s3_cli + '_image'] }}"
-        VERSION: "{{ params.images[params.s3_cli + '_version'] }}"
+        IMAGE: "{{ params.images[params.s3_cli] }}"
     restart: "unless-stopped"
 
     {#############################################################}
@@ -601,8 +594,7 @@ services:
       context: .
       dockerfile: "shared/containers/fluentd/Dockerfile"
       args:
-        IMAGE: "{{ params.images.fluentd_image }}"
-        VERSION: "{{ params.images.fluentd_version }}"
+        IMAGE: "{{ params.images.fluentd }}"
     restart: "unless-stopped"
     ports:
     - "{{ params.fluentd_port }}:24224"
