@@ -194,12 +194,12 @@ templates:
 - src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   dest: "docker-compose.yml"
   params:
+    pod_type: "{{ var_pod_type }}"
+    shared_network: "{{ var_shared_network_name }}"
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     main_real_dir: "{{ var_main_dir }}"
     inner_scripts_dir: "{{ var_inner_scripts_dir }}"
-    pod_type: "{{ var_pod_type }}"
-    shared_network: "{{ var_shared_network_name }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     internal: "{{ params.internal | default(false) }}"
     use_secrets: "{{ params.use_secrets | default(false) }}"
@@ -215,8 +215,8 @@ templates:
     use_certbot: "{{ params.use_certbot | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-    s3_cli: "{{ params.s3_cli | default('') }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
+    s3_cli: "{{ params.s3_cli | default('') }}"
     bind_external_port: "{{ params.bind_external_port | default('53') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | default({}) | to_json }}

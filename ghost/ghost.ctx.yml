@@ -250,11 +250,11 @@ templates:
   dest: "docker-compose.yml"
   params:
     pod_type: "{{ var_pod_type }}"
+    shared_network: "{{ var_shared_network_name }}"
     local: "{{ var_local }}"
     main_dir: "{{ var_main_dir_container }}"
     main_real_dir: "{{ var_main_dir }}"
     inner_scripts_dir: "{{ var_inner_scripts_dir }}"
-    shared_network: "{{ var_shared_network_name }}"
     named_volumes: "{{ params.named_volumes | default(false) }}"
     internal: "{{ params.internal | default(false) }}"
     use_secrets: "{{ params.use_secrets | default(false) }}"

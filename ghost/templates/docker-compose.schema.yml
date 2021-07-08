@@ -6,7 +6,7 @@ schemas:
       pod_type:
         non_empty: true
         type: "str"
-        choices: ["app", "web", "cache", "db"]
+        choices: ["app", "web", "db"]
         description: "pod type"
       shared_network:
         type: "str"
@@ -30,10 +30,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "specify to use named volumes instead of mapping the data in containers to host directories"
-      app_dev:
-        non_empty: true
-        type: "str"
-        description: "development with live reload (mapped to the app repository)"
       internal:
         non_empty: true
         type: "bool"
@@ -103,23 +99,10 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, specifies that certbot is used to generate ssl certificates"
-      use_redis:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a redis service to be used as a caching layer"
-      use_memcached:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a memcached service to be used as a caching layer"
-      use_composer:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a composer service load the wordpress dependencies (for development)"
-      wordpress_ini_file_type:
-        non_empty: true
+      ghost_environment:
         type: "str"
-        choices: ["production", "development"]
-        description: "wordpress php.ini file type"
+        choices: ["development", "production"]
+        description: "ghost service environment"
       db_host:
         non_empty: true
         type: "str"
