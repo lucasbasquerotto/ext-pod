@@ -1,0 +1,130 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    lax: true
+    props:
+      images:
+        schema: "images"
+        required: true
+        description: "container images"
+      memory:
+        schema: "memory"
+        required: true
+        description: "memory limits"
+  images:
+    type: "dict"
+    description: "container images schema"
+    props:
+      nginx_image:
+        type: "str"
+        description: "nginx container image"
+      varnish_image:
+        type: "str"
+        description: "varnish container image"
+      wordpress_image:
+        type: "str"
+        description: "wordpress container image"
+      pma_image:
+        type: "str"
+        description: "phpmyadmin container image"
+      adminer_image:
+        type: "str"
+        description: "adminer container image"
+      theia_image:
+        type: "str"
+        description: "theia container image"
+      minio_gateway_image:
+        type: "str"
+        description: "minio_gateway container image"
+      minio_image:
+        type: "str"
+        description: "minio container image"
+      redis_image:
+        type: "str"
+        description: "redis container image"
+      memcached_image:
+        type: "str"
+        description: "memcached container image"
+      mysql_image:
+        type: "str"
+        description: "mysql container image"
+      toolbox_image:
+        type: "str"
+        description: "toolbox container image"
+      composer_image:
+        type: "str"
+        description: "composer container image"
+      fluentd_image:
+        type: "str"
+        description: "fluentd container image"
+      certbot_image:
+        type: "str"
+        description: "certbot container image"
+      logrotator_image:
+        type: "str"
+        description: "logrotator container image"
+      awscli_image:
+        type: "str"
+        description: "awscli container image"
+      mc_image:
+        type: "str"
+        description: "mc container image"
+      rclone_image:
+        type: "str"
+        description: "rclone container image"
+  memory:
+    type: "dict"
+    description: "memory limits schema"
+    props:
+      nginx:
+        type: "str"
+        description: "memory limit for the nginx service"
+      varnish:
+        type: "str"
+        description: "memory limit for the varnish service"
+      wordpress:
+        type: "str"
+        description: "memory limit for the wordpress service"
+      pma:
+        type: "str"
+        description: "memory limit for the phpmyadmin service"
+      adminer:
+        type: "str"
+        description: "memory limit for the adminer service"
+      theia:
+        type: "str"
+        description: "memory limit for the theia service"
+      minio_gateway:
+        type: "str"
+        description: "memory limit for the minio gateway service"
+      redis:
+        type: "str"
+        description: "memory limit for the redis service"
+      memcached:
+        type: "str"
+        description: "memory limit for the memcached service"
+      mysql:
+        type: "str"
+        description: "memory limit for the mysql service"
+      toolbox:
+        type: "str"
+        description: "memory limit for the toolbox service"
+      composer:
+        type: "str"
+        description: "memory limit for the composer service"
+      fluentd:
+        type: "str"
+        description: "memory limit for the fluentd service"
+      certbot:
+        type: "str"
+        description: "memory limit for the certbot service"
+      mysql_cli:
+        type: "str"
+        description: "memory limit for the mysql client service"
+      logrotator:
+        type: "str"
+        description: "memory limit for the logrotator service"
+      s3_cli:
+        type: "str"
+        description: "memory limit for the s3 client service"

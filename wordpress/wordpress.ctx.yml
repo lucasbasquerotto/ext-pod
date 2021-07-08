@@ -263,7 +263,7 @@ templates:
   dest: "docker-compose.yml"
   schema:
     - "{{ var_main_dir }}/templates/docker-compose.schema.yml"
-    - "{{ var_main_dir }}/templates/images.schema.yml"
+    - "{{ var_main_dir }}/templates/docker-compose.common.schema.yml"
   params:
     pod_type: "{{ var_pod_type }}"
     shared_network: "{{ var_shared_network_name }}"
