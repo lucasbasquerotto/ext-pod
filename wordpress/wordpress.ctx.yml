@@ -259,8 +259,8 @@ env_files:
 
 templates:
 
-- src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
-  dest: "docker-compose.yml"
+- dest: "docker-compose.yml"
+  src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
   schema:
     - "{{ var_main_dir }}/templates/docker-compose.schema.yml"
     - "{{ var_main_dir }}/templates/docker-compose.common.schema.yml"
@@ -305,11 +305,11 @@ templates:
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}
 
-- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
-  dest: "docker-compose.run.yml"
+- dest: "docker-compose.run.yml"
+  src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
   schema:
     - "{{ var_main_dir }}/templates/docker-compose.run.schema.yml"
-    - "{{ var_main_dir }}/templates/images.schema.yml"
+    - "{{ var_main_dir }}/templates/docker-compose.common.schema.yml"
   params:
     pod_type: "{{ var_pod_type }}"
     shared_network: "{{ var_shared_network_name }}"
@@ -323,8 +323,8 @@ templates:
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}
 
-- src: "{{ var_main_dir }}/templates/docker-compose.env"
-  dest: ".env"
+- dest: ".env"
+  src: "{{ var_main_dir }}/templates/docker-compose.env"
   schema: "{{ var_main_dir }}/templates/docker-compose.env.schema.yml"
   params:
     ctx_full_name: "{{ var_ctx_full_name }}"
@@ -349,8 +349,8 @@ templates:
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and (params.use_varnish | bool) %}
 
-- src: "{{ var_main_dir }}/templates/varnish/default.vcl"
-  dest: "env/varnish/default.vcl"
+- dest: "env/varnish/default.vcl"
+  src: "{{ var_main_dir }}/templates/varnish/default.vcl"
   schema: "{{ var_main_dir }}/templates/varnish/varnish.schema.yml"
   params: {}
 
@@ -360,8 +360,8 @@ templates:
 ##############################################################
 {% if var_pod_type in ['app', 'web'] %}
 
-- src: "{{ var_main_dir }}/templates/wordpress/wp.env"
-  dest: "env/wordpress/.env"
+- dest: "env/wordpress/.env"
+  src: "{{ var_main_dir }}/templates/wordpress/wp.env"
   schema: "{{ var_main_dir }}/templates/wordpress/wp.env.schema.yml"
   params:
     env: "{{ params.wp_env | default('') }}"
@@ -399,8 +399,8 @@ templates:
 ##############################################################
 {% if var_pod_type in ['app', 'db'] %}
 
-- src: "{{ var_shared_dir }}/templates/mysql/init.sql"
-  dest: "env/mysql/init.sql"
+- dest: "env/mysql/init.sql"
+  src: "{{ var_shared_dir }}/templates/mysql/init.sql"
   schema: "{{ var_shared_dir }}/templates/mysql/init.mysql.schema.yml"
   params:
     viewer_password: "{{ credentials.mysql.viewer_password | default('') }}"
@@ -414,8 +414,8 @@ templates:
 ##############################################################
 {% if params.use_s3 | default(false) | bool %}
 
-- src: "{{ var_s3_config_src }}"
-  dest: "{{ var_s3_config_dest }}"
+- dest: "{{ var_s3_config_dest }}"
+  src: "{{ var_s3_config_src }}"
   schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
   params:
     - alias: "backup"
@@ -458,8 +458,8 @@ templates:
   | ternary('http://varnish:80', 'http://wordpress:80')
 %}
 
-- src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
-  dest: "env/nginx/nginx.conf"
+- dest: "env/nginx/nginx.conf"
+  src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
@@ -534,8 +534,8 @@ templates:
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
-- src: "main/vars/values.tpl.txt"
-  dest: "env/secrets.txt"
+- dest: "env/secrets.txt"
+  src: "main/vars/values.tpl.txt"
   params:
     empty: ""
 
@@ -573,8 +573,8 @@ templates:
     {% endif %}
     ##############################################################
 
-- src: "{{ var_shared_dir }}/templates/mysql/.my.tpl.cnf"
-  dest: "env/mysql/.my.cnf"
+- dest: "env/mysql/.my.cnf"
+  src: "{{ var_shared_dir }}/templates/mysql/.my.tpl.cnf"
   schema: "{{ var_shared_dir }}/templates/mysql/.my.cnf.schema.yml"
   mode: "600"
   params:
@@ -584,8 +584,8 @@ templates:
 {% endif %}
 ##############################################################
 
-- src: "main/vars/vars.tpl.sh"
-  dest: "vars.sh"
+- dest: "vars.sh"
+  src: "main/vars/vars.tpl.sh"
   params:
     var_load_script_path: "{{ var_main_dir }}/scripts/wordpress.vars.sh"
 
