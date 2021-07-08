@@ -22,15 +22,24 @@ schemas:
       varnish:
         type: "str"
         description: "varnish container image"
-      wordpress:
+      mediawiki:
         type: "str"
-        description: "wordpress container image"
+        description: "mediawiki container image"
+      redis:
+        type: "str"
+        description: "redis container image"
+      memcached:
+        type: "str"
+        description: "memcached container image"
       pma:
         type: "str"
         description: "phpmyadmin container image"
       adminer:
         type: "str"
         description: "adminer container image"
+      mysql:
+        type: "str"
+        description: "mysql container image"
       theia:
         type: "str"
         description: "theia container image"
@@ -40,30 +49,12 @@ schemas:
       minio:
         type: "str"
         description: "minio container image"
-      redis:
-        type: "str"
-        description: "redis container image"
-      memcached:
-        type: "str"
-        description: "memcached container image"
-      mysql:
-        type: "str"
-        description: "mysql container image"
       toolbox:
         type: "str"
         description: "toolbox container image"
-      composer:
-        type: "str"
-        description: "composer container image"
-      fluentd:
-        type: "str"
-        description: "fluentd container image"
       certbot:
         type: "str"
         description: "certbot container image"
-      logrotator:
-        type: "str"
-        description: "logrotator container image"
       awscli:
         type: "str"
         description: "awscli container image"
@@ -73,6 +64,12 @@ schemas:
       rclone:
         type: "str"
         description: "rclone container image"
+      logrotator:
+        type: "str"
+        description: "logrotator container image"
+      fluentd:
+        type: "str"
+        description: "fluentd container image"
   memory:
     type: "dict"
     description: "memory limits schema"
@@ -83,48 +80,42 @@ schemas:
       varnish:
         type: "str"
         description: "memory limit for the varnish service"
-      wordpress:
+      mediawiki:
         type: "str"
-        description: "memory limit for the wordpress service"
-      pma:
-        type: "str"
-        description: "memory limit for the phpmyadmin service"
-      adminer:
-        type: "str"
-        description: "memory limit for the adminer service"
-      theia:
-        type: "str"
-        description: "memory limit for the theia service"
-      minio_gateway:
-        type: "str"
-        description: "memory limit for the minio gateway service"
+        description: "memory limit for the mediawiki service"
       redis:
         type: "str"
         description: "memory limit for the redis service"
       memcached:
         type: "str"
         description: "memory limit for the memcached service"
+      pma:
+        type: "str"
+        description: "memory limit for the phpmyadmin service"
+      adminer:
+        type: "str"
+        description: "memory limit for the adminer service"
       mysql:
         type: "str"
         description: "memory limit for the mysql service"
+      theia:
+        type: "str"
+        description: "memory limit for the theia service"
+      minio_gateway:
+        type: "str"
+        description: "memory limit for the minio_gateway service"
       toolbox:
         type: "str"
         description: "memory limit for the toolbox service"
-      composer:
-        type: "str"
-        description: "memory limit for the composer service"
       fluentd:
         type: "str"
         description: "memory limit for the fluentd service"
       certbot:
         type: "str"
         description: "memory limit for the certbot service"
-      mysql_cli:
-        type: "str"
-        description: "memory limit for the mysql client service"
       logrotator:
         type: "str"
         description: "memory limit for the logrotator service"
       s3_cli:
         type: "str"
-        description: "memory limit for the s3 client service"
+        description: "memory limit for the s3_cli service"

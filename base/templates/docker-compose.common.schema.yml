@@ -1,0 +1,79 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    lax: true
+    props:
+      images:
+        schema: "images"
+        required: true
+        description: "container images"
+      memory:
+        schema: "memory"
+        required: true
+        description: "memory limits"
+  images:
+    type: "dict"
+    description: "container images schema"
+    props:
+      nginx:
+        type: "str"
+        description: "nginx container image"
+      minio:
+        type: "str"
+        description: "minio container image"
+      theia:
+        type: "str"
+        description: "theia container image"
+      minio_gateway:
+        type: "str"
+        description: "minio_gateway container image"
+      toolbox:
+        type: "str"
+        description: "toolbox container image"
+      certbot:
+        type: "str"
+        description: "certbot container image"
+      awscli:
+        type: "str"
+        description: "awscli container image"
+      mc:
+        type: "str"
+        description: "mc container image"
+      rclone:
+        type: "str"
+        description: "rclone container image"
+      logrotator:
+        type: "str"
+        description: "logrotator container image"
+      fluentd:
+        type: "str"
+        description: "fluentd container image"
+  memory:
+    type: "dict"
+    description: "memory limits schema"
+    props:
+      nginx:
+        type: "str"
+        description: "memory limit for the nginx service"
+      theia:
+        type: "str"
+        description: "memory limit for the theia service"
+      minio_gateway:
+        type: "str"
+        description: "memory limit for the minio_gateway service"
+      toolbox:
+        type: "str"
+        description: "memory limit for the toolbox service"
+      fluentd:
+        type: "str"
+        description: "memory limit for the fluentd service"
+      certbot:
+        type: "str"
+        description: "memory limit for the certbot service"
+      logrotator:
+        type: "str"
+        description: "memory limit for the logrotator service"
+      s3_cli:
+        type: "str"
+        description: "memory limit for the s3_cli service"
