@@ -1,0 +1,113 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      sitename:
+        type: "str"
+        description: "holds the name of your wiki setup"
+      meta_namespace:
+        type: "str"
+        description: >-
+          the name of the meta namespace (also known as the project namespace),
+          used for pages regarding the wiki itself
+      server:
+        type: "str"
+        description: >-
+          contains the base URL of the server, including protocol
+          but without the trailing slash and without the subdirectory if any
+      logo:
+        type: "str"
+        description: >-
+          specifies which graphical logo is displayed in the top left corner
+          of all mediawiki pages
+      emergency_contact:
+        type: "str"
+        description: >-
+          the email address of the user to contact if something goes wrong;
+          this email address is used to send internal bug reports to
+      password_sender:
+        type: "str"
+        description: >-
+          the email address where email gets sent from, when passwords are
+          sent out to users who have forgotten their passwords
+      db_server:
+        type: "str"
+        description: "contains the hostname where the database is hosted on"
+      db_name:
+        type: "str"
+        description: "the database name of the database to be used by mediawiki"
+      db_user:
+        type: "str"
+        description: "login name to be used by mediawiki to access the database"
+      db_password:
+        type: "str"
+        description:
+        description: "login password to be used by mediawiki to access the database"
+      use_memcached:
+        type: "bool"
+        description: "when true, specifies that mediawiki uses memcached for cache"
+      memcached_endpoint:
+        type: "str"
+        description: "the memcached server endpoint, when use_memcached is true"
+      upload_path:
+        type: "str"
+        description: "the place where files uploaded by the users are stored"
+      lang:
+        type: "str"
+        description: >-
+          this specifies which language your page content is in,
+          and also provides the default language for your wiki's interface
+      secret_key:
+        type: "str"
+        description: >-
+          when no better sources of entropy are available to mediawiki,
+          this value is used as a source of cryptographic entropy when
+          generating user_tokens to insert into the user table which is
+          used as a persistent cookie for authentication
+      authentication_token_version:
+        type: "str"
+        description: >-
+          used to salt the token stored in the database;
+          changing the value will immediately detach all sessions and log all users out;
+          this is intended for emergencies such as a mass account compromise
+      use_s3_storage:
+        type: "bool"
+        description: >-
+          when true, specifies that mediawiki should use an s3-like compatible service
+          to store uploaded files
+      s3_key:
+        type: "str"
+        description: "s3 access key (extension:aws)"
+      s3_secret:
+        type: "str"
+        description: "s3 secret key (extension:aws)"
+      s3_bucket:
+        type: "str"
+        description: "s3 bucket name (extension:aws)"
+      s3_region:
+        type: "str"
+        description: "s3 bucket region (extension:aws)"
+      s3_endpoint:
+        type: "str"
+        description: "s3 endpoint (extension:aws); it can be left empty when using aws s3"
+      s3_path:
+        type: "str"
+        description: "path inside the bucket to store the uploaded files (extension:aws)"
+      uploads_cdn_path:
+        type: "str"
+        description: "cdn path to access uploaded files"
+      disable_logs:
+        type: "bool"
+        description: "when true, disable mediawiki logs; defaults to false"
+      debug_logs:
+        type: "bool"
+        description: >-
+          when true, enable mediawiki debug logs at <data_dir>/log/mediawiki/debug.log;
+          defaults to false
+      use_varnish:
+        type: "bool"
+        description: >-
+          when true, defines that there is varnish proxy server(s) that
+          serve cached content to unauthenticated visitors
+          (will acces the server to purge the cache, when needed)

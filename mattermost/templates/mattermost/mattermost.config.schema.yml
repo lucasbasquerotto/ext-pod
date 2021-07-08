@@ -1,0 +1,69 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      site_url:
+        type: "str"
+        description: "the site url"
+      db_user:
+        type: "str"
+        description: "the database username"
+      db_password:
+        type: "str"
+        description: "the database user password"
+      db_hostname:
+        type: "str"
+        description: "the database hostname (without port)"
+      db_port:
+        type: "int"
+        description: "the database port"
+      db_name:
+        type: "str"
+        description: "the database name"
+      use_s3_storage:
+        type: "bool"
+        description: >-
+          when true, specifies that an s3-compatible service should
+          be used to store uploaded files
+      s3_access_key:
+        type: "str"
+        description: "s3 access key (when use_s3_storage=true)"
+      s3_secret_key:
+        type: "str"
+        description: "s3 secret key (when use_s3_storage=true)"
+      s3_bucket_name:
+        type: "str"
+        description: "s3 bucket name (when use_s3_storage=true)"
+      s3_bucket_path:
+        type: "str"
+        description: "s3 bucket path (when use_s3_storage=true)"
+      s3_bucket_region:
+        type: "str"
+        description: "s3 bucket region (when use_s3_storage=true)"
+      s3_endpoint:
+        type: "str"
+        description: "s3 endpoint (when use_s3_storage=true)"
+      s3_ssl:
+        type: "bool"
+        description: "when true, enables only secure s3 connections (when use_s3_storage=true)"
+      enable_smtp:
+        type: "true"
+        description: >-
+          when true, smtp username and password are used for authenticating to the smtp server
+      smtp_user_name:
+        type: "str"
+        description: "smtp username"
+      smtp_password:
+        type: "str"
+        description: "smtp password"
+      smtp_address:
+        type: "str"
+        description: "smtp address"
+      smtp_port:
+        type: "int"
+        description: "smtp port"
+      smtp_connection_security:
+        type: "str"
+        choices: ["", "TLS", "STARTTLS"]
+        description: "smtp connection security"

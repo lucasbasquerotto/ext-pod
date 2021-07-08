@@ -337,8 +337,9 @@ templates:
 ##############################################################
 {% if var_pod_type in ['app', 'web'] %}
 
-- src: "{{ var_main_dir }}/templates/mediawiki/LocalSettings.php"
-  dest: "env/mediawiki/LocalSettings.php"
+- dest: "env/mediawiki/LocalSettings.php"
+  src: "{{ var_main_dir }}/templates/mediawiki/LocalSettings.php"
+  schema: "{{ var_main_dir }}/templates/mediawiki/mediawiki.config.schema.yml"
   mode: "666"
   params:
     sitename: "{{ params.mediawiki.sitename | default('') }}"
