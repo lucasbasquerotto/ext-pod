@@ -254,7 +254,6 @@ templates:
     use_mongo_express: "{{ params.use_mongo_express | default(false) }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
-    use_filestash: "{{ params.use_filestash | default(false) }}"
     use_bot: "{{ params.use_bot | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
@@ -424,11 +423,6 @@ templates:
         endpoint: "http://minio_gateway:9000"
         private: true
         use_basic_auth: false
-      - name: "filestash"
-        when: "{{ params.use_filestash | default(false) }}"
-        endpoint: "http://filestash:8334"
-        private: true
-        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "mongo_express"
         when: "{{ params.use_mongo_express | default(false) }}"
         endpoint: "http://mongo_express:8081"

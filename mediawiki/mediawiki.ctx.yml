@@ -269,7 +269,6 @@ templates:
     use_adminer: "{{ params.use_adminer | default(false) }}"
     use_theia: "{{ params.use_theia | default(false) }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
-    use_filestash: "{{ params.use_filestash | default(false) }}"
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
@@ -470,11 +469,6 @@ templates:
         endpoint: "http://minio_gateway:9000"
         private: true
         use_basic_auth: false
-      - name: "filestash"
-        when: "{{ params.use_filestash | default(false) }}"
-        endpoint: "http://filestash:8334"
-        private: true
-        use_basic_auth: "{{ params.use_basic_auth_private | default(false) }}"
       - name: "phpmyadmin"
         when: "{{ params.use_pma | default(false) }}"
         endpoint: "http://phpmyadmin:80"

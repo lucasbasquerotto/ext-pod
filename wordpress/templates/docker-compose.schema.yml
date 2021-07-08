@@ -4,135 +4,181 @@ schemas:
     type: "dict"
     props:
       local:
+        non_empty: true
         type: "bool"
-        non_empty: true
+        description: "pod in local host"
       main_dir:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "extension pod (this repository) directory"
       main_real_dir:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "extension pod (this repository) directory without links"
       inner_scripts_dir:
         type: "str"
-      app_dev:
-        type: "str"
-        non_empty: true
+        description: "directory inside containers to have the scripts (for running commands inside containers)"
       pod_type:
-        type: "str"
         non_empty: true
+        type: "str"
         choices: ["app", "web", "cache", "db"]
+        description: "pod type"
       shared_network:
         type: "str"
-        non_empty: true
+        description: "shared network name"
       named_volumes:
-        type: "str"
         non_empty: true
+        type: "bool"
+        description: "specify to use named volumes instead of mapping the data in containers to host directories"
+      app_dev:
+        non_empty: true
+        type: "str"
+        description: "development with live reload (mapped to the app repository)"
       internal:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "specifies if the pod is internal in the host (no ports mapped to host ports)"
       use_secrets:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "use secrets instead of environment variables for confidential data"
       use_fluentd:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, the services logging driver is fluentd"
       use_internal_fluentd:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, includes a fluentd service"
       use_s3:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, includes a s3 client service"
       use_local_s3:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: >-
+          when true, includes a local s3 server service to be used for
+          backups and restores (mainly for development and tests)
       use_nginx:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, includes a nginx service to act as reverse proxy"
       use_varnish:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: >-
+          when true, includes a varnish service to act as a caching layer for the server http responses
       use_pma:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, includes a phpmyadmin service to be used as a database gui"
       use_adminer:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, includes an adminer service to be used as a database gui"
       use_theia:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: >-
+          when true, includes a theia service to make easy to see the server logs and run
+          predefined actions without the need of ssh-ing into the server
       use_minio_gateway:
-        type: "bool"
         non_empty: true
-      use_filestash:
         type: "bool"
-        non_empty: true
+        description: "when true, includes a minio gateway service to be used as a gui to access s3 buckets"
       use_custom_ssl:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: >-
+          when true, uses custom ssl certificates (instead of certificates generated automatically
+          by certbot)
       use_internal_ssl:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: >-
+          when true, maps internal ssl certificates to some services so that they can access other,
+          internal services, with self-signed certificates
       use_certbot:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, specifies that certbot is used to generate ssl certificates"
       use_redis:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, includes a redis service to be used as a caching layer"
       use_memcached:
-        type: "bool"
         non_empty: true
+        type: "bool"
+        description: "when true, includes a memcached service to be used as a caching layer"
       use_composer:
+        non_empty: true
         type: "bool"
-        non_empty: true
+        description: "when true, includes a composer service load the wordpress dependencies (for development)"
       wordpress_ini_file_type:
-        type: "str"
         non_empty: true
+        type: "str"
+        choices: ["production", "development"]
+        description: "wordpress php.ini file type"
       db_host:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "database host (without port)"
       db_port:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "database port"
       db_name:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "database name"
       db_user:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "database user"
       db_gui_user:
         type: "str"
+        description: "database gui user"
       fluentd_port:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "fluentd port (in localhost)"
       fluentd_output_plugin:
-        type: "str"
         non_empty: true
+        type: "str"
+        choices: ["file", "elasticsearch"]
+        description: "fluentd output plugin"
       elasticsearch_host:
         type: "str"
+        description: "elasticsearch host (when fluentd_output_plugin=elasticsearch)"
       s3_cli:
         type: "str"
         choices: ["", "awscli", "mc", "rclone"]
+        description: "s3 client type"
       ports:
-        schema: "ports"
         non_empty: true
+        schema: "ports"
+        description: "services external ports (in the host)"
       images:
-        type: "dict"
         required: true
+        type: "dict"
+        description: "services container images"
       memory:
-        type: "dict"
         required: true
+        type: "dict"
+        description: "services memory limits"
   ports:
     type: "dict"
     props:
       public_http_port:
-        type: "str"
         non_empty: true
+        type: "str"
       public_https_port:
-        type: "str"
         non_empty: true
+        type: "str"
       private_http_port:
-        type: "str"
         non_empty: true
+        type: "str"
       private_https_port:
-        type: "str"
         non_empty: true
+        type: "str"

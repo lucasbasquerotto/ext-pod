@@ -45,10 +45,6 @@ schemas:
         type: "str"
       minio_version:
         type: "str"
-      filestash_image:
-        type: "str"
-      filestash_version:
-        type: "str"
       redis_image:
         type: "str"
       redis_version:
@@ -109,8 +105,6 @@ schemas:
       theia:
         type: "str"
       minio_gateway:
-        type: "str"
-      filestash:
         type: "str"
       redis:
         type: "str"

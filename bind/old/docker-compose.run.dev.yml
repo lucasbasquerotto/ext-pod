@@ -3,15 +3,14 @@ version: "2.4"
 x-logging:
   mainlog: &mainlog
     driver: "json-file"
-    options: 
+    options:
       max-size: "50m"
 
 services:
-  
   s3_backup:
-    container_name: "${CTX_NAME}-run-s3_backup"
+    container_name: "${CTX_PREFIX_RUN}s3_backup"
     hostname: "s3_backup"
-    build: 
+    build:
       context: .
       dockerfile: "main/awscli/Dockerfile"
       args:
@@ -21,23 +20,22 @@ services:
         S3_ACCESS_KEY: $S3_BACKUP_ACCESS_KEY
         S3_SECRET_KEY: $S3_BACKUP_SECRET_KEY
     restart: "unless-stopped"
-    volumes: 
-    - "$DATA_DIR:/var/main/data"
-    - "$DATA_DIR/tmp:/tmp/main"
-    - "$DATA_DIR/log:/var/log/main"
+    volumes:
+      - "$DATA_DIR:/var/main/data"
+      - "$DATA_DIR/tmp:/tmp/main"
+      - "$DATA_DIR/log:/var/log/main"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_S3_BACKUP
-  
+
   dnssec:
-    container_name: "${CTX_NAME}-run-dnssec"
+    container_name: "${CTX_PREFIX_RUN}dnssec"
     hostname: "dnssec"
     image: "$DNSSEC_IMAGE:$DNSSEC_VERSION"
     restart: "unless-stopped"
-    volumes: 
-    - "$DATA_DIR/dnssec:/var/main/data/dnssec"
-    - "$DATA_DIR/tmp/dnssec:/tmp/main/dnssec"
+    volumes:
+      - "$DATA_DIR/dnssec:/var/main/data/dnssec"
+      - "$DATA_DIR/tmp/dnssec:/tmp/main/dnssec"
     logging: *mainlog
     command: "tail -f /dev/null"
     mem_limit: $CONTAINER_MEM_DNSSEC
-    

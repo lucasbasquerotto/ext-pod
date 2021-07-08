@@ -4,31 +4,42 @@ schemas:
     type: "dict"
     props:
       local:
+        non_empty: true
         type: "bool"
-        non_empty: true
+        description: "pod in local host"
       main_dir:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "extension pod (this repository) directory"
       main_real_dir:
-        type: "str"
         non_empty: true
+        type: "str"
+        description: "extension pod (this repository) directory without links"
       inner_scripts_dir:
         type: "str"
+        description: "directory inside containers to have the scripts (for running commands inside containers)"
       pod_type:
-        type: "str"
         non_empty: true
+        type: "str"
         choices: ["app", "web", "cache", "db"]
+        description: "pod type"
       shared_network:
         type: "str"
+        description: "shared network name"
       use_certbot:
         type: "bool"
+        description: "when true, includes a certbot service"
       use_fluentd:
         type: "bool"
+        description: "when true, the services logging driver is fluentd"
       fluentd_port:
         type: "str"
+        description: "fluentd port in localhost"
       images:
-        type: "dict"
         required: true
+        type: "dict"
+        description: "services container images"
       memory:
-        type: "dict"
         required: true
+        type: "dict"
+        description: "services memory limits"

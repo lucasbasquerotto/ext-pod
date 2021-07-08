@@ -8,7 +8,6 @@
 {% set var_use_adminer = var_is_web and (params.use_adminer | bool) %}
 {% set var_use_theia = var_is_web and (params.use_theia | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
-{% set var_use_filestash = var_is_web and (params.use_filestash | bool) %}
 {% set var_use_composer = var_is_web and (params.use_composer | bool) %}
 
 {% set var_is_cache = params.pod_type in ['app', 'cache'] %}
@@ -698,57 +697,6 @@ services:
     {% if (params.memory.minio_gateway | default('')) != '' %}
 
     mem_limit: "{{ params.memory.minio_gateway }}"
-
-    {% endif %}
-    {#############################################################}
-
-  {% endif %}
-  {#############################################################}
-
-  {#############################################################}
-  {% if var_use_filestash %}
-
-  filestash:
-    container_name: "${CTX_PREFIX_MAIN}filestash"
-    hostname: "filestash"
-    build:
-      context: .
-      dockerfile: "shared/containers/filestash/Dockerfile"
-      args:
-        IMAGE: "{{ params.images.filestash_image }}"
-        VERSION: "{{ params.images.filestash_version }}"
-    restart: "unless-stopped"
-
-    {#############################################################}
-    {% if var_use_internal_fluentd %}
-
-    depends_on:
-    - "fluentd"
-
-    {% endif %}
-    {#############################################################}
-
-    networks:
-    - "shared"
-
-    {#############################################################}
-    {% if var_local %}
-
-    extra_hosts:
-      host.docker.internal: host-gateway
-
-    {% endif %}
-    {#############################################################}
-
-    volumes:
-    - "$DATA_DIR/tmp/filestash:/tmp/main/filestash"
-    - "$DATA_DIR/tmp/tmp/filestash:/tmp/main/tmp/filestash"
-    logging: *mainlog
-
-    {#############################################################}
-    {% if (params.memory.filestash | default('')) != '' %}
-
-    mem_limit: "{{ params.memory.filestash }}"
 
     {% endif %}
     {#############################################################}
