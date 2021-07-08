@@ -6,7 +6,7 @@ schemas:
       pod_type:
         non_empty: true
         type: "str"
-        choices: ["app", "web", "cache", "db"]
+        choices: ["app", "web", "db"]
         description: "pod type"
       shared_network:
         type: "str"

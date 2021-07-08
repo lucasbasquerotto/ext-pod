@@ -5,7 +5,7 @@
 {% set var_local = params.local | default(false) | bool %}
 {% set var_pod_type = params.type | default('') %}
 
-{% if not (var_pod_type in ['app', 'web', 'cache', 'db']) %}
+{% if not (var_pod_type in ['app', 'web', 'db']) %}
   {% set error = {} %}
   {{ error['error.pod_type.invalid.' + var_pod_type] }}
 {% endif %}
@@ -354,8 +354,8 @@ templates:
     local: "{{ var_local }}"
     data_dir: "{{ var_data_dir }}"
     use_secrets: "{{ params.use_secrets | default(false) }}"
-    use_local_s3: "{{ var_use_local_s3 }}"
     use_minio_gateway: "{{ params.use_minio_gateway | default(false) }}"
+    use_local_s3: "{{ var_use_local_s3 }}"
     minio_gateway_endpoint: "{{ var_s3_minio_gateway_credentials.endpoint | default('') }}"
     minio_gateway_access_key: "{{ var_s3_minio_gateway_credentials.access_key | default('') }}"
     minio_gateway_secret_key: "{{ var_s3_minio_gateway_credentials.secret_key | default('') }}"
