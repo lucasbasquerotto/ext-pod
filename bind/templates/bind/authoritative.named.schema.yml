@@ -1,0 +1,23 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      bind_zone:
+        non_empty: true
+        type: "str"
+        description: "bind zone"
+      bind_type:
+        non_empty: true
+        type: "str"
+        choices: ["master", "slave"]
+        description: "bind type"
+      bind_master_ip:
+        type: "str"
+        description: "bind master ip"
+      bind_slave_ip:
+        type: "str"
+        description: "bind slave ip"
+      bind_secret:
+        type: "str"
+        description: "bind secret"

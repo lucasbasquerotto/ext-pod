@@ -1,0 +1,27 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      bind_zone:
+        non_empty: true
+        type: "str"
+        description: "bind zone"
+      bind_email_hostmaster:
+        type: "str"
+        description: "hostmaster email"
+      bind_serial:
+        type: "str"
+        description: "bind serial"
+      bind_master_ns:
+        type: "str"
+        description: "bind master nameserver"
+      bind_slave_ns:
+        type: "str"
+        description: "bind slave nameserver"
+      bind_master_ip:
+        type: "str"
+        description: "bind master ip"
+      bind_slave_ip:
+        type: "str"
+        description: "bind slave ip"

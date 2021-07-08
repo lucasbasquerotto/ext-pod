@@ -1,0 +1,19 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      elasticsearch_hosts:
+        type: "list"
+        elem_type: "str"
+        non_empty: true
+        description: "list of hosts pointing to the elasticsearch servers"
+      use_secure_elasticsearch:
+        type: "bool"
+        description: "when true, uses authentication and tls to connect to elasticsearch"
+      kibana_user:
+        type: "str"
+        description: "elasticsearch username for the kibana user (when use_secure_elasticsearch=true)"
+      elasticsearch_password:
+        type: "str"
+        description: "elasticsearch password for the kibana user (when use_secure_elasticsearch=true)"

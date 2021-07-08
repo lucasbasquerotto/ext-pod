@@ -1,0 +1,67 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      url:
+        type: "str"
+        description: "str"
+      db_host:
+        type: "str"
+        description: "database host (without port)"
+      db_port:
+        type: "str"
+        description: "database port"
+      db_user:
+        type: "str"
+        description: "database user"
+      db_password:
+        type: "str"
+        description: "database user"
+      db_name:
+        type: "str"
+        description: "database name"
+      mail:
+        schema: "mail"
+        description: "ghost mail settings"
+  mail:
+    type: "dict"
+    description: "mail settings schema"
+    props:
+      transport:
+        non_empty: true
+        choices: ["SMTP"]
+        type: "str"
+        description: "mail transport type"
+      options:
+        schema: "mail_auth"
+        description: "mail options"
+  mail_options:
+    type: "dict"
+    description: "mail options schema"
+    props:
+      service:
+        non_empty: true
+        type: "str"
+        description: "mail service"
+      host:
+        non_empty: true
+        type: "str"
+        description: "mail host"
+      port:
+        type: "int"
+        description: "mail port"
+      auth:
+        required: true
+        schema: "mail_auth"
+        description: "mail suthentication settings"
+  mail_auth:
+    type: "dict"
+    description: "mail suthentication settings schema"
+    props:
+      user:
+        type: "str"
+        description: "mail user"
+      pass:
+        type: "str"
+        description: "mail password"
