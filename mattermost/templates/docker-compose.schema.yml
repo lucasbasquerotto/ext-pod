@@ -30,10 +30,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "specify to use named volumes instead of mapping the data in containers to host directories"
-      app_dev:
-        non_empty: true
-        type: "str"
-        description: "development with live reload (mapped to the app repository)"
       internal:
         non_empty: true
         type: "bool"
@@ -60,19 +56,18 @@ schemas:
         description: >-
           when true, includes a local s3 server service to be used for
           backups and restores (mainly for development and tests)
+      use_wale:
+        non_empty: true
+        type: "bool"
+        description: "when true, uses wale as the backup mechanism for the postgres database"
       use_nginx:
         non_empty: true
         type: "bool"
         description: "when true, includes a nginx service to act as reverse proxy"
-      use_varnish:
+      use_pgadmin:
         non_empty: true
         type: "bool"
-        description: >-
-          when true, includes a varnish service to act as a caching layer for the server http responses
-      use_pma:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a phpmyadmin service to be used as a database gui"
+        description: "when true, includes a pgadmin service to be used as a database gui"
       use_adminer:
         non_empty: true
         type: "bool"
@@ -103,23 +98,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, specifies that certbot is used to generate ssl certificates"
-      use_redis:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a redis service to be used as a caching layer"
-      use_memcached:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a memcached service to be used as a caching layer"
-      use_composer:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a composer service load the wordpress dependencies (for development)"
-      wordpress_ini_file_type:
-        non_empty: true
-        type: "str"
-        choices: ["production", "development"]
-        description: "wordpress php.ini file type"
       db_host:
         non_empty: true
         type: "str"
@@ -139,6 +117,15 @@ schemas:
       db_gui_user:
         type: "str"
         description: "database gui user"
+      db_gui_password:
+        type: "str"
+        description: "database gui user password"
+      pgadmin_email:
+        type: "str"
+        description: "email to be used in the login of pgadmin"
+      pgadmin_password:
+        type: "str"
+        description: "password to be used in the login of pgadmin"
       fluentd_port:
         non_empty: true
         type: "str"

@@ -6,7 +6,7 @@ schemas:
       pod_type:
         non_empty: true
         type: "str"
-        choices: ["app", "web", "cache", "db"]
+        choices: ["app", "web", "db"]
         description: "pod type"
       shared_network:
         type: "str"
@@ -30,10 +30,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "specify to use named volumes instead of mapping the data in containers to host directories"
-      app_dev:
-        non_empty: true
-        type: "str"
-        description: "development with live reload (mapped to the app repository)"
       internal:
         non_empty: true
         type: "bool"
@@ -64,19 +60,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, includes a nginx service to act as reverse proxy"
-      use_varnish:
-        non_empty: true
-        type: "bool"
-        description: >-
-          when true, includes a varnish service to act as a caching layer for the server http responses
-      use_pma:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a phpmyadmin service to be used as a database gui"
-      use_adminer:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes an adminer service to be used as a database gui"
       use_theia:
         non_empty: true
         type: "bool"
@@ -103,42 +86,18 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, specifies that certbot is used to generate ssl certificates"
-      use_redis:
+      use_consul:
         non_empty: true
         type: "bool"
-        description: "when true, includes a redis service to be used as a caching layer"
-      use_memcached:
+        description: "use consul for the vault storage data"
+      use_secure_vault:
         non_empty: true
         type: "bool"
-        description: "when true, includes a memcached service to be used as a caching layer"
-      use_composer:
+        description: "use secure vault (https)"
+      use_secure_consul:
         non_empty: true
         type: "bool"
-        description: "when true, includes a composer service load the wordpress dependencies (for development)"
-      wordpress_ini_file_type:
-        non_empty: true
-        type: "str"
-        choices: ["production", "development"]
-        description: "wordpress php.ini file type"
-      db_host:
-        non_empty: true
-        type: "str"
-        description: "database host (without port)"
-      db_port:
-        non_empty: true
-        type: "str"
-        description: "database port"
-      db_name:
-        non_empty: true
-        type: "str"
-        description: "database name"
-      db_user:
-        non_empty: true
-        type: "str"
-        description: "database user"
-      db_gui_user:
-        type: "str"
-        description: "database gui user"
+        description: "use secure consul (https)"
       fluentd_port:
         non_empty: true
         type: "str"
@@ -155,6 +114,19 @@ schemas:
         type: "str"
         choices: ["", "awscli", "mc", "rclone"]
         description: "s3 client type"
+      dev_vault:
+        non_empty: true
+        type: "bool"
+        description: "use vault in development mode"
+      vault_external_port:
+        type: "str"
+        description: "vault external port (in the host); defaults to 8200"
+      consul_internal_port:
+        type: "str"
+        description: "consul internal port (in the host); defaults to 8501 when use_secure_consul=true or 8500 otherwise"
+      consul_external_port:
+        type: "str"
+        description: "consul external port (in the host); defaults to consul_internal_port"
       ports:
         non_empty: true
         schema: "ports"

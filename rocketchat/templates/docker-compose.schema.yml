@@ -6,7 +6,7 @@ schemas:
       pod_type:
         non_empty: true
         type: "str"
-        choices: ["app", "web", "cache", "db"]
+        choices: ["app", "web", "db"]
         description: "pod type"
       shared_network:
         type: "str"
@@ -30,10 +30,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "specify to use named volumes instead of mapping the data in containers to host directories"
-      app_dev:
-        non_empty: true
-        type: "str"
-        description: "development with live reload (mapped to the app repository)"
       internal:
         non_empty: true
         type: "bool"
@@ -64,19 +60,14 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, includes a nginx service to act as reverse proxy"
-      use_varnish:
+      use_bot:
         non_empty: true
         type: "bool"
-        description: >-
-          when true, includes a varnish service to act as a caching layer for the server http responses
-      use_pma:
+        description: "when true, includes a hubot service that is able to access rocketchat"
+      use_mongo_express:
         non_empty: true
         type: "bool"
-        description: "when true, includes a phpmyadmin service to be used as a database gui"
-      use_adminer:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes an adminer service to be used as a database gui"
+        description: "when true, includes a mongo-express service to be used as a database gui"
       use_theia:
         non_empty: true
         type: "bool"
@@ -103,23 +94,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, specifies that certbot is used to generate ssl certificates"
-      use_redis:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a redis service to be used as a caching layer"
-      use_memcached:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a memcached service to be used as a caching layer"
-      use_composer:
-        non_empty: true
-        type: "bool"
-        description: "when true, includes a composer service load the wordpress dependencies (for development)"
-      wordpress_ini_file_type:
-        non_empty: true
-        type: "str"
-        choices: ["production", "development"]
-        description: "wordpress php.ini file type"
       db_host:
         non_empty: true
         type: "str"
@@ -136,6 +110,9 @@ schemas:
         non_empty: true
         type: "str"
         description: "database user"
+      db_root_user:
+        type: "str"
+        description: "database root user (superuser)"
       db_gui_user:
         type: "str"
         description: "database gui user"
@@ -155,6 +132,18 @@ schemas:
         type: "str"
         choices: ["", "awscli", "mc", "rclone"]
         description: "s3 client type"
+      hubot_room:
+        type: "str"
+        description: "hubot room"
+      hubot_user:
+        type: "str"
+        description: "hubot username"
+      hubot_bot_name:
+        type: "str"
+        description: "hubot name shown to users"
+      rocketchat:
+        schema: "rocketchat"
+        description: "rocketchat settings schema"
       ports:
         non_empty: true
         schema: "ports"
@@ -167,6 +156,33 @@ schemas:
         required: true
         type: "dict"
         description: "services memory limits"
+
+  rocketchat:
+    block_default_settings:
+      type: "bool"
+      description: "block the rocketchat default settings (can't be changed by an admin)"
+    mail_url:
+      type: "str"
+      description: "rocketchat email url"
+    storage_type:
+      type: "str"
+      choices: ["FileSystem", "AmazonS3"]
+      description: "rocketchat storage type (for uploads)"
+    fileupload_s3_bucket_url:
+      type: "str"
+      description: "fileupload s3 bucket url (when fileupload_s3_bucket_url=AmazonS3)"
+    fileupload_s3_bucket:
+      type: "str"
+      description: "fileupload s3 bucket (when fileupload_s3_bucket=AmazonS3)"
+    fileupload_s3_region:
+      type: "str"
+      description: "fileupload s3 region (when fileupload_s3_region=AmazonS3)"
+    fileupload_s3_acl:
+      type: "str"
+      description: "fileupload s3 acl (when fileupload_s3_acl=AmazonS3)"
+    fileupload_s3_cdn:
+      type: "str"
+      description: "fileupload s3 cdn (when fileupload_s3_cdn=AmazonS3)"
   ports:
     type: "dict"
     props:

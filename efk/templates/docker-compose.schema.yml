@@ -97,7 +97,7 @@ schemas:
       fluentd_port:
         non_empty: true
         type: "str"
-        description: "fluentd port (in localhost)"
+        description: "fluentd port (in localhost); defaults to 24224"
       fluentd_output_plugin:
         non_empty: true
         type: "str"
