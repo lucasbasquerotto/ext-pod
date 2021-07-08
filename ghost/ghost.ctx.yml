@@ -461,13 +461,14 @@ templates:
 ##############################################################
 {% if var_use_internal_fluentd and (var_fluentd_output_plugin == 'elasticsearch') %}
 
-- src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
-  dest: "env/fluentd/fluent.conf"
+- dest: "env/fluentd/fluent.conf"
+  src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
+  schema: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.schema.yml"
   params:
+    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
     use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     elasticsearch_user: "fluentd"
     elasticsearch_password: "{{ credentials.elasticsearch.fluentd_password | default('') }}"
-    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
 
 {% endif %}
 ##############################################################

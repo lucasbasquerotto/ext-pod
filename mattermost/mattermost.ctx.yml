@@ -367,8 +367,9 @@ templates:
 ##############################################################
 {% if var_pod_type in ['app', 'web'] %}
 
-- src: "{{ var_main_dir }}/templates/mattermost/config.tpl.json"
-  dest: "env/mattermost/config.json"
+- dest: "env/mattermost/config.json"
+  src: "{{ var_main_dir }}/templates/mattermost/config.tpl.json"
+  schema: "{{ var_main_dir }}/templates/mattermost/mattermost.config.schema.yml"
   params:
     site_url: "{{ var_mattermost_external_host }}"
     db_hostname: "{{ var_postgres_hostname }}"
@@ -525,13 +526,14 @@ templates:
 ##############################################################
 {% if var_use_internal_fluentd and (var_fluentd_output_plugin == 'elasticsearch') %}
 
-- src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
-  dest: "env/fluentd/fluent.conf"
+- dest: "env/fluentd/fluent.conf"
+  src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
+  schema: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.schema.yml"
   params:
+    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
     use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     elasticsearch_user: "fluentd"
     elasticsearch_password: "{{ credentials.elasticsearch.fluentd_password | default('') }}"
-    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
 
 {% endif %}
 ##############################################################
@@ -549,8 +551,9 @@ templates:
 ##############################################################
 {% if (var_pod_type in ['app', 'db']) and (not (params.custom_postgres_conf | default(false) | bool)) %}
 
-- src: "{{ var_shared_dir }}/templates/postgres/postgresql.tpl.conf"
-  dest: "env/postgres/postgresql.conf"
+- dest: "env/postgres/postgresql.conf"
+  src: "{{ var_shared_dir }}/templates/postgres/postgresql.tpl.conf"
+  schema: "{{ var_shared_dir }}/templates/postgres/postgresql.schema.conf"
   params:
     max_connections: "{{ params.services.postgres.max_connections | default('') }}"
     shared_buffers: "{{ params.services.postgres.shared_buffers | default('') }}"
@@ -562,8 +565,9 @@ templates:
 ##############################################################
 {% if (var_pod_type in ['app', 'db']) and var_use_wale_general %}
 
-- src: "{{ var_shared_dir }}/templates/wal-e/wale.tpl.conf"
-  dest: "env/postgres/wale.conf"
+- dest: "env/postgres/wale.conf"
+  src: "{{ var_shared_dir }}/templates/wal-e/wale.tpl.conf"
+  schema: "{{ var_shared_dir }}/templates/wal-e/wale.schema.conf"
   params:
     wale_s3_prefix: "s3://{{ params.backup_bucket_name }}/{{ params.backup_bucket_path }}"
     aws_access_key_id: "{{ var_s3_backup_credentials.access_key | default('') }}"

@@ -1,0 +1,16 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      use_secure_elasticsearch:
+        type: "bool"
+        description: "when true, uses authentication and tls to connect to elasticsearch"
+      s3_endpoint:
+        type: "str"
+        description: "s3 endpoint used to store snapshots"
+      s3_path_style_access:
+        type: "bool"
+        description: >-
+          when true, access s3 using the path style, instead of accessing
+          the bucket as a subdomain

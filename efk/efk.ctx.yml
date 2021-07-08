@@ -351,13 +351,14 @@ templates:
 ##############################################################
 {% if var_use_internal_fluentd and (var_fluentd_output_plugin == 'elasticsearch') %}
 
-- src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
-  dest: "env/fluentd/fluent.conf"
+- dest: "env/fluentd/fluent.conf"
+  src: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.tpl.conf"
+  schema: "{{ var_shared_dir }}/templates/fluentd/elasticsearch.schema.yml"
   params:
+    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
     use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     elasticsearch_user: "fluentd"
     elasticsearch_password: "{{ credentials.elasticsearch.fluentd_password | default('') }}"
-    elasticsearch_hosts: {{ var_elasticsearch_hosts | to_json }}
 
 {% endif %}
 ##############################################################
@@ -379,8 +380,9 @@ templates:
 ##############################################################
 {% if var_use_elasticsearch %}
 
-- src: "{{ var_main_dir }}/templates/elasticsearch/elasticsearch.tpl.yml"
-  dest: "env/elasticsearch/elasticsearch.yml"
+- dest: "env/elasticsearch/elasticsearch.yml"
+  src: "{{ var_main_dir }}/templates/elasticsearch/elasticsearch.tpl.yml"
+  schema: "{{ var_main_dir }}/templates/elasticsearch/elasticsearch.schema.yml"
   params:
     use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     s3_endpoint: "{{ var_s3_backup_credentials.endpoint | default('') }}"
