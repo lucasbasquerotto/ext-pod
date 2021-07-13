@@ -140,16 +140,16 @@ env_files:
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
-- src: "{{ var_custom_ssl_fullchain }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+- dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  src: "{{ var_custom_ssl_fullchain }}"
   when: "{{ var_custom_ssl_fullchain != '' }}"
 
-- src: "{{ var_custom_ssl_privkey }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+- dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  src: "{{ var_custom_ssl_privkey }}"
   when: "{{ var_custom_ssl_privkey != '' }}"
 
-- src: "{{ var_custom_ssl_concat }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+- dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+  src: "{{ var_custom_ssl_concat }}"
   when: "{{ var_custom_ssl_concat != '' }}"
 
 {% endif %}
@@ -158,24 +158,24 @@ env_files:
 ##############################################################
 {% if var_use_internal_ssl %}
 
-- src: "{{ var_internal_ssl_fullchain }}"
-  dest: "env/ssl/fullchain.pem"
+- dest: "env/ssl/fullchain.pem"
+  src: "{{ var_internal_ssl_fullchain }}"
   when: "{{ var_internal_ssl_fullchain != '' }}"
 
-- src: "{{ var_internal_ssl_cert }}"
-  dest: "env/ssl/cert.pem"
+- dest: "env/ssl/cert.pem"
+  src: "{{ var_internal_ssl_cert }}"
   when: "{{ var_internal_ssl_cert != '' }}"
 
-- src: "{{ var_internal_ssl_ca }}"
-  dest: "env/ssl/ca.pem"
+- dest: "env/ssl/ca.pem"
+  src: "{{ var_internal_ssl_ca }}"
   when: "{{ var_internal_ssl_ca != '' }}"
 
-- src: "{{ var_internal_ssl_privkey }}"
-  dest: "env/ssl/privkey.pem"
+- dest: "env/ssl/privkey.pem"
+  src: "{{ var_internal_ssl_privkey }}"
   when: "{{ var_internal_ssl_privkey != '' }}"
 
-- src: "{{ var_internal_ssl_concat }}"
-  dest: "env/ssl/concat.pem"
+- dest: "env/ssl/concat.pem"
+  src: "{{ var_internal_ssl_concat }}"
   when: "{{ var_internal_ssl_concat != '' }}"
 
 {% endif %}
@@ -184,16 +184,19 @@ env_files:
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
-- src: "{{ params.auth_file }}"
-  dest: "env/nginx/auth/.htpasswd"
+- dest: "env/nginx/auth/.htpasswd"
+  src: "{{ params.auth_file }}"
 
 {% endif %}
 ##############################################################
 
 templates:
 
-- src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
-  dest: "docker-compose.yml"
+- dest: "docker-compose.yml"
+  src: "{{ var_main_dir }}/templates/docker-compose.tpl.yml"
+  schema:
+    - "{{ var_main_dir }}/templates/docker-compose.schema.yml"
+    - "{{ var_main_dir }}/templates/docker-compose.common.schema.yml"
   params:
     pod_type: "{{ var_pod_type }}"
     shared_network: "{{ var_shared_network_name }}"
@@ -232,8 +235,11 @@ templates:
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}
 
-- src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
-  dest: "docker-compose.run.yml"
+- dest: "docker-compose.run.yml"
+  src: "{{ var_main_dir }}/templates/docker-compose.run.tpl.yml"
+  schema:
+    - "{{ var_main_dir }}/templates/docker-compose.run.schema.yml"
+    - "{{ var_main_dir }}/templates/docker-compose.common.schema.yml"
   params:
     pod_type: "{{ var_pod_type }}"
     shared_network: "{{ var_shared_network_name }}"
@@ -247,8 +253,9 @@ templates:
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}
 
-- src: "{{ var_main_dir }}/templates/docker-compose.env"
-  dest: ".env"
+- dest: ".env"
+  src: "{{ var_main_dir }}/templates/docker-compose.env"
+  schema: "{{ var_main_dir }}/templates/docker-compose.env.schema.yml"
   params:
     ctx_full_name: "{{ var_ctx_full_name }}"
     ctx_prefix_main: "{{ var_ctx_prefix_main }}"
@@ -270,8 +277,8 @@ templates:
 ##############################################################
 {% if params.use_s3 | default(false) | bool %}
 
-- src: "{{ var_s3_config_src }}"
-  dest: "{{ var_s3_config_dest }}"
+- dest: "{{ var_s3_config_dest }}"
+  src: "{{ var_s3_config_src }}"
   schema: "{{ var_shared_dir }}/templates/s3-cli/s3-cli.schema.yml"
   params:
     - alias: "backup"
@@ -294,8 +301,8 @@ templates:
 
 {% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
 
-- src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
-  dest: "env/nginx/nginx.conf"
+- dest: "env/nginx/nginx.conf"
+  src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
@@ -358,8 +365,8 @@ templates:
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
 
-- src: "main/vars/values.tpl.txt"
-  dest: "env/secrets.txt"
+- dest: "env/secrets.txt"
+  src: "main/vars/values.tpl.txt"
   params:
     empty: ""
 
@@ -393,8 +400,8 @@ templates:
 {% endif %}
 ##############################################################
 
-- src: "main/vars/vars.tpl.sh"
-  dest: "vars.sh"
+- dest: "vars.sh"
+  src: "main/vars/vars.tpl.sh"
   params:
     var_load_script_path: "{{ var_main_dir }}/scripts/prometheus.vars.sh"
 

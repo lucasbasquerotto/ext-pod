@@ -1,7 +1,6 @@
 ARG IMAGE
-ARG VERSION
 
-FROM $IMAGE:$VERSION
+FROM $IMAGE
 
 RUN bin/elasticsearch-plugin install --batch repository-s3
 

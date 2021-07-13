@@ -1,7 +1,6 @@
 ARG IMAGE
-ARG VERSION
 
-FROM $IMAGE:$VERSION
+FROM $IMAGE
 
 COPY /env/bind/named.conf /etc/bind/named.conf
 

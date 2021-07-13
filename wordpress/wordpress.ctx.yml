@@ -207,16 +207,16 @@ env_files:
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and (var_use_custom_ssl | bool) %}
 
-- src: "{{ var_custom_ssl_fullchain }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+- dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/fullchain.pem"
+  src: "{{ var_custom_ssl_fullchain }}"
   when: "{{ var_custom_ssl_fullchain != '' }}"
 
-- src: "{{ var_custom_ssl_privkey }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+- dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/privkey.pem"
+  src: "{{ var_custom_ssl_privkey }}"
   when: "{{ var_custom_ssl_privkey != '' }}"
 
-- src: "{{ var_custom_ssl_concat }}"
-  dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+- dest: "env/certbot/etc/live/{{ var_custom_ssl_main_domain }}/concat.pem"
+  src: "{{ var_custom_ssl_concat }}"
   when: "{{ var_custom_ssl_concat != '' }}"
 
 {% endif %}
@@ -225,24 +225,24 @@ env_files:
 ##############################################################
 {% if var_use_internal_ssl %}
 
-- src: "{{ var_internal_ssl_fullchain }}"
-  dest: "env/ssl/fullchain.pem"
+- dest: "env/ssl/fullchain.pem"
+  src: "{{ var_internal_ssl_fullchain }}"
   when: "{{ var_internal_ssl_fullchain != '' }}"
 
-- src: "{{ var_internal_ssl_cert }}"
-  dest: "env/ssl/cert.pem"
+- dest: "env/ssl/cert.pem"
+  src: "{{ var_internal_ssl_cert }}"
   when: "{{ var_internal_ssl_cert != '' }}"
 
-- src: "{{ var_internal_ssl_ca }}"
-  dest: "env/ssl/ca.pem"
+- dest: "env/ssl/ca.pem"
+  src: "{{ var_internal_ssl_ca }}"
   when: "{{ var_internal_ssl_ca != '' }}"
 
-- src: "{{ var_internal_ssl_privkey }}"
-  dest: "env/ssl/privkey.pem"
+- dest: "env/ssl/privkey.pem"
+  src: "{{ var_internal_ssl_privkey }}"
   when: "{{ var_internal_ssl_privkey != '' }}"
 
-- src: "{{ var_internal_ssl_concat }}"
-  dest: "env/ssl/concat.pem"
+- dest: "env/ssl/concat.pem"
+  src: "{{ var_internal_ssl_concat }}"
   when: "{{ var_internal_ssl_concat != '' }}"
 
 {% endif %}
@@ -251,8 +251,8 @@ env_files:
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and ((params.auth_file | default('')) != '') %}
 
-- src: "{{ params.auth_file }}"
-  dest: "env/nginx/auth/.htpasswd"
+- dest: "env/nginx/auth/.htpasswd"
+  src: "{{ params.auth_file }}"
 
 {% endif %}
 ##############################################################
