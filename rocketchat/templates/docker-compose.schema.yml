@@ -156,33 +156,34 @@ schemas:
         required: true
         type: "dict"
         description: "services memory limits"
-
   rocketchat:
-    block_default_settings:
-      type: "bool"
-      description: "block the rocketchat default settings (can't be changed by an admin)"
-    mail_url:
-      type: "str"
-      description: "rocketchat email url"
-    storage_type:
-      type: "str"
-      choices: ["FileSystem", "AmazonS3"]
-      description: "rocketchat storage type (for uploads)"
-    fileupload_s3_bucket_url:
-      type: "str"
-      description: "fileupload s3 bucket url (when fileupload_s3_bucket_url=AmazonS3)"
-    fileupload_s3_bucket:
-      type: "str"
-      description: "fileupload s3 bucket (when fileupload_s3_bucket=AmazonS3)"
-    fileupload_s3_region:
-      type: "str"
-      description: "fileupload s3 region (when fileupload_s3_region=AmazonS3)"
-    fileupload_s3_acl:
-      type: "str"
-      description: "fileupload s3 acl (when fileupload_s3_acl=AmazonS3)"
-    fileupload_s3_cdn:
-      type: "str"
-      description: "fileupload s3 cdn (when fileupload_s3_cdn=AmazonS3)"
+    type: "dict"
+    props:
+      block_default_settings:
+        type: "bool"
+        description: "block the rocketchat default settings (can't be changed by an admin)"
+      mail_url:
+        type: "str"
+        description: "rocketchat email url"
+      storage_type:
+        type: "str"
+        choices: ["FileSystem", "AmazonS3"]
+        description: "rocketchat storage type (for uploads)"
+      fileupload_s3_bucket_url:
+        type: "str"
+        description: "fileupload s3 bucket url (when fileupload_s3_bucket_url=AmazonS3)"
+      fileupload_s3_bucket:
+        type: "str"
+        description: "fileupload s3 bucket (when fileupload_s3_bucket=AmazonS3)"
+      fileupload_s3_region:
+        type: "str"
+        description: "fileupload s3 region (when fileupload_s3_region=AmazonS3)"
+      fileupload_s3_acl:
+        type: "str"
+        description: "fileupload s3 acl (when fileupload_s3_acl=AmazonS3)"
+      fileupload_s3_cdn:
+        type: "str"
+        description: "fileupload s3 cdn (when fileupload_s3_cdn=AmazonS3)"
   ports:
     type: "dict"
     props:

@@ -371,7 +371,8 @@ templates:
 {% if params.use_secrets | default(false) | bool %}
 
 - dest: "env/secrets.txt"
-  src: "main/vars/values.tpl.txt"
+  src: "main/vars/vars.tpl.txt"
+  schema: "main/vars/vars.schema.yml"
   params:
     empty: ""
 
@@ -416,6 +417,7 @@ templates:
 
 - dest: "vars.sh"
   src: "main/vars/vars.tpl.sh"
+  schema: "main/vars/vars.schema.yml"
   params:
     var_load_script_path: "{{ var_main_dir }}/scripts/minio.vars.sh"
 

@@ -215,7 +215,6 @@ templates:
     rproxy_type: "{{ var_rproxy_type }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
-    elasticsearch_port: "{{ params.services.elasticsearch.port | default('') }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
     ports: {{ var_ports | to_json }}
@@ -355,7 +354,8 @@ templates:
 {% if params.use_secrets | default(false) | bool %}
 
 - dest: "env/secrets.txt"
-  src: "main/vars/values.tpl.txt"
+  src: "main/vars/vars.tpl.txt"
+  schema: "main/vars/vars.schema.yml"
   params:
     empty: ""
 
@@ -382,6 +382,7 @@ templates:
 
 - dest: "vars.sh"
   src: "main/vars/vars.tpl.sh"
+  schema: "main/vars/vars.schema.yml"
   params:
     var_load_script_path: "{{ var_main_dir }}/scripts/rproxy.vars.sh"
 

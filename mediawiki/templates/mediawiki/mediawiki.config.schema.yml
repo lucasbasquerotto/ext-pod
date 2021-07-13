@@ -42,7 +42,6 @@ schemas:
         description: "login name to be used by mediawiki to access the database"
       db_password:
         type: "str"
-        description:
         description: "login password to be used by mediawiki to access the database"
       use_memcached:
         type: "bool"
