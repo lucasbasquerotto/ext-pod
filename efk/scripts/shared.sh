@@ -7,6 +7,8 @@ pod_layer_dir="$var_pod_layer_dir"
 pod_script_env_file="$var_pod_script"
 # shellcheck disable=SC2154
 inner_run_file="$var_inner_scripts_dir/run"
+# shellcheck disable=SC2154
+pod_data_dir="$var_pod_data_dir"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
@@ -93,6 +95,19 @@ case "$command" in
 				mkdir -p "$dir"
 				chown 1000:1000 "$dir"
 			fi
+
+			dir="$tmp_dir/secrets/elasticsearch"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+				chown 1000:1000 "$dir"
+			fi
+
+			touch "$dir/keystore.txt"
+
+			if [ "${var_main__local:-}" = 'true' ]; then
+				chmod 666 "$dir/keystore.txt"
+			fi
 		fi
 		;;
 	"shared:setup")
@@ -117,13 +132,25 @@ case "$command" in
 
 		# Define Keystore
 		if [ "${var_custom__s3_snapshot:-}" = 'true' ]; then
-			info "$command: add variables to the elasticsearch keystore"
+			keystore_file="$pod_layer_dir/env/elasticsearch/keystore.txt"
+			keystore_tmp_file="$pod_data_dir/tmp/secrets/elasticsearch/keystore.txt"
 
-			while IFS='=' read -r key value; do
-				echo "$value" | xargs \
-					| "$pod_script_env_file" exec-nontty elasticsearch \
-						bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)"
-			done < "$pod_layer_dir/env/elasticsearch/keystore.txt"
+			checksum1="$(md5sum "$keystore_file" | awk '{print $1}')"
+			checksum2="$(md5sum "$keystore_tmp_file" | awk '{print $1}')"
+
+			if [ "$checksum1" != "$checksum2" ]; then
+				info "$command: add variables to the elasticsearch keystore"
+
+				while IFS='=' read -r key value; do
+					echo "$value" | xargs \
+						| "$pod_script_env_file" exec-nontty elasticsearch \
+							bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)"
+				done < "$keystore_file"
+
+				"$pod_script_env_file" restart elasticsearch
+
+				cp "$keystore_file" "$keystore_tmp_file"
+			fi
 		fi
 		;;
 	"inner:custom:elasticsearch:secure:main")
