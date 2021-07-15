@@ -97,25 +97,28 @@ case "$command" in
 		;;
 	"shared:setup")
 		if [ "$var_main__pod_type" = "app" ] || [ "$var_main__pod_type" = "db" ]; then
-			if [ "${var_main__use_secure_elasticsearch:-}" = 'true' ]; then
-				"$pod_script_env_file" "custom:elasticsearch:secure"
-			fi
+			"$pod_script_env_file" "custom:elasticsearch:setup"
 		fi
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
-	"custom:elasticsearch:secure")
+	"custom:elasticsearch:setup")
 		"$pod_script_env_file" up toolbox elasticsearch
 
 		"$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:ready"
 
-		db_pass="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:pass")"
+		if [ "${var_main__use_secure_elasticsearch:-}" = 'true' ]; then
+			db_pass="$("$pod_script_env_file" "db:subtask:db_main" --db_subtask_cmd="db:main:elasticsearch:pass")"
 
-		"$pod_script_env_file" exec-nontty toolbox \
-			bash "$inner_run_file" "inner:custom:elasticsearch:secure:main" --db_pass="$db_pass"
+			"$pod_script_env_file" exec-nontty toolbox \
+				bash "$inner_run_file" "inner:custom:elasticsearch:secure:main" \
+				--db_pass="$db_pass"
+		fi
 
 		# Define Keystore
-		if [ "${var_load__custom__s3_snapshot:-}" ]; then
+		if [ "${var_custom__s3_snapshot:-}" = 'true' ]; then
+			info "$command: add variables to the elasticsearch keystore"
+
 			while IFS='=' read -r key value; do
 				echo "$value" | xargs \
 					| "$pod_script_env_file" exec-nontty elasticsearch \

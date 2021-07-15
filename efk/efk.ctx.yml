@@ -432,10 +432,7 @@ templates:
 ##############################################################
 
 ##############################################################
-{% if var_use_elasticsearch
-  and var_use_secure_elasticsearch
-  and (params.s3_snapshot | default(false) | bool)
-%}
+{% if var_use_elasticsearch and (params.db_backup.s3_snapshot | default(false) | bool) %}
 
 - dest: "env/elasticsearch/keystore.txt"
   src: "main/vars/vars.tpl.txt"

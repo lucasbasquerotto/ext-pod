@@ -48,7 +48,7 @@ schemas:
         type: "bool"
         description: "when true, enables only secure s3 connections (when use_s3_storage=true)"
       enable_smtp:
-        type: "true"
+        type: "bool"
         description: >-
           when true, smtp username and password are used for authenticating to the smtp server
       smtp_user_name:

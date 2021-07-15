@@ -35,6 +35,8 @@ tmp_errors=()
 
 # specific vars...
 
+export var_custom__s3_snapshot="${var_load__custom__s3_snapshot:-}"
+
 if [ "${var_load_main__inner:-}" != 'true' ]; then
 	export var_main__use_secure_elasticsearch="${var_load_use__secure_elasticsearch:-}"
 

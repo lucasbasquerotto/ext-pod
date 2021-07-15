@@ -560,7 +560,7 @@ templates:
 
 - dest: "env/postgres/postgresql.conf"
   src: "{{ var_shared_dir }}/templates/postgres/postgresql.tpl.conf"
-  schema: "{{ var_shared_dir }}/templates/postgres/postgresql.schema.conf"
+  schema: "{{ var_shared_dir }}/templates/postgres/postgresql.schema.yml"
   params:
     max_connections: "{{ params.services.postgres.max_connections | default('') }}"
     shared_buffers: "{{ params.services.postgres.shared_buffers | default('') }}"
