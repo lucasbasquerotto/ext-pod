@@ -348,28 +348,23 @@ templates:
   src: "{{ var_main_dir }}/templates/bind/authoritative.named.tpl.conf"
   schema: "{{ var_main_dir }}/templates/bind/authoritative.named.schema.yml"
   params:
-    bind_type: "{{ params.bind_type | default('') }}"
     bind_zone: "{{ params.bind_zone | default('') }}"
-    bind_secret: "{{ credentials.bind.secret | default('') }}"
+    bind_type: "{{ params.bind_type | default('') }}"
     bind_master_ip: "{{ params.dependencies.master.host | default('127.0.0.1') }}"
     bind_slave_ip: "{{ params.dependencies.slave.host | default('127.0.0.1') }}"
-    bind_master_ns: "{{ params.bind.master_ns | default('') }}"
-    bind_slave_ns: "{{ params.bind.slave_ns | default('') }}"
-    bind_email_hostmaster: "{{ params.bind.email_hostmaster | default('') }}"
-    bind_serial: "{{ params.bind.serial | default('') }}"
+    bind_secret: "{{ credentials.bind.secret | default('') }}"
 
 - dest: "env/bind/zone.conf"
   src: "{{ var_main_dir }}/templates/bind/zone.tpl.conf"
   schema: "{{ var_main_dir }}/templates/bind/zone.schema.yml"
   params:
-    bind_type: "{{ params.bind_type }}"
-    bind_zone: "{{ params.bind_zone }}"
-    bind_master_ip: "{{ params.dependencies.master.host | default('127.0.0.1') }}"
-    bind_slave_ip: "{{ params.dependencies.slave.host | default('127.0.0.1') }}"
+    bind_zone: "{{ params.bind_zone | default('') }}"
+    bind_email_hostmaster: "{{ params.bind_email_hostmaster | default('') }}"
+    bind_serial: "{{ params.bind_serial | default('') }}"
     bind_master_ns: "{{ params.bind_master_ns | default('') }}"
     bind_slave_ns: "{{ params.bind_slave_ns | default('') }}"
-    bind_email_hostmaster: "{{ params.bind_email_hostmaster | default('') }}"
-    bind_serial: "{{ params.bind_serial }}"
+    bind_master_ip: "{{ params.dependencies.master.host | default('127.0.0.1') }}"
+    bind_slave_ip: "{{ params.dependencies.slave.host | default('127.0.0.1') }}"
 
 ##############################################################
 {% if params.use_secrets | default(false) | bool %}
@@ -455,8 +450,8 @@ templates:
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
     var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
 
-    var_load_custom__bind_type: "{{ params.bind_type }}"
-    var_load_custom__bind_zone: "{{ params.bind_zone }}"
+    var_load_custom__bind_type: "{{ params.bind_type | default('') }}"
+    var_load_custom__bind_zone: "{{ params.bind_zone | default('') }}"
     var_load_custom__bind_external_port: "{{ params.bind_external_port | default('53') }}"
 
     # Enable Tasks

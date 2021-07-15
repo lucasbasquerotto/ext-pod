@@ -105,6 +105,10 @@ schemas:
       bind_external_port:
         type: "int"
         description: "bind service external port (in the host)"
+      ports:
+        non_empty: true
+        schema: "ports"
+        description: "services external ports (in the host)"
       images:
         required: true
         type: "dict"
