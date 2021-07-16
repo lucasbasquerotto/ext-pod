@@ -431,6 +431,15 @@ templates:
       - name: "ghost"
         endpoint: "{{ var_ghost_service }}"
         use_outer_proxy: "{{ params.use_outer_proxy | default(false) }}"
+        proxy: true
+        locations:
+          - location: "/"
+            data: |-
+              proxy_read_timeout       {{ params.proxy.proxy_read_timeout | default('240', true) }};
+              client_max_body_size     {{ params.proxy.client_max_body_size | default('50M', true) }};
+              ### limits ###
+              limit_req zone=mainlimit burst={{ params.proxy.limit_req_burst | default('6', true) }} nodelay;
+              limit_conn uploadconnlimit {{ params.proxy.uploadconnlimit | default('5', true) }};
       - name: "private"
         when: "{{ params.use_private_path | default(false) }}"
         private: true
