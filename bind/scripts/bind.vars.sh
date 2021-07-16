@@ -26,17 +26,21 @@ tmp_errors=()
 
 # specific vars...
 
-if [ -z "${var_load_custom__bind_type:-}" ]; then
-	tmp_errors+=("[$var_load_name] var_load_custom__bind_type is not defined")
+if [ "${var_load_main__inner:-}" != 'true' ]; then
+	if [ -z "${var_load_custom__bind_type:-}" ]; then
+		tmp_errors+=("[$var_load_name] var_load_custom__bind_type is not defined")
+	fi
+
+	if [ -z "${var_load_custom__bind_zone:-}" ]; then
+		tmp_errors+=("[$var_load_name] var_load_custom__bind_zone is not defined")
+	fi
+
+	export var_custom__bind__type="${var_load_custom__bind_type:-}"
+	export var_custom__bind__zone="${var_load_custom__bind_zone:-}"
+	export var_custom__bind__external_port="${var_load_custom__bind_external_port:-}"
 fi
 
-if [ -z "${var_load_custom__bind_zone:-}" ]; then
-	tmp_errors+=("[$var_load_name] var_load_custom__bind_zone is not defined")
-fi
-
-export var_custom__bind__type="${var_load_custom__bind_type:-}"
-export var_custom__bind__zone="${var_load_custom__bind_zone:-}"
-export var_custom__bind__external_port="${var_load_custom__bind_external_port:-}"
+# load shared variables and verify errors
 
 tmp_error_count=${#tmp_errors[@]}
 

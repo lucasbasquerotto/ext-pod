@@ -40,6 +40,8 @@ if [ "${var_load_main__inner:-}" != 'true' ]; then
 	export var_main__use_consul="${var_load_use__consul:-}"
 fi
 
+# load shared variables and verify errors
+
 tmp_error_count=${#tmp_errors[@]}
 
 if [[ $tmp_error_count -gt 0 ]]; then

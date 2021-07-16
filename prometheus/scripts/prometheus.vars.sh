@@ -34,6 +34,8 @@ tmp_errors=()
 
 # specific vars...
 
+# load shared variables and verify errors
+
 tmp_error_count=${#tmp_errors[@]}
 
 if [[ $tmp_error_count -gt 0 ]]; then

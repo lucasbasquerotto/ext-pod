@@ -190,6 +190,8 @@ if [ "${var_load_main__inner:-}" != 'true' ]; then
 	fi
 fi
 
+# load shared variables and verify errors
+
 tmp_error_count=${#tmp_errors[@]}
 
 if [[ $tmp_error_count -gt 0 ]]; then
