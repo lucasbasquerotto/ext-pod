@@ -475,6 +475,7 @@ templates:
         proxy: true
         locations:
           - location: "/wp-admin/"
+            proxy: true
             data: |-
               proxy_read_timeout       {{ params.proxy.wp_admin.proxy_read_timeout | default('240', true) }};
               client_max_body_size     {{ params.proxy.wp_admin.client_max_body_size | default('10M', true) }};

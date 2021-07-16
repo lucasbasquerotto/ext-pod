@@ -434,6 +434,7 @@ templates:
         proxy: true
         locations:
           - location: "/"
+            proxy: true
             data: |-
               proxy_read_timeout       {{ params.proxy.proxy_read_timeout | default('240', true) }};
               client_max_body_size     {{ params.proxy.client_max_body_size | default('50M', true) }};
