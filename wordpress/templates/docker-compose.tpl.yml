@@ -1214,6 +1214,7 @@ services:
     {#############################################################}
 
     volumes:
+    - "$DATA_DIR/fluentd/fluent.conf:/fluentd/etc/fluent.conf"
     - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
     - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
     - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
