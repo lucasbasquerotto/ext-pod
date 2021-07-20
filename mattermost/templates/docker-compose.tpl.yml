@@ -652,7 +652,7 @@ services:
 
     {{ include_scripts() }}
 
-    - "./env/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
+    - "$DATA_DIR/tmp/postgres/env/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
 
     {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
