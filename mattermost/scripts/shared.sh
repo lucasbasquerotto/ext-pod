@@ -51,10 +51,8 @@ pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"prepare")
-		# shellcheck disable=SC2154
-		pod_type="$var_main__pod_type"
-		# shellcheck disable=SC2154
-		use_pgadmin="$var_main__use_pgadmin"
+		pod_type="${var_main__pod_type:-}"
+		use_pgadmin="${var_main__use_pgadmin:-}"
 
 		env_dir="/var/main/env"
 		data_dir="/var/main/data"
