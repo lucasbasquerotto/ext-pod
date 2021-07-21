@@ -50,6 +50,10 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, includes a fluentd service"
+      use_secure_elasticsearch:
+        non_empty: true
+        type: "bool"
+        description: "when true, uses authentication and tls to connect to elasticsearch"
       use_s3:
         non_empty: true
         type: "bool"
