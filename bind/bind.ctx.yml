@@ -208,6 +208,7 @@ templates:
     use_secrets: "{{ params.use_secrets | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     use_s3: "{{ params.use_s3 | default(false) }}"
     use_local_s3: "{{ var_use_local_s3 }}"
     use_nginx: "{{ params.use_nginx | default(false) }}"

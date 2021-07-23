@@ -33,7 +33,7 @@
 {% set var_inner_scripts_dir = params.inner_scripts_dir | default('/var/main/scripts', true) %}
 
 {% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
-{% set var_elasticsearch_external_port = params.services.elasticsearch.port | default('9200') %}
+{% set var_elasticsearch_external_port = params.elasticsearch_external_port | default(9200) %}
 {% set var_elasticsearch_scheme = var_use_secure_elasticsearch | ternary('https', 'http') %}
 {% set var_elasticsearch_hosts = (var_pod_type in ['app', 'db'])
   | ternary([var_elasticsearch_scheme + '://elasticsearch:9200'], input.dependencies.elasticsearch.host_list | default([]))
@@ -217,6 +217,7 @@ templates:
     use_secrets: "{{ params.use_secrets | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     use_internal_fluentd: "{{ var_use_internal_fluentd }}"
+    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     use_s3: "{{ params.use_s3 | default(false) }}"
     use_local_s3: "{{ var_use_local_s3 }}"
     use_nginx: "{{ params.use_nginx | default(false) }}"
@@ -226,12 +227,12 @@ templates:
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
-    use_secure_elasticsearch: "{{ var_use_secure_elasticsearch }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
     kibana_port: "{{ params.services.kibana.port | default('') }}"
     elasticsearch_java_opts: "{{ params.services.elasticsearch.java_opts | default('') }}"
+    expose_elasticsearch_port: "{{ params.expose_elasticsearch_port | default(false) }}"
     elasticsearch_port: "{{ var_elasticsearch_external_port }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | default({}) | to_json }}

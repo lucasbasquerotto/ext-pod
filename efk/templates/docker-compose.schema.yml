@@ -46,6 +46,10 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, includes a fluentd service"
+      use_secure_elasticsearch:
+        non_empty: true
+        type: "bool"
+        description: "when true, uses authentication and tls to connect to elasticsearch"
       use_s3:
         non_empty: true
         type: "bool"
@@ -90,10 +94,6 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, specifies that certbot is used to generate ssl certificates"
-      use_secure_elasticsearch:
-        non_empty: true
-        type: "bool"
-        description: "when true, uses authentication and tls to connect to elasticsearch"
       fluentd_port:
         non_empty: true
         type: "str"
@@ -113,6 +113,11 @@ schemas:
       elasticsearch_java_opts:
         type: "str"
         description: "java options for the elasticsearch service"
+      expose_elasticsearch_port:
+        type: "bool"
+        description: >-
+          when true, exposes the elasticsearch port to the host even if
+          the pod type is web
       elasticsearch_port:
         type: "int"
         description: "elasticsearch service external port (in the host)"
