@@ -32,7 +32,7 @@
 {% set var_data_dir = input.data_dir %}
 {% set var_inner_scripts_dir = params.inner_scripts_dir | default('/var/main/scripts', true) %}
 
-{% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
+{% set var_fluentd_port = params.fluentd_port | default('24224') %}
 {% set var_elasticsearch_hosts = input.dependencies.elasticsearch.host_list | default([]) %}
 
 {% set var_custom_ssl_main_domain = params.custom_ssl.main_domain | default('') %}
@@ -380,9 +380,9 @@ templates:
     secure_auth_salt: "{{ credentials.wordpress.config.secure_auth_salt | default('') }}"
     logged_in_salt: "{{ credentials.wordpress.config.logged_in_salt | default('') }}"
     nonce_salt: "{{ credentials.wordpress.config.nonce_salt | default('') }}"
-    table_prefix: "{{ params.services.wordpress.table_prefix | default('wp_') }}"
-    wplang: "{{ params.services.wordpress.lang }}"
-    debug: "{{ params.services.wordpress.debug | default(false) | lower }}"
+    table_prefix: "{{ params.wordpress_table_prefix | default('wp_') }}"
+    wplang: "{{ params.wordpress_lang }}"
+    debug: "{{ params.wordpress_debug | default(false) | lower }}"
     use_w3tc: "{{ params.use_w3tc | default(false) }}"
     use_s3_storage: "{{ params.use_s3_storage | default(false) }}"
     s3_uploads_bucket: "{{ var_s3_uploads_bucket }}"
@@ -464,7 +464,7 @@ templates:
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    conf: {{ params.nginx_conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
     contents: {{ contents | default({}) | to_json }}

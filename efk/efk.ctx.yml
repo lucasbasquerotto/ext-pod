@@ -32,7 +32,7 @@
 {% set var_data_dir = input.data_dir %}
 {% set var_inner_scripts_dir = params.inner_scripts_dir | default('/var/main/scripts', true) %}
 
-{% set var_fluentd_port = params.services.fluentd.port | default('24224') %}
+{% set var_fluentd_port = params.fluentd_port | default('24224') %}
 {% set var_elasticsearch_external_port = params.elasticsearch_external_port | default(9200) %}
 {% set var_elasticsearch_scheme = var_use_secure_elasticsearch | ternary('https', 'http') %}
 {% set var_elasticsearch_hosts = (var_pod_type in ['app', 'db'])
@@ -230,8 +230,8 @@ templates:
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
-    kibana_port: "{{ params.services.kibana.port | default('') }}"
-    elasticsearch_java_opts: "{{ params.services.elasticsearch.java_opts | default('') }}"
+    kibana_port: "{{ params.kibana_external_port | default('') }}"
+    elasticsearch_java_opts: "{{ params.elasticsearch_java_opts | default('') }}"
     expose_elasticsearch_port: "{{ params.expose_elasticsearch_port | default(false) }}"
     elasticsearch_port: "{{ var_elasticsearch_external_port }}"
     ports: {{ var_ports | to_json }}
@@ -309,7 +309,7 @@ templates:
   schema: "{{ var_shared_dir }}/templates/nginx/nginx.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services.nginx.conf | default(var_default_nginx_conf) | to_json }}
+    conf: {{ params.nginx_conf | default(var_default_nginx_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
     contents: {{ contents | default({}) | to_json }}
