@@ -122,7 +122,7 @@ case "$command" in
 		db_connect_wait_secs="$var_run__migrate__db_connect_wait_secs"
 
 		pass_arg=()
-		[ -n "${var_run__migrate__db_pass:-}" ] && pass_arg+=( --password="${var_run__migrate__db_pass:-}" )
+		[ -n "${var_run__migrate__db_pass:-}" ] && pass_arg+=( --db_pass="${var_run__migrate__db_pass:-}" )
 
 		if [ "$var_main__pod_type" != "app" ] && [ "$var_main__pod_type" != "db" ]; then
 			db_service="mysql_cli"
