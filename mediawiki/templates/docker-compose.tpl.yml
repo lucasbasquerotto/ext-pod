@@ -1129,6 +1129,14 @@ services:
     extra_hosts:
       host.docker.internal: host-gateway
 
+      {#############################################################}
+      {% if params.fluentd_output_plugin == 'elasticsearch' %}
+
+      elasticsearch: host-gateway
+
+      {% endif %}
+      {#############################################################}
+
     {% endif %}
     {#############################################################}
 
