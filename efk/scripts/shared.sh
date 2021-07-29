@@ -74,6 +74,8 @@ case "$command" in
 		data_dir="/var/main/data"
 		tmp_dir="/tmp/main"
 
+		# kibana.yml - permissions
+
 		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "db" ]; then
 			dir="$data_dir/elasticsearch"
 
