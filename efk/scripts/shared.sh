@@ -74,8 +74,6 @@ case "$command" in
 		data_dir="/var/main/data"
 		tmp_dir="/tmp/main"
 
-		# kibana.yml - permissions
-
 		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "db" ]; then
 			dir="$data_dir/elasticsearch"
 
@@ -146,7 +144,7 @@ case "$command" in
 				while IFS='=' read -r key value; do
 					echo "$value" | xargs \
 						| "$pod_script_env_file" exec-nontty elasticsearch \
-							bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)"
+							bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)" >&2
 				done < "$keystore_file"
 
 				"$pod_script_env_file" restart elasticsearch
