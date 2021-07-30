@@ -1012,21 +1012,7 @@ services:
     {% endif %}
     {#############################################################}
 
-    {#############################################################}
-    {% if params.fluentd_output_plugin == 'elasticsearch' %}
-
-    environment:
-      ELASTICSEARCH_HOSTNAME: "{{ params.elasticsearch_host | urlsplit('hostname') }}"
-      ELASTICSEARCH_PORT: "{{ params.elasticsearch_host | urlsplit('port') }}"
-
-    {% endif %}
-    {#############################################################}
-
     volumes:
-    - "$DATA_DIR/fluentd/fluent.conf:/fluentd/etc/fluent.conf"
-    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
-    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
-    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
 
     {#############################################################}
     {% if var_fluentd_ssl %}
@@ -1036,6 +1022,10 @@ services:
     {% endif %}
     {#############################################################}
 
+    - "$DATA_DIR/fluentd/fluent.conf:/fluentd/etc/fluent.conf"
+    - "$DATA_DIR/log/fluentd:/var/log/main/fluentd"
+    - "$DATA_DIR/tmp/fluentd:/tmp/main/fluentd"
+    - "$DATA_DIR/tmp/tmp/fluentd:/tmp/main/tmp/fluentd"
     logging: *jsonlog
 
     {#############################################################}

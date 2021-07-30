@@ -154,7 +154,6 @@ case "$command" in
 		fi
 		;;
 	"inner:custom:elasticsearch:secure:main")
-		# Create roles
 		echo "creating the elasticsearch roles..." >&2
 
 		info "creating/updating role fluentd..."
