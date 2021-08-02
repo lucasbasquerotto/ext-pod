@@ -518,6 +518,7 @@ templates:
     var_load_meta__no_info_wrap: "{{ params.meta.no_info_wrap | default('') | lower }}"
     var_load_meta__no_summary: "{{ params.meta.no_summary | default('') | lower }}"
     var_load_meta__no_colors: "{{ params.meta.no_colors | default('') | lower }}"
+    var_load_meta__error_on_warn: "{{ params.meta.error_on_warn | default('') | lower }}"
 
     var_load_general__ctx_full_name: "{{ var_ctx_full_name }}"
     var_load_general__ctx_prefix_main: "{{ var_ctx_prefix_main }}"

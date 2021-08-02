@@ -18,6 +18,10 @@ function error {
 	"$pod_script_env_file" "util:error" --error="${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}"
 }
 
+function warn {
+	"$pod_script_env_file" "util:warn" --warn="${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}"
+}
+
 [ "${var_run__meta__no_stacktrace:-}" != 'true' ] \
 	&& trap 'echo "[error] ${BASH_SOURCE[0]}:$LINENO" >&2; exit 3;' ERR
 
@@ -138,19 +142,31 @@ case "$command" in
 			checksum1="$(md5sum "$keystore_file" | awk '{print $1}')"
 			checksum2="$(md5sum "$keystore_tmp_file" | awk '{print $1}')"
 
-			if [ "$checksum1" != "$checksum2" ]; then
+			# if [ "$checksum1" != "$checksum2" ]; then
 				info "$command: add variables to the elasticsearch keystore"
+				keystore_error='false'
 
 				while IFS='=' read -r key value; do
+					keystore_new_error='false'
+
 					echo "$value" | xargs \
 						| "$pod_script_env_file" exec-nontty elasticsearch \
-							bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)" >&2
+							bin/elasticsearch-keystore add --stdin --force "$(echo "$key" | xargs)" \
+							>&2 || keystore_new_error='true'
+
+					if [ "$keystore_new_error" != 'false' ]; then
+						keystore_error='true'
+						warn "error when adding the variable '$(echo "$key" | xargs)' to the keystore"
+					fi
 				done < "$keystore_file"
 
-				"$pod_script_env_file" restart elasticsearch
+				if [ "$keystore_error" = 'false' ]; then
+					info "copying the backup keystore file..."
+					cp "$keystore_file" "$keystore_tmp_file"
+				fi
 
-				cp "$keystore_file" "$keystore_tmp_file"
-			fi
+				"$pod_script_env_file" restart elasticsearch
+			# fi
 		fi
 		;;
 	"inner:custom:elasticsearch:secure:main")
