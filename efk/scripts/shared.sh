@@ -44,6 +44,7 @@ while getopts ':-:' OPT; do
 	fi
 	case "$OPT" in
 		pod_type ) arg_pod_type="${OPTARG:-}";;
+		use_internal_ssl ) arg_use_internal_ssl="${OPTARG:-}";;
 		db_pass ) arg_db_pass="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
@@ -167,7 +168,6 @@ case "$command" in
 
 			if [ "$checksum1" != "$checksum2" ]; then
 				info "$command: add variables to the elasticsearch keystore"
-				keystore_error='false'
 
 				while IFS='=' read -r key value; do
 					keystore_new_error='false'
@@ -178,15 +178,12 @@ case "$command" in
 							>&2 || keystore_new_error='true'
 
 					if [ "$keystore_new_error" != 'false' ]; then
-						keystore_error='true'
-						warn "error when adding the variable '$(echo "$key" | xargs)' to the keystore"
+						error "error when adding the variable '$(echo "$key" | xargs)' to the keystore (possibly OOM error)"
 					fi
 				done < "$keystore_file"
 
-				if [ "$keystore_error" = 'false' ]; then
-					info "copying the backup keystore file..."
-					cp "$keystore_file" "$keystore_tmp_file"
-				fi
+				info "copying the backup keystore file..."
+				cp "$keystore_file" "$keystore_tmp_file"
 
 				"$pod_script_env_file" restart elasticsearch
 			fi
