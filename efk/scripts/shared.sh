@@ -77,6 +77,7 @@ case "$command" in
 	"inner:custom:prepare")
 		data_dir="/var/main/data"
 		tmp_dir="/tmp/main"
+		env_dir="/var/main/env"
 
 		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "db" ]; then
 			dir="$data_dir/elasticsearch"
@@ -112,6 +113,26 @@ case "$command" in
 			if [ "${var_main__local:-}" = 'true' ]; then
 				chmod 666 "$dir/keystore.txt"
 			fi
+
+			src_dir="$env_dir/ssl"
+			dir="$tmp_dir/elasticsearch/ssl"
+
+			if [ "${var_main__use_internal_ssl:-}" = 'true' ]; then
+				mkdir -p "$dir"
+				cp -R --no-target-directory "$src_dir" "$dir"
+				chown 1000:1000 "$dir"/*
+			fi
+		fi
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			src_dir="$env_dir/ssl"
+			dir="$tmp_dir/kibana/ssl"
+
+			if [ "${var_main__use_internal_ssl:-}" = 'true' ]; then
+				mkdir -p "$dir"
+				cp -R --no-target-directory "$src_dir" "$dir"
+				chown 1000:1000 "$dir"/*
+			fi
 		fi
 		;;
 	"shared:setup")
@@ -142,7 +163,7 @@ case "$command" in
 			checksum1="$(md5sum "$keystore_file" | awk '{print $1}')"
 			checksum2="$(md5sum "$keystore_tmp_file" | awk '{print $1}')"
 
-			# if [ "$checksum1" != "$checksum2" ]; then
+			if [ "$checksum1" != "$checksum2" ]; then
 				info "$command: add variables to the elasticsearch keystore"
 				keystore_error='false'
 
@@ -166,7 +187,7 @@ case "$command" in
 				fi
 
 				"$pod_script_env_file" restart elasticsearch
-			# fi
+			fi
 		fi
 		;;
 	"inner:custom:elasticsearch:secure:main")

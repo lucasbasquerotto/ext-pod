@@ -536,6 +536,7 @@ templates:
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
     var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
+    var_load_use__internal_ssl: "{{ var_use_internal_ssl | default('') | lower }}"
     var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
 
     # Enable Tasks
