@@ -66,7 +66,9 @@ case "$command" in
 		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox \
-			bash "$inner_run_file" "inner:custom:prepare" --pod_type="$pod_type"
+			bash "$inner_run_file" "inner:custom:prepare" \
+				--pod_type="$pod_type" \
+				--use_internal_ssl="${var_main__use_internal_ssl:-}"
 
 		vm_max_map_count="${var_migrate_es_vm_max_map_count:-262144}"
 		info "$command increasing vm max map count to $vm_max_map_count"
@@ -117,7 +119,7 @@ case "$command" in
 			src_dir="$env_dir/ssl"
 			dir="$tmp_dir/elasticsearch/ssl"
 
-			if [ "${var_main__use_internal_ssl:-}" = 'true' ]; then
+			if [ "${arg_use_internal_ssl:-}" = 'true' ]; then
 				mkdir -p "$dir"
 				cp -R --no-target-directory "$src_dir" "$dir"
 				chown 1000:1000 "$dir"/*
@@ -128,7 +130,7 @@ case "$command" in
 			src_dir="$env_dir/ssl"
 			dir="$tmp_dir/kibana/ssl"
 
-			if [ "${var_main__use_internal_ssl:-}" = 'true' ]; then
+			if [ "${arg_use_internal_ssl:-}" = 'true' ]; then
 				mkdir -p "$dir"
 				cp -R --no-target-directory "$src_dir" "$dir"
 				chown 1000:1000 "$dir"/*
