@@ -10,7 +10,7 @@
 {% set var_use_prometheus = var_is_db %}
 
 {% set var_use_cadvisor = params.use_cadvisor | bool %}
-{% set var_use_node_exporter = params.use_node_exporter | bool %}
+{% set var_use_internal_node_exporter = params.use_internal_node_exporter | bool %}
 
 {% set var_use_s3 = params.use_s3 | bool %}
 {% set var_use_local_s3 = params.use_local_s3 | bool %}
@@ -529,7 +529,7 @@ services:
   {#############################################################}
 
   {#############################################################}
-  {% if var_use_node_exporter %}
+  {% if var_use_internal_node_exporter %}
 
   node-exporter:
     container_name: "${CTX_PREFIX_MAIN}node_exporter"

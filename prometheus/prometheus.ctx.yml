@@ -219,7 +219,7 @@ templates:
     use_custom_ssl: "{{ var_use_custom_ssl }}"
     use_internal_ssl: "{{ var_use_internal_ssl }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
-    use_node_exporter: "{{ params.use_node_exporter | default(false) }}"
+    use_internal_node_exporter: "{{ params.use_internal_node_exporter | default(false) }}"
     use_cadvisor: "{{ params.use_cadvisor | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"

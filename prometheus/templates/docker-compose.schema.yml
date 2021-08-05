@@ -94,13 +94,14 @@ schemas:
         non_empty: true
         type: "bool"
         description: "when true, specifies that certbot is used to generate ssl certificates"
-      use_node_exporter:
+      use_internal_node_exporter:
         non_empty: true
         type: "bool"
         description: >-
           when true, includes a node exporter service to export statistics about the host to
-          the prometheus service (it's recommended to let this setting as false and instead
-          run the node exporter service directly in the host, instead of in a container)
+          the prometheus service (in staging and production environments, it's recommended to
+          let this setting as false and instead run the node exporter service directly in the host,
+          instead of in a container)
       use_cadvisor:
         non_empty: true
         type: "bool"
