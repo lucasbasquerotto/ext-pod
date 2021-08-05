@@ -509,6 +509,7 @@ services:
     {% endif %}
     {#############################################################}
 
+    - "$DATA_DIR/sync/prometheus/config:/etc/prometheus/dynamic"
     - "$DATA_DIR/tmp/prometheus:/tmp/main/prometheus"
     - "$DATA_DIR/tmp/tmp/prometheus:/tmp/main/tmp/prometheus"
     command:

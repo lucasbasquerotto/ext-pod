@@ -85,6 +85,20 @@ case "$command" in
 				mkdir -p "$dir"
 				chown 65534:65534 "$dir"
 			fi
+
+			dir="$data_dir/sync/prometheus/config"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+				chown 65534:65534 "$dir"
+			fi
+
+			file="$dir/targets.yml"
+
+			if [ ! -f "$file" ]; then
+				echo '- targets: []' > "$file"
+				chown 65534:65534 "$file"
+			fi
 		fi
 
 		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
