@@ -112,6 +112,9 @@ services:
     {#############################################################}
 
     volumes:
+
+    {{ include_scripts() }}
+
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     logging: *mainlog
 
