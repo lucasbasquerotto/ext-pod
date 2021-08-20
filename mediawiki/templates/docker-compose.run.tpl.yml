@@ -115,6 +115,14 @@ services:
 
     {{ include_scripts() }}
 
+    {#############################################################}
+    {% if params.use_secrets | bool %}
+
+    - "./env/mysql/.my.cnf:/root/.my.cnf:ro"
+
+    {% endif %}
+    {#############################################################}
+
     - "$DATA_DIR/tmp/mysql:/tmp/main/mysql"
     logging: *mainlog
 
