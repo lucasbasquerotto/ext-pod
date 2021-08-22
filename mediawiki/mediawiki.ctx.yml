@@ -303,6 +303,7 @@ templates:
     main_dir: "{{ var_main_dir_container }}"
     main_real_dir: "{{ var_main_dir }}"
     inner_scripts_dir: "{{ var_inner_scripts_dir }}"
+    use_secrets: "{{ params.use_secrets | default(false) }}"
     use_certbot: "{{ params.use_certbot | default(false) }}"
     use_fluentd: "{{ params.use_fluentd | default(false) }}"
     fluentd_port: "{{ var_fluentd_port }}"
