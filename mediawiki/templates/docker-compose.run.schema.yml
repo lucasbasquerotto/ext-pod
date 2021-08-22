@@ -26,6 +26,10 @@ schemas:
       inner_scripts_dir:
         type: "str"
         description: "directory inside containers to have the scripts (for running commands inside containers)"
+      use_secrets:
+        non_empty: true
+        type: "bool"
+        description: "use secrets instead of environment variables for confidential data"
       use_certbot:
         type: "bool"
         description: "when true, includes a certbot service"
