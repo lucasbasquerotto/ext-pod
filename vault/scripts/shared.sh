@@ -93,7 +93,7 @@ case "$command" in
 
 				mkdir -p "$dir"
 				cp -R --no-target-directory "$src_dir" "$dir"
-				chown 1000:1000 "$dir"/*
+				chown 100:1000 "$dir"/*
 			fi
 		fi
 
@@ -104,7 +104,7 @@ case "$command" in
 
 				mkdir -p "$dir"
 				cp -R --no-target-directory "$src_dir" "$dir"
-				chown 1000:1000 "$dir"/*
+				chown 100:1000 "$dir"/*
 			fi
 		fi
 		;;
