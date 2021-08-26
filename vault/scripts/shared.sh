@@ -51,6 +51,9 @@ pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"prepare")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
 		"$pod_script_env_file" up toolbox > /dev/null
 
 		"$pod_script_env_file" exec-nontty toolbox \
