@@ -2,4 +2,4 @@ ARG IMAGE
 
 FROM $IMAGE
 
-COPY /env/vault/config.json /vault/config/config.json
+COPY --chown=vault:vault /env/vault/config.json /vault/config/config.json
