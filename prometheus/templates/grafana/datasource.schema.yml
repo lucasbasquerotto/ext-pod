@@ -1,0 +1,27 @@
+root: "template_schema"
+schemas:
+  template_schema:
+    type: "dict"
+    props:
+      prometheus_url:
+        type: "str"
+        non_empty: true
+        description: "prometheus host url"
+      prometheus_password:
+        type: "str"
+        description: "prometheus database password"
+      prometheus_user:
+        type: "str"
+        description: "prometheus database user"
+      prometheus_database:
+        type: "str"
+        description: "prometheus database name"
+      prometheus_basic_auth:
+        type: "bool"
+        description: "enable/disable prometheus basic auth"
+      prometheus_basic_auth_user:
+        type: "str"
+        description: "prometheus basic auth username"
+      prometheus_basic_auth_password:
+        type: "str"
+        description: "prometheus basic auth password"

@@ -18,31 +18,21 @@ datasources:
     # <int> org id. will default to orgId 1 if not specified
     orgId: 1
     # <string> url
-    url: http://prometheus:9090
+    url: "{{ params.prometheus_url }}"
     # <string> database password, if used
-    password:
+    password: "{{ params.prometheus_password | default('') }}"
     # <string> database user, if used
-    user:
+    user: "{{ params.prometheus_user | default('') }}"
     # <string> database name, if used
-    database:
+    database: "{{ params.prometheus_database | default('') }}"
     # <bool> enable/disable basic auth
-    basicAuth: false
+    basicAuth: "{{ params.prometheus_basic_auth | default(false) | lower }}"
     # <string> basic auth username, if used
-    basicAuthUser:
+    basicAuthUser: "{{ params.prometheus_basic_auth_user | default('') }}"
     # <string> basic auth password, if used
-    basicAuthPassword:
+    basicAuthPassword: "{{ params.prometheus_basic_auth_password | default('') }}"
     # <bool> enable/disable with credentials headers
     withCredentials:
     # <bool> mark as default datasource. Max one per org
     isDefault: true
-    # <map> fields that will be converted to json and stored in json_data
-    jsonData:
-      graphiteVersion: "1.1"
-      tlsAuth: false
-      tlsAuthWithCACert: false
-    # <string> json object of data that will be encrypted.
-    secureJsonData:
-      tlsCACert: "..."
-      tlsClientCert: "..."
-      tlsClientKey: "..."
     version: 1
