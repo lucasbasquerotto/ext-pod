@@ -412,9 +412,9 @@ services:
     volumes:
 
     {#############################################################}
-    {% if params.use_secure_vault | bool %}
+    {% if params.use_secure_consul | bool %}
 
-    - "./env/ssl:/vault/config/certs"
+    - "$DATA_DIR/tmp/vault/ssl:/vault/config/certs:ro"
 
     {% endif %}
     {#############################################################}
@@ -511,7 +511,7 @@ services:
     {% if params.use_secure_consul | bool %}
 
     volumes:
-    - "./env/ssl:/consul/config/certs"
+    - "$DATA_DIR/tmp/consul/ssl:/consul/config/certs:ro"
 
     {% endif %}
     {#############################################################}
@@ -586,7 +586,7 @@ services:
     {#############################################################}
     {% if params.use_secure_consul | bool %}
 
-    - "./env/ssl:/consul/config/certs"
+    - "$DATA_DIR/tmp/consul/ssl:/consul/config/certs:ro"
 
     {% endif %}
     {#############################################################}

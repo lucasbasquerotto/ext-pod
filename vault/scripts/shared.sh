@@ -37,6 +37,8 @@ while getopts ':-:' OPT; do
 		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
+		pod_type ) arg_pod_type="${OPTARG:-}";;
+		use_internal_ssl ) arg_use_internal_ssl="${OPTARG:-}";;
 		days_ago ) arg_days_ago="${OPTARG:-}";;
 		max_amount ) arg_max_amount="${OPTARG:-}";;
 		??* ) ;; ## ignore
@@ -51,12 +53,19 @@ case "$command" in
 	"prepare")
 		"$pod_script_env_file" up toolbox > /dev/null
 
-		"$pod_script_env_file" exec-nontty toolbox bash "$inner_run_file" "inner:custom:prepare"
+		"$pod_script_env_file" exec-nontty toolbox \
+			bash "$inner_run_file" "inner:custom:prepare" \
+				--pod_type="$pod_type" \
+				--use_internal_ssl="${var_main__use_internal_ssl:-}"
 
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"inner:custom:prepare")
-		base_dir="/var/main/data/vault"
+		data_dir="/var/main/data"
+		tmp_dir="/tmp/main"
+		env_dir="/var/main/env"
+
+		base_dir="$data_dir/vault"
 
 		dir="$base_dir/data"
 
@@ -73,6 +82,28 @@ case "$command" in
 		fi
 
 		chown 100 "$dir"
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			if [ "${arg_use_internal_ssl:-}" = 'true' ]; then
+				src_dir="$env_dir/ssl"
+				dir="$tmp_dir/vault/ssl"
+
+				mkdir -p "$dir"
+				cp -R --no-target-directory "$src_dir" "$dir"
+				chown 1000:1000 "$dir"/*
+			fi
+		fi
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "db" ]; then
+			if [ "${arg_use_internal_ssl:-}" = 'true' ]; then
+				src_dir="$env_dir/ssl"
+				dir="$tmp_dir/consul/ssl"
+
+				mkdir -p "$dir"
+				cp -R --no-target-directory "$src_dir" "$dir"
+				chown 1000:1000 "$dir"/*
+			fi
+		fi
 		;;
 	"custom:unique:log")
 		opts=()
