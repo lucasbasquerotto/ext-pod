@@ -32,7 +32,7 @@
 {% set var_elasticsearch_hosts = input.dependencies.elasticsearch.host_list | default([]) %}
 
 {% set var_prometheus_external_port = params.prometheus_external_port | default(9090) %}
-{% set var_prometheus_scheme = params.use_secure_prometheus | ternary('https', 'http') %}
+{% set var_prometheus_scheme = params.use_secure_prometheus | default(false) | ternary('https', 'http') %}
 {% set var_prometheus_host = (var_pod_type in ['app', 'db'])
   | ternary(
       var_prometheus_scheme + '://prometheus:9090',
