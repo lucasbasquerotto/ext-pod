@@ -31,8 +31,7 @@ scrape_configs:
       - targets:
           - "localhost:9090"
           - "cadvisor:8080"
-          - "node-exporter:9100"
-          - "nginx-exporter:9113"
+          - "host.docker.internal:9100"
 
     file_sd_configs:
       - files:

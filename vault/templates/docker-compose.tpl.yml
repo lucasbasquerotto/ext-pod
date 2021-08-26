@@ -4,7 +4,6 @@
 {% set var_use_nginx = var_is_web and (params.use_nginx | bool) %}
 {% set var_use_vault = var_is_web %}
 {% set var_use_consul_client = var_is_web and (params.use_consul | bool) %}
-{#TODO verify consul client#}
 {% set var_use_consul_client = false | bool %}
 {% set var_use_theia = var_is_web and (params.use_theia | bool) %}
 {% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
