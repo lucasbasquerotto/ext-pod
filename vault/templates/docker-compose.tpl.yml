@@ -412,7 +412,7 @@ services:
     volumes:
 
     {#############################################################}
-    {% if params.use_secure_consul | bool %}
+    {% if params.use_secure_vault | bool %}
 
     - "$DATA_DIR/tmp/vault/ssl:/vault/config/certs:ro"
 
@@ -422,7 +422,7 @@ services:
     {#############################################################}
     {% if var_use_consul and (params.use_secure_consul | bool) %}
 
-    - "./env/ssl:/vault/config/consul/certs"
+    - "$DATA_DIR/tmp/vault/ssl:/vault/config/consul/certs"
 
     {% endif %}
     {#############################################################}
