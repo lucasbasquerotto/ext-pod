@@ -244,38 +244,89 @@ services:
     {#############################################################}
 
     environment:
-    - PORT=3000
-    - ROOT_URL=http://localhost:3000
-    - MONGO_URL=mongodb://{{ params.db_user }}:$DB_PASSWORD@{{ params.db_host }}:{{ params.db_port }}/{{ params.db_name }}?authSource=admin
-    - MONGO_OPLOG_URL=mongodb://oploguser:$DB_OPLOG_PASSWORD@{{ params.db_host }}:{{ params.db_port }}/local?authSource=admin
-    - MAIL_URL={{ params.rocketchat.mail_url | default('') }}
-    - CDN_PREFIX={{ params.rocketchat.cdn_prefix | default('') }}
-    - CDN_JSCSS_PREFIX={{ params.rocketchat.cdn_prefix | default('') }}
+      PORT: "3000"
+      ROOT_URL: "http://localhost:3000"
+      MONGO_URL: "mongodb://{{ params.db_user }}:$DB_PASSWORD@{{ params.db_host }}:{{ params.db_port }}/{{ params.db_name }}?authSource=admin"
+      MONGO_OPLOG_URL: "mongodb://oploguser:$DB_OPLOG_PASSWORD@{{ params.db_host }}:{{ params.db_port }}/local?authSource=admin"
+      CDN_PREFIX: "{{ params.rocketchat.cdn_prefix | default('') }}"
+      CDN_JSCSS_PREFIX: "{{ params.rocketchat.cdn_prefix | default('') }}"
 
-    {#############################################################}
-    {% if params.rocketchat.block_default_settings | bool %}
+      {###################################################################}
+      {% if params.rocketchat.enable_smtp | bool %}
 
-    - SETTINGS_BLOCKED=FileUpload_Storage_Type,FileUpload_S3_Bucket,FileUpload_S3_Region,FileUpload_S3_BucketURL,FileUpload_FileSystemPath
+      OVERWRITE_SETTING_SMTP_Host: "{{ params.rocketchat.smtp_address }}"
+      OVERWRITE_SETTING_SMTP_Port: "{{ params.rocketchat.smtp_port }}"
+      OVERWRITE_SETTING_SMTP_IgnoreTLS: "{{ params.rocketchat.smtp_ignore_tls | bool | ternary('true', 'false') }}"
+      OVERWRITE_SETTING_SMTP_Username: "{{ params.rocketchat.smtp_user_name }}"
+      OVERWRITE_SETTING_SMTP_Password: "$ROCKETCHAT_SMTP_PASSWORD"
+      OVERWRITE_SETTING_From_Email: "{{ params.rocketchat.smtp_from }}"
 
-    {% endif %}
-    {#############################################################}
+      {% endif %}
+      {###################################################################}
 
-    - FileUpload_Storage_Type={{ params.rocketchat.storage_type }}
-    - FileUpload_FileSystemPath=/app/uploads
+      OVERWRITE_SETTING_FileUpload_Storage_Type: "{{ params.rocketchat.storage_type }}"
+      OVERWRITE_SETTING_FileUpload_FileSystemPath: "/app/uploads"
 
-    {#############################################################}
-    {% if params.rocketchat.storage_type == 'AmazonS3' %}
+      {#############################################################}
+      {% if params.rocketchat.storage_type == 'AmazonS3' %}
 
-    - FileUpload_S3_Bucket={{ params.rocketchat.fileupload_s3_bucket }}
-    - FileUpload_S3_Region={{ params.rocketchat.fileupload_s3_region }}
-    - FileUpload_S3_BucketURL={{ params.rocketchat.fileupload_s3_bucket_url }}
-    - FileUpload_S3_Acl={{ params.rocketchat.fileupload_s3_acl }}
-    - FileUpload_S3_CDN={{ params.rocketchat.fileupload_s3_cdn }}
-    - FileUpload_S3_AWSAccessKeyId=$ROCKETCHAT_FILEUPLOAD_S3_ACCESS_KEY
-    - FileUpload_S3_AWSSecretAccessKey=$ROCKETCHAT_FILEUPLOAD_S3_SECRET_KEY
+      OVERWRITE_SETTING_FileUpload_S3_Bucket: "{{ params.rocketchat.fileupload_s3_bucket }}"
+      OVERWRITE_SETTING_FileUpload_S3_Region: "{{ params.rocketchat.fileupload_s3_region }}"
+      OVERWRITE_SETTING_FileUpload_S3_BucketURL: "{{ params.rocketchat.fileupload_s3_bucket_url }}"
+      OVERWRITE_SETTING_FileUpload_S3_Acl: "{{ params.rocketchat.fileupload_s3_acl }}"
+      OVERWRITE_SETTING_FileUpload_S3_CDN: "{{ params.rocketchat.fileupload_s3_cdn }}"
+      OVERWRITE_SETTING_FileUpload_S3_AWSAccessKeyId: "$ROCKETCHAT_FILEUPLOAD_S3_ACCESS_KEY"
+      OVERWRITE_SETTING_FileUpload_S3_AWSSecretAccessKey: "$ROCKETCHAT_FILEUPLOAD_S3_SECRET_KEY"
 
-    {% endif %}
-    {#############################################################}
+      {% endif %}
+      {#############################################################}
+
+      {#############################################################}
+      {% if params.rocketchat.block_default_settings | bool %}
+
+        {% set var_settings_blocked = [
+            "FileUpload_Storage_Type",
+            "FileUpload_FileSystemPath"
+          ]
+        %}
+
+        {###################################################################}
+        {% if params.rocketchat.storage_type == 'AmazonS3' %}
+
+          {% set var_settings_blocked = var_settings_blocked + [
+              "FileUpload_S3_Bucket",
+              "FileUpload_S3_Region",
+              "FileUpload_S3_BucketURL",
+              "FileUpload_S3_Acl",
+              "FileUpload_S3_CDN",
+              "FileUpload_S3_AWSAccessKeyId",
+              "FileUpload_S3_AWSSecretAccessKey"
+            ]
+          %}
+
+        {% endif %}
+        {###################################################################}
+
+        {###################################################################}
+        {% if params.rocketchat.enable_smtp | bool %}
+
+          {% set var_settings_blocked = var_settings_blocked + [
+              "SMTP_Host",
+              "SMTP_Port",
+              "SMTP_IgnoreTLS",
+              "SMTP_Username",
+              "SMTP_Password",
+              "From_Email"
+            ]
+          %}
+
+        {% endif %}
+        {###################################################################}
+
+      SETTINGS_BLOCKED: "{{ var_settings_blocked | join(',') }}"
+
+      {% endif %}
+      {#############################################################}
 
     networks:
     - "shared"

@@ -166,9 +166,25 @@ schemas:
       block_default_settings:
         type: "bool"
         description: "block the rocketchat default settings (can't be changed by an admin)"
-      mail_url:
+      enable_smtp:
         type: "str"
-        description: "rocketchat email url"
+        description: >-
+          uses an external (third party) email service to send rocketchat emails (recommended)
+      smtp_from:
+        type: "str"
+        description: "rocketchat email 'from'"
+      smtp_address:
+        type: "str"
+        description: "rocketchat smtp service host"
+      smtp_port:
+        type: "str"
+        description: "rocketchat smtp service port"
+      smtp_ignore_tls:
+        type: "str"
+        description: "ignore tls when trying to connect to the rocketchat smtp service"
+      smtp_user_name:
+        type: "str"
+        description: "rocketchat smtp service username"
       storage_type:
         type: "str"
         choices: ["FileSystem", "AmazonS3"]

@@ -42,6 +42,25 @@ $wgEnableUserEmail = true; # UPO
 $wgEmergencyContact = "{{ params.emergency_contact }}";
 $wgPasswordSender = "{{ params.password_sender }}";
 
+{###################################################################}
+{% if params.enable_smtp | bool %}
+
+$wgSMTP = [
+	// could also be an IP address. Where the SMTP server is located. If using SSL or TLS, add the prefix "ssl://" or "tls://".
+    'host'     => '{{ params.smtp_address }}',
+	// Port to use when connecting to the SMTP server
+    'port'     => {{ params.smtp_port }},
+	// Should we use SMTP authentication (true or false)
+    'auth'     => true,
+	// Username to use for SMTP authentication (if being used)
+    'username' => '{{ params.smtp_user_name }}',
+	// Password to use for SMTP authentication (if being used)
+    'password' => '{{ params.smtp_password }}'
+];
+
+{% endif %}
+{###################################################################}
+
 $wgEnotifUserTalk = false; # UPO
 $wgEnotifWatchlist = false; # UPO
 $wgEmailAuthentication = true;

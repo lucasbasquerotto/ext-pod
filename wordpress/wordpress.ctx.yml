@@ -657,8 +657,8 @@ templates:
     var_load_migrate__wp_rewrite_structure: "{{ params.migrate_wp_rewrite_structure | default('') }}"
 
     var_load_migrate__wp_activate_all_plugins: "{{ params.migrate_wp_activate_all_plugins | default('') | lower }}"
-    var_load_migrate__wp_plugins_to_activate: "{{ params.migrate_wp_plugins_to_activate | default('') }}"
-    var_load_migrate__wp_plugins_to_deactivate: "{{ params.migrate_wp_plugins_to_deactivate | default('') }}"
+    var_load_migrate__wp_plugins_to_activate: "{{ params.migrate_wp_plugins_to_activate | default([]) | join(' ') }}"
+    var_load_migrate__wp_plugins_to_deactivate: "{{ params.migrate_wp_plugins_to_deactivate | default([]) | join(' ') }}"
 
     # Enable Tasks
 

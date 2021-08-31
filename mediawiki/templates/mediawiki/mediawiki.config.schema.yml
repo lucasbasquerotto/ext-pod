@@ -31,6 +31,24 @@ schemas:
         description: >-
           the email address where email gets sent from, when passwords are
           sent out to users who have forgotten their passwords
+      enable_smtp:
+        type: "bool"
+        description: >-
+          enables sending email from a third party service (recommended); defaults to false
+      smtp_address:
+        type: "str"
+        description: >-
+          email service host (where the smtp server is located); could also be an ip address;
+          if using ssl or tls, add the prefix "ssl://" or "tls://", respectively
+      smtp_port:
+        type: "int"
+        description: "port to use when connecting to the smtp server"
+      smtp_user_name:
+        type: "str"
+        description: "username to use for smtp authentication"
+      smtp_password:
+        type: "str"
+        description: "password to use for smtp authentication"
       db_server:
         type: "str"
         description: "contains the hostname where the database is hosted on"
