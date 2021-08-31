@@ -51,7 +51,7 @@ schemas:
         type: "bool"
         description: >-
           when true, smtp username and password are used for authenticating to the smtp server
-      smtp_user_name:
+      smtp_username:
         type: "str"
         description: "smtp username"
       smtp_password:

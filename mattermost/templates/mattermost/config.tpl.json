@@ -244,7 +244,7 @@
     "ReplyToAddress": "",
     "FeedbackOrganization": "",
     "EnableSMTPAuth": {{ params.enable_smtp | lower }},
-    "SMTPUsername": "{{ params.smtp_user_name }}",
+    "SMTPUsername": "{{ params.smtp_username }}",
     "SMTPPassword": "{{ params.smtp_password }}",
     "SMTPServer": "{{ params.smtp_address }}",
     "SMTPPort": "{{ params.smtp_port }}",

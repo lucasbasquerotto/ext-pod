@@ -180,9 +180,9 @@ schemas:
         type: "str"
         description: "rocketchat smtp service port"
       smtp_ignore_tls:
-        type: "str"
+        type: "bool"
         description: "ignore tls when trying to connect to the rocketchat smtp service"
-      smtp_user_name:
+      smtp_username:
         type: "str"
         description: "rocketchat smtp service username"
       storage_type:

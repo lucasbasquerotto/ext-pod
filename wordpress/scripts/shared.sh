@@ -98,6 +98,7 @@ case "$command" in
 		opts+=( "--use_varnish=${var_run__migrate__use_varnish:-}" )
 		opts+=( "--use_redis=${var_run__migrate__use_redis:-}" )
 		opts+=( "--use_memcached=${var_run__migrate__use_memcached:-}" )
+		opts+=( "--use_custom_mail_plugin=${var_main__use_custom_mail_plugin:-}" )
 		opts+=( "--use_s3_storage=${var_main__use_s3_storage:-}" )
 
 		"$pod_env_shared_exec_file" "migrate:$pod_type" "${opts[@]}"

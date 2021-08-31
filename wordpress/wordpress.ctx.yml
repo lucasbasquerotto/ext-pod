@@ -384,6 +384,14 @@ templates:
     wplang: "{{ params.wordpress_lang }}"
     debug: "{{ params.wordpress_debug | default(false) | lower }}"
     use_w3tc: "{{ params.use_w3tc | default(false) }}"
+    enable_smtp: "{{ params.use_wordpress_mail | default(false) }}"
+    smtp_from: "{{ params.wordpress_smtp_from | default('') }}"
+    smtp_name: "{{ params.wordpress_smtp_name | default('') }}"
+    smtp_address: "{{ credentials.wordpress_mail.address | default('') }}"
+    smtp_port: "{{ credentials.wordpress_mail.port | default('') }}"
+    smtp_secure: "{{ credentials.wordpress_mail.secure | default('') }}"
+    smtp_username: "{{ credentials.wordpress_mail.smtp_username | default('') }}"
+    smtp_password: "{{ credentials.wordpress_mail.smtp_password | default('') }}"
     use_s3_storage: "{{ params.use_s3_storage | default(false) }}"
     s3_uploads_bucket: "{{ var_s3_uploads_bucket }}"
     s3_uploads_region: "{{ var_s3_uploads_credentials.region | default('') }}"
@@ -649,6 +657,8 @@ templates:
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
     var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"
     var_load_use__custom_ssl: "{{ var_use_custom_ssl | default('') | lower }}"
+
+    var_load_use__custom_mail_plugin: "{{ params.use_custom_mail_plugin | default('') | lower }}"
     var_load_use__s3_storage: "{{ params.use_s3_storage | default('') | lower }}"
     var_load_use__secure_elasticsearch: "{{ var_use_secure_elasticsearch | lower }}"
 

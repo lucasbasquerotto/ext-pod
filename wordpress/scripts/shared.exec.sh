@@ -54,6 +54,7 @@ while getopts ':-:' OPT; do
 		use_varnish ) arg_use_varnish="${OPTARG:-}";;
 		use_redis ) arg_use_redis="${OPTARG:-}";;
 		use_memcached ) arg_use_memcached="${OPTARG:-}";;
+		use_custom_mail_plugin ) arg_use_custom_mail_plugin="${OPTARG:-}";;
 		use_s3_storage ) arg_use_s3_storage="${OPTARG:-}";;
 		??* ) error "Illegal option --$OPT" ;;	# bad long option
 		\? )	exit 2 ;;	# bad short option (error reported via getopts)
@@ -229,10 +230,17 @@ case "$command" in
 			>&2 echo "structure rewritten to ${arg_wp_rewrite_structure:-}"
 		fi
 
+		if [ "${arg_use_custom_mail_plugin:-}" = "true" ]; then
+			mail_plugin='custom-phpmailer'
+			>&2 echo "activate mail plugin: $mail_plugin"
+			wp --allow-root plugin activate "$mail_plugin"
+			>&2 echo "mail plugin activated: $mail_plugin"
+		fi
+
 		if [ "${arg_use_s3_storage:-}" = "true" ]; then
-			>&2 echo "activate plugins: ${s3_plugins[*]}"
+			>&2 echo "activate s3 plugins: ${s3_plugins[*]}"
 			wp --allow-root plugin activate "${s3_plugins[@]}"
-			>&2 echo "plugins activated: ${s3_plugins[*]}"
+			>&2 echo "s3 plugins activated: ${s3_plugins[*]}"
 		fi
 		;;
 	*)

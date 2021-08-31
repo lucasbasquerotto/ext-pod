@@ -53,7 +53,7 @@ $wgSMTP = [
 	// Should we use SMTP authentication (true or false)
     'auth'     => true,
 	// Username to use for SMTP authentication (if being used)
-    'username' => '{{ params.smtp_user_name }}',
+    'username' => '{{ params.smtp_username }}',
 	// Password to use for SMTP authentication (if being used)
     'password' => '{{ params.smtp_password }}'
 ];

@@ -43,7 +43,7 @@ schemas:
       smtp_port:
         type: "int"
         description: "port to use when connecting to the smtp server"
-      smtp_user_name:
+      smtp_username:
         type: "str"
         description: "username to use for smtp authentication"
       smtp_password:

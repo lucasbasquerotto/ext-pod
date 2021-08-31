@@ -257,7 +257,7 @@ services:
       OVERWRITE_SETTING_SMTP_Host: "{{ params.rocketchat.smtp_address }}"
       OVERWRITE_SETTING_SMTP_Port: "{{ params.rocketchat.smtp_port }}"
       OVERWRITE_SETTING_SMTP_IgnoreTLS: "{{ params.rocketchat.smtp_ignore_tls | bool | ternary('true', 'false') }}"
-      OVERWRITE_SETTING_SMTP_Username: "{{ params.rocketchat.smtp_user_name }}"
+      OVERWRITE_SETTING_SMTP_Username: "{{ params.rocketchat.smtp_username }}"
       OVERWRITE_SETTING_SMTP_Password: "$ROCKETCHAT_SMTP_PASSWORD"
       OVERWRITE_SETTING_From_Email: "{{ params.rocketchat.smtp_from }}"
 
