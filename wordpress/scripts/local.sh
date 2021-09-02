@@ -98,6 +98,10 @@ case "$command" in
 		fi
 
 		"$pod_env_shared_file" "$command" "$@"
+
+		if [ "${var_custom__app_dev:-}" = "true" ]; then
+			"$pod_env_shared_file" exec-nontty wordpress chown -R 33 /var/www/html/web/wp/
+		fi
 		;;
 	"clear")
 		"$pod_script_env_file" "local:clear"
