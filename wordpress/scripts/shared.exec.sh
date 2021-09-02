@@ -128,6 +128,10 @@ case "$command" in
 			wp --allow-root plugin activate w3-total-cache
 			>&2 echo "plugin activated: w3tc"
 
+			if [ -f '/var/www/html/web/.htaccess' ]; then
+				chown www-data:www-data '/var/www/html/web/.htaccess'
+			fi
+
 			if [ "${arg_use_redis:-}" = "true" ]; then
 				cp /var/www/html/web/app/plugins/w3-total-cache/wp-content/object-cache.php \
 					/var/www/html/web/app/object-cache.php
