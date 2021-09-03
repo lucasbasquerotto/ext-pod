@@ -195,7 +195,7 @@ case "$command" in
 		info "creating/updating role fluentd..."
 
 		curl --fail -sS -u "elastic:$arg_db_pass" \
-			--cacert /etc/ssl/fullchain.pem \
+			--cacert /var/main/env/ssl/fullchain.pem \
 			-XPOST "https://elasticsearch:9200/_security/role/fluentd" \
 			-d'{
 				"cluster": ["manage_index_templates", "monitor", "manage_ilm"],
@@ -221,7 +221,7 @@ case "$command" in
 				info "creating/updating user $user..."
 
 				curl --fail -sS -u "elastic:$arg_db_pass" \
-					--cacert /etc/ssl/fullchain.pem \
+					--cacert /var/main/env/ssl/fullchain.pem \
 					-XPOST "https://elasticsearch:9200/_security/user/${user}" \
 					-d"$value" \
 					-H "Content-Type: application/json" \

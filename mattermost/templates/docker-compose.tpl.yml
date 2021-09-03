@@ -180,11 +180,11 @@ services:
     {#############################################################}
     {% if params.use_custom_ssl | default(false) | bool %}
 
-    - "./env/certbot/etc:/etc/ssl:ro"
+    - "./env/certbot/etc:/var/main/env:ro"
 
     {% elif params.use_certbot | default(false) | bool %}
 
-    - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
+    - "$DATA_DIR/sync/certbot/etc:/var/main/env:ro"
 
     {% endif %}
     {#############################################################}
@@ -803,14 +803,6 @@ services:
     - "$DATA_DIR/log:/var/log/main"
 
     {#############################################################}
-    {% if params.use_internal_ssl | bool %}
-
-    - "./env/ssl:/etc/ssl:ro"
-
-    {% endif %}
-    {#############################################################}
-
-    {#############################################################}
     {% if (params.local | bool) and (params.named_volumes | bool) %}
 
     - "uploads:/var/main/data/mattermost/uploads"
@@ -937,7 +929,7 @@ services:
     {#############################################################}
     {% if var_fluentd_ssl %}
 
-    - "./env/ssl:/etc/ssl:ro"
+    - "./env/ssl:/var/main/env/ssl:ro"
 
     {% endif %}
     {#############################################################}

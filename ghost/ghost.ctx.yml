@@ -434,9 +434,33 @@ templates:
         use_outer_proxy: "{{ params.use_outer_proxy | default(false) }}"
         proxy: true
         locations:
+          - location: "/ghost"
+            proxy: true
+            data: |-
+
+              ##############################################################
+              {% if params.use_outer_proxy | default(false) | bool %}
+
+                proxy_hide_header Vary;
+
+              {% endif %}
+              ##############################################################
+
+              proxy_read_timeout       {{ params.proxy.proxy_read_timeout | default('240', true) }};
+              client_max_body_size     {{ params.proxy.client_max_body_size | default('50M', true) }};
           - location: "/"
             proxy: true
             data: |-
+
+              ##############################################################
+              {% if params.use_outer_proxy | default(false) | bool %}
+
+              proxy_hide_header Vary;
+              proxy_hide_header Cache-Control;
+
+              {% endif %}
+              ##############################################################
+
               proxy_read_timeout       {{ params.proxy.proxy_read_timeout | default('240', true) }};
               client_max_body_size     {{ params.proxy.client_max_body_size | default('50M', true) }};
               ### limits ###

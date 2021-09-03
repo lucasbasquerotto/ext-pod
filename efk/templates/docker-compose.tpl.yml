@@ -168,11 +168,11 @@ services:
     {#############################################################}
     {% if params.use_custom_ssl | bool %}
 
-    - "./env/certbot/etc:/etc/ssl:ro"
+    - "./env/certbot/etc:/var/main/env:ro"
 
     {% elif params.use_certbot | bool %}
 
-    - "$DATA_DIR/sync/certbot/etc:/etc/ssl:ro"
+    - "$DATA_DIR/sync/certbot/etc:/var/main/env:ro"
 
     {% endif %}
     {#############################################################}
@@ -637,14 +637,6 @@ services:
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
 
-    {#############################################################}
-    {% if params.use_internal_ssl | bool %}
-
-    - "./env/ssl:/etc/ssl:ro"
-
-    {% endif %}
-    {#############################################################}
-
     {{ include_scripts() }}
 
     logging: *mainlog
@@ -754,7 +746,7 @@ services:
     {#############################################################}
     {% if var_fluentd_ssl %}
 
-    - "./env/ssl:/etc/ssl:ro"
+    - "./env/ssl:/var/main/env/ssl:ro"
 
     {% endif %}
     {#############################################################}

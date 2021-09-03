@@ -589,7 +589,7 @@ templates:
     var_load__db_main__db_port: "{{ params.db_main.port | default('') }}"
     var_load__db_main__db_connect_wait_secs: "{{ params.db_main.db_connect_wait_secs | default('') }}"
     var_load__db_main__db_tls: "{{ var_use_secure_elasticsearch | lower }}"
-    var_load__db_main__db_tls_ca_cert: "{{ var_use_secure_elasticsearch | ternary('/etc/ssl/fullchain.pem', '') }}"
+    var_load__db_main__db_tls_ca_cert: "{{ var_use_secure_elasticsearch | ternary('/var/main/env/ssl/fullchain.pem', '') }}"
 
     var_load__db_setup__use_s3: "{{ params.db_setup.use_s3 | default('') }}"
     var_load__db_setup__repository_name: "{{ params.db_setup.repository_name | default('') }}"
