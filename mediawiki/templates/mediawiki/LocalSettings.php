@@ -196,7 +196,7 @@ $wgFileBackends['s3']['endpoint'] = '{{ params.s3_endpoint }}';
 {###################################################################}
 {% if (params.uploads_cdn_path | default('')) == '' %}
 
-$wgAWSBucketDomain = '$1.{{ params.s3_endpoint | urlsplit("netloc") }}';
+$wgAWSBucketDomain = '$1.{{ params.s3_endpoint | urlsplit("hostname") }}';
 
 {% endif %}
 {###################################################################}
@@ -207,7 +207,7 @@ $wgAWSBucketDomain = '$1.{{ params.s3_endpoint | urlsplit("netloc") }}';
 {###################################################################}
 {% if (params.uploads_cdn_path | default('')) != '' %}
 
-$wgAWSBucketDomain = '{{ params.uploads_cdn_path | urlsplit("netloc") }}';
+$wgAWSBucketDomain = '{{ params.uploads_cdn_path | urlsplit("hostname") }}';
 
 {% endif %}
 {###################################################################}
