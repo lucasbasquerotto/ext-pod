@@ -136,6 +136,12 @@ schemas:
         type: "str"
         choices: ["", "awscli", "mc", "rclone"]
         description: "s3 client type"
+      s3_backup_bucket:
+        type: "str"
+        description: "s3 backup bucket name"
+      s3_uploads_bucket:
+        type: "str"
+        description: "s3 uploads bucket name"
       hubot_room:
         type: "str"
         description: "hubot room"
