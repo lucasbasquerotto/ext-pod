@@ -692,6 +692,7 @@ templates:
     var_load_use__fluentd: "{{ params.use_fluentd | default('') | lower }}"
     var_load_use__internal_fluentd: "{{ var_use_internal_fluentd | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
+    var_load_use__minio_gateway: "{{ params.use_minio_gateway | default('') | lower }}"
     var_load_use__outer_proxy: "{{ params.use_outer_proxy | default('') | lower }}"
     var_load_use__certbot: "{{ params.use_certbot | default('') | lower }}"
     var_load_use__ssl: "{{ params.use_ssl | default('') | lower }}"

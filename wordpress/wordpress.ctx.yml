@@ -649,6 +649,7 @@ templates:
     var_load_use__internal_fluentd: "{{ var_use_internal_fluentd | lower }}"
     var_load_use__composer: "{{ var_use_composer | default('') | lower }}"
     var_load_use__theia: "{{ params.use_theia | default('') | lower }}"
+    var_load_use__minio_gateway: "{{ params.use_minio_gateway | default('') | lower }}"
     var_load_use__varnish: "{{ params.use_varnish | default('') | lower }}"
     var_load_use__redis: "{{ params.use_redis | default('') | lower }}"
     var_load_use__memcached: "{{ params.use_memcached | default('') | lower }}"
