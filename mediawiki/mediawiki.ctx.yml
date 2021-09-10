@@ -287,6 +287,8 @@ templates:
     fluentd_output_plugin: "{{ var_fluentd_output_plugin }}"
     elasticsearch_host: "{{ input.dependencies.elasticsearch.host | default('') }}"
     s3_cli: "{{ params.s3_cli | default('') }}"
+    s3_backup_bucket: "{{ params.backup_bucket_name | default('') }}"
+    s3_uploads_bucket: "{{ params.uploads_bucket_name | default('') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | default({}) | to_json }}
     memory: {{ params.memory | default({}) | to_json }}

@@ -927,7 +927,10 @@ services:
     {#############################################################}
 
     networks:
-    - "shared"
+      shared:
+        aliases:
+          - "{{ params.s3_backup_bucket | default('backup') }}.s3"
+          - "{{ params.s3_uploads_bucket | default('uploads') }}.s3"
     expose:
     - "9000"
 

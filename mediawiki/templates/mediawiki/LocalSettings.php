@@ -11,6 +11,10 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 	exit;
 }
 
+# Do not attach warnings because they can be appended to JSON responses
+# causing "Invalid response from server" errors
+error_reporting(0);
+
 ## Uncomment this to disable output compression
 # $wgDisableOutputCompression = true;
 
@@ -166,6 +170,10 @@ wfLoadSkin( 'Vector' );
 wfLoadExtension( 'Nuke' );
 wfLoadExtension( 'WikiEditor' );
 wfLoadExtension( 'VisualEditor' );
+
+# Enable Visual Editor
+wfLoadExtension( 'Parsoid', 'vendor/wikimedia/parsoid/extension.json' );
+$wgVirtualRestConfig['modules']['parsoid']['url'] = 'http://localhost' . $wgScriptPath . '/rest.php';
 
 {###################################################################}
 {% if params.use_s3_storage | bool %}
