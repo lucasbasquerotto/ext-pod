@@ -292,6 +292,7 @@ templates:
     hubot_bot_name: "{{ credentials.hubot.bot_name | default('') }}"
     rocketchat:
       site_url: "{{ var_rocketchat_external_host }}"
+      cdn_prefix: "{{ params.rocketchat_cdn_prefix | default('') }}"
       block_default_settings: "{{ params.rocketchat_block_default_settings | default(false) }}"
       enable_smtp: "{{ params.use_rocketchat_mail | default(false) }}"
       smtp_from: "{{ params.rocketchat_smtp_from | default('') }}"
