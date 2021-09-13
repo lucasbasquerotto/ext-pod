@@ -169,6 +169,9 @@ schemas:
   rocketchat:
     type: "dict"
     props:
+      site_url:
+        type: "str"
+        description: "rocketchat site url (as seen from a browser)"
       block_default_settings:
         type: "bool"
         description: "block the rocketchat default settings (can't be changed by an admin)"
@@ -207,6 +210,14 @@ schemas:
       fileupload_s3_acl:
         type: "str"
         description: "fileupload s3 acl (when fileupload_s3_acl=AmazonS3)"
+      fileupload_s3_signature_version:
+        type: "str"
+        description: "s3 signature version; defaults to v4"
+      fileupload_s3_path_style:
+        type: "bool"
+        description: >-
+          specify if the access to the s3 bucket url uses path style or vhost (domain-based);
+          defaults to false
       fileupload_s3_cdn:
         type: "str"
         description: "fileupload s3 cdn (when fileupload_s3_cdn=AmazonS3)"

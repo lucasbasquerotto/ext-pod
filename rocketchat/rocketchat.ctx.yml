@@ -149,6 +149,18 @@
   {% endif %}
 {% endif %}
 
+{% set var_rocketchat_domain = params.domains.rocketchat | default('') %}
+{% set var_rocketchat_external_port = params.use_ssl | default(false) | bool | ternary(
+    var_ports.public_https_port | default(''),
+    var_ports.public_http_port | default('')
+  )
+%}
+{% set var_rocketchat_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
+  + '://' + var_rocketchat_domain
+  + (((var_rocketchat_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_rocketchat_external_port | string)))
+%}
+
 {% set var_s3_minio_gateway_credentials = credentials.minio_gateway | default({}) %}
 {% set var_s3_backup_credentials = credentials.backup_bucket | default({}) %}
 {% set var_s3_uploads_credentials = credentials.uploads_bucket | default({}) %}
@@ -159,6 +171,7 @@
     'endpoint': 'http://s3:9000',
     'access_key': 'minio',
     'secret_key': 'minio123',
+    'signature_version': 'v2',
     'path_style': true
   }
 %}
@@ -278,6 +291,7 @@ templates:
     hubot_user: "{{ credentials.hubot.user | default('') }}"
     hubot_bot_name: "{{ credentials.hubot.bot_name | default('') }}"
     rocketchat:
+      site_url: "{{ var_rocketchat_external_host }}"
       block_default_settings: "{{ params.rocketchat_block_default_settings | default(false) }}"
       enable_smtp: "{{ params.use_rocketchat_mail | default(false) }}"
       smtp_from: "{{ params.rocketchat_smtp_from | default('') }}"
@@ -290,6 +304,8 @@ templates:
       fileupload_s3_bucket: "{{ params.uploads_bucket_name | default('') }}"
       fileupload_s3_region: "{{ var_s3_uploads_credentials.region | default('') }}"
       fileupload_s3_acl: "{{ var_s3_uploads_credentials.acl | default('') }}"
+      fileupload_s3_signature_version: "{{ var_s3_uploads_credentials.signature_version | default('') }}"
+      fileupload_s3_path_style: "{{ var_s3_uploads_credentials.path_style | default(false)  }}"
       fileupload_s3_cdn: "{{ params.rocketchat_s3_cdn | default('') }}"
     ports: {{ var_ports | to_json }}
     images: {{ params.images | default({}) | to_json }}
