@@ -797,7 +797,7 @@ services:
     {#############################################################}
 
     volumes:
-    - "./env:/var/main/env"
+    - "./env:/var/main/env:ro"
     - "$DATA_DIR:/var/main/data"
     - "$DATA_DIR/tmp:/tmp/main"
     - "$DATA_DIR/log:/var/log/main"
