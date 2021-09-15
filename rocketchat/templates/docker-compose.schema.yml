@@ -172,6 +172,9 @@ schemas:
       site_url:
         type: "str"
         description: "rocketchat site url (as seen from a browser)"
+      cdn_prefix:
+        type: "str"
+        description: "cdn prefix for assets"
       block_default_settings:
         type: "bool"
         description: "block the rocketchat default settings (can't be changed by an admin)"
