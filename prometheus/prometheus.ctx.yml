@@ -119,6 +119,22 @@
   {% endif %}
 {% endif %}
 
+{% set var_grafana_external_host = '' %}
+
+{% if var_use_grafana %}
+  {% set var_grafana_domain = params.domains.grafana | default('') %}
+  {% set var_grafana_external_port = params.use_ssl | default(false) | bool | ternary(
+      var_ports.private_https_port | default(''),
+      var_ports.private_http_port | default('')
+    )
+  %}
+  {% set var_grafana_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
+    + '://' + var_grafana_domain
+    + (((var_grafana_external_port | string) in ['80', '443'])
+    | ternary('', ':' + (var_grafana_external_port | string)))
+  %}
+{% endif %}
+
 {% set var_s3_minio_gateway_credentials = credentials.minio_gateway | default({}) %}
 {% set var_s3_backup_credentials = credentials.backup_bucket | default({}) %}
 {% set var_s3_backup_replica_credentials = credentials.backup_replica_bucket | default({}) %}
@@ -235,6 +251,7 @@ templates:
     s3_cli: "{{ params.s3_cli | default('') }}"
     grafana_port: "{{ params.grafana_port | default('3000') }}"
     grafana_server_domain: "{{ credentials.grafana.server_domain | default('') }}"
+    grafana_external_host: "{{ var_grafana_external_host }}"
     grafana_smtp_enabled: "{{ credentials.grafana.smtp_enabled | default('') }}"
     grafana_smtp_host: "{{ credentials.grafana.smtp_host | default('') }}"
     grafana_smtp_user: "{{ credentials.grafana.smtp_user | default('') }}"

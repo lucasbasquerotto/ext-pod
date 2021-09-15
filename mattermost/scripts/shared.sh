@@ -67,19 +67,23 @@ case "$command" in
 		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
 		;;
 	"inner:custom:prepare")
-		env_dir="/var/main/env"
 		data_dir="/var/main/data"
+		env_dir="/var/main/env"
 
 		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
-			file="$env_dir/mattermost/config.json"
-			chown 2000:2000 "$file"
+			src_file="$env_dir/mattermost/config.json"
+			dest_dir="$data_dir/mattermost"
+			dest_file="$dest_dir/config.json"
 
-			dir="$data_dir/mattermost/uploads"
-
-			if [ ! -d "$dir" ]; then
-				mkdir -p "$dir"
+			if [ ! -d "$dest_dir" ]; then
+				mkdir -p "$dest_dir"
 			fi
 
+			cp "$src_file" "$dest_file"
+			chown 2000:2000 "$dest_file"
+
+			dir="$data_dir/mattermost/uploads"
+			mkdir -p "$dir"
 			chown 2000:2000 "$dir"
 
 			if [ "${arg_use_pgadmin:-}" = 'true' ]; then

@@ -122,7 +122,6 @@ schemas:
         type: "str"
         choices: ["", "awscli", "mc", "rclone"]
         description: "s3 client type"
-
       grafana_port:
         non_empty: true
         type: "int"
@@ -131,6 +130,10 @@ schemas:
         non_empty: true
         type: "str"
         description: "the grafana server domain (url used to access grafana)"
+      grafana_external_host:
+        non_empty: true
+        type: "str"
+        description: "the grafana root url (the external, user-facing, url)"
       grafana_smtp_enabled:
         non_empty: true
         type: "str"

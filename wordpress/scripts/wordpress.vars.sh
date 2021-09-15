@@ -26,6 +26,8 @@ if [ "${var_load_main__local:-}" = 'true' ]; then
 	export var_load_general__script_env_file='local.sh'
 fi
 
+export var_main__use_custom_mail_plugin="${var_load_use__custom_mail_plugin:-}"
+
 function tmp_error {
 	echo "${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}" >&2
 	exit 2

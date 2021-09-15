@@ -262,6 +262,7 @@ services:
     environment:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_SERVER_DOMAIN: "{{ params.grafana_server_domain }}"
+      GF_SERVER_ROOT_URL: "{{ params.grafana_external_host }}"
       GF_SMTP_ENABLED: "{{ params.grafana_smtp_enabled }}"
       GF_SMTP_HOST: "{{ params.grafana_smtp_host }}"
       GF_SMTP_USER: "{{ params.grafana_smtp_user }}"

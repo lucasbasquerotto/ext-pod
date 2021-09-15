@@ -61,9 +61,6 @@ case "$command" in
 		# shellcheck disable=SC2154
 		pod_type="$var_main__pod_type"
 
-		data_dir="/var/main/data"
-		tmp_dir="/tmp/main"
-
 		"$pod_script_env_file" up toolbox
 
 		"$pod_script_env_file" exec-nontty toolbox \
