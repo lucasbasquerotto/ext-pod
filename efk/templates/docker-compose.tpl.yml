@@ -168,11 +168,11 @@ services:
     {#############################################################}
     {% if params.use_custom_ssl | bool %}
 
-    - "./env/certbot/etc:/var/main/env/ssl:ro"
+    - "./env/certbot/etc:/var/main/env/certbot:ro"
 
     {% elif params.use_certbot | bool %}
 
-    - "$DATA_DIR/sync/certbot/etc:/var/main/env/ssl:ro"
+    - "$DATA_DIR/sync/certbot/etc:/var/main/env/certbot:ro"
 
     {% endif %}
     {#############################################################}
