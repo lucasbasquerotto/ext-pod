@@ -67,3 +67,15 @@ schemas:
         type: "str"
         choices: ["", "TLS", "STARTTLS"]
         description: "smtp connection security"
+      smtp_feedback_email:
+        type: "str"
+        description: "email address displayed on email account used when sending notification emails from mattermost"
+      smtp_reply_to_email:
+        type: "str"
+        description: "email address used in the reply-to header when sending notification emails from mattermost"
+      send_email_notifications:
+        type: "bool"
+        description: "when true, mattermost attempts to send email notifications"
+      require_email_verification:
+        type: "bool"
+        description: "when true, mattermost requires email verification after account creation prior to allowing login"
