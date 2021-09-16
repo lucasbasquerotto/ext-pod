@@ -119,6 +119,7 @@ case "$command" in
 
 		>&2 echo "update database"
 		wp --allow-root core update-db
+		>&2 echo "verify if wordpress is installed (the setup or setup_new task must have run before)"
 		wp --allow-root core is-installed
 		version="$(wp --allow-root core version)"
 		>&2 echo "wordpress version: $version"
