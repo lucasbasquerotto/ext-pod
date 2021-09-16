@@ -174,11 +174,11 @@ services:
     {#############################################################}
     {% if params.use_custom_ssl | default(false) | bool %}
 
-    - "./env/certbot/etc:/var/main/env:ro"
+    - "./env/certbot/etc:/var/main/env/ssl:ro"
 
     {% elif params.use_certbot | default(false) | bool %}
 
-    - "$DATA_DIR/sync/certbot/etc:/var/main/env:ro"
+    - "$DATA_DIR/sync/certbot/etc:/var/main/env/ssl:ro"
 
     {% endif %}
     {#############################################################}
