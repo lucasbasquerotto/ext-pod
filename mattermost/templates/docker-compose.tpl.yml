@@ -250,12 +250,12 @@ services:
     {% if var_use_nginx %}
 
     expose:
-    - "80"
+    - "8065"
 
     {% else %}
 
     ports:
-    - "{{ params.ports.public_http_port }}:80"
+    - "{{ params.ports.public_http_port }}:8065"
 
     {% endif %}
     {#############################################################}
