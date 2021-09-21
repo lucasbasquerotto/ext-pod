@@ -6,6 +6,8 @@ pod_layer_dir="$var_pod_layer_dir"
 # shellcheck disable=SC2154
 pod_script_env_file="$var_pod_script"
 
+pod_shared_run_file="$pod_layer_dir/shared/scripts/shared.sh"
+
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
 }
@@ -42,8 +44,6 @@ while getopts ':-:' OPT; do
 	esac
 done
 shift $((OPTIND-1))
-
-pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
 
 case "$command" in
 	"custom:unique:log")

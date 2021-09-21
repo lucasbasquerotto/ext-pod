@@ -54,7 +54,7 @@ while getopts ':-:' OPT; do
 done
 shift $((OPTIND-1))
 
-pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
+pod_shared_run_file="$pod_layer_dir/shared/scripts/shared.sh"
 
 case "$command" in
 	"prepare")

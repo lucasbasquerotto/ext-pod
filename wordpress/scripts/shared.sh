@@ -10,7 +10,7 @@ pod_env_shared_exec_file="$var_run__general__script_dir/shared.exec.sh"
 # shellcheck disable=SC2154
 inner_run_file="$var_inner_scripts_dir/run"
 
-pod_shared_run_file="$pod_layer_dir/shared/scripts/main.sh"
+pod_shared_run_file="$pod_layer_dir/shared/scripts/shared.sh"
 
 function info {
 	"$pod_script_env_file" "util:info" --info="${*}"
