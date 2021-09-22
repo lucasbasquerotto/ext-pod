@@ -325,7 +325,11 @@ templates:
 ##############################################################
 {% if (var_pod_type in ['app', 'web']) and (not (params.custom_nginx_conf | default(false) | bool)) %}
 
-{% set var_default_nginx_conf = { 'ssl': params.use_ssl | default(false) } %}
+{% set var_default_nginx_conf = {
+    'ssl': params.use_ssl | default(false),
+    'use_blacklist': true,
+  }
+%}
 
 - dest: "env/nginx/nginx.conf"
   src: "{{ var_shared_dir }}/templates/nginx/nginx.tpl.conf"

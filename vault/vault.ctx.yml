@@ -420,10 +420,11 @@ templates:
 {% if (var_pod_type in ['app', 'web']) and (not (params.custom_nginx_conf | default(false) | bool)) %}
 
 {% set var_default_nginx_conf = {
-  'ssl': params.use_ssl | default(false),
-  'proxy_ssl_ca_file': '/etc/proxy-ssl/ca.pem',
-  'proxy_ssl_cert_file': '/etc/proxy-ssl/cert.pem',
-  'proxy_ssl_key_file': '/etc/proxy-ssl/privkey.pem'
+    'ssl': params.use_ssl | default(false),
+    'use_blacklist': true,
+    'proxy_ssl_ca_file': '/etc/proxy-ssl/ca.pem',
+    'proxy_ssl_cert_file': '/etc/proxy-ssl/cert.pem',
+    'proxy_ssl_key_file': '/etc/proxy-ssl/privkey.pem'
   }
 %}
 

@@ -461,6 +461,7 @@ templates:
 
 {% set var_default_nginx_conf = {
     'ssl': params.use_ssl | default(false),
+    'use_blacklist': true,
     'use_outer_proxy': params.use_outer_proxy | default(false),
     'outer_proxy_ip_header': params.outer_proxy_ip_header | default('')
   }
