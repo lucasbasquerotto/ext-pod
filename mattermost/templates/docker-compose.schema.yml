@@ -67,7 +67,7 @@ schemas:
       use_nginx:
         non_empty: true
         type: "bool"
-        description: "when true, includes a nginx service to act as reverse proxy"
+        description: "when true, includes an nginx service to act as reverse proxy"
       use_pgadmin:
         non_empty: true
         type: "bool"
