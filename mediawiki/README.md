@@ -2,6 +2,10 @@
 
 This example deploys a pod with containers containing a Mediawiki service connected to a MySQL database.
 
+## Pod Parameters
+
+TODO
+
 ## Deployment
 
 There are 3 types of deployment of this pod:
@@ -76,7 +80,7 @@ params:
     logo: "https://www.mediawiki.org/static/images/project-logos/mediawikiwiki.png"
   host_ssh_public_keys_content:
     origin: "env"
-    file: "ssh/id_rsa.pub"
+    file: "demo/ssh/id_rsa.pub"
 credentials:
   mediawiki:
     secret_key: "ce4e374745189efeeb2202833493c13242de589d59299f43f8325d59c7d4ebbe"
@@ -89,7 +93,7 @@ credentials:
   host:
     host_user: "host"
     host_pass: "111222"
-    ssh_file: "ssh/id_rsa"
+    ssh_file: "demo/ssh/id_rsa"
   digital_ocean:
     api_token: "{{ params.digital_ocean_api_token }}"
   cloudflare:
@@ -116,8 +120,8 @@ params:
     theia: "theia.localhost"
     minio_gateway: "s3.localhost"
   backup_bucket_name: "mediawiki-backup"
-  db_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/ghost/db/20210505_013103.zip?raw=true"
-  uploads_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/ghost/uploads/20210505_013115.zip?raw=true"
+  db_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/mediawiki/db/20200612_181745.zip?raw=true"
+  uploads_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/mediawiki/uploads/20200612_181745.zip?raw=true"
   meta:
     ignore_validators: true
     skip_local_node_preparation: true
@@ -156,17 +160,19 @@ params:
   inner_scripts_dir: ""
   named_volumes: false
   s3_cli: "awscli"
-  auth_file: "auth/.htpasswd"
-  fluentd_output_plugin: "elasticsearch"
+  auth_file: "demo/auth/.htpasswd"
+  fluentd_output_plugin: "file"
   local_custom_ssl:
-    fullchain: "ssl/internal.bundle.crt"
-    cert: "ssl/internal.crt"
-    ca: "ssl/internal.ca.crt"
-    privkey: "ssl/internal.key"
+    fullchain: "demo/ssl/internal.bundle.crt"
+    cert: "demo/ssl/internal.crt"
+    ca: "demo/ssl/internal.ca.crt"
+    privkey: "demo/ssl/internal.key"
   memory_app:
     nginx: 512mb
     varnish: 512mb
-    ghost: 1gb
+    mediawiki: 1gb
+    redis: 512mb
+    memcached: 512mb
     pma: 512mb
     adminer: 512mb
     mysql: 1gb
@@ -178,22 +184,19 @@ params:
     logrotator: 256mb
     s3_cli: 512mb
 credentials:
-  db:
-    root_password: "111111"
-    viewer_password: "222222"
-    name: "ghost_db"
-    user: "ghost_user"
-    password: "333333"
-  ghost_mail:
-    from: "'My Send Email' <{{ params.sender_email }}>"
-    transport: "SMTP"
-    options:
-      service: "Sendgrid"
-      host: "smtp.sendgrid.net"
-      port: "587"
-      auth:
-        user: "apikey"
-        pass: "{{ params.sendgrid_pass }}"
+  mediawiki:
+    secret_key: "ce4e374745189efeeb2202833493c13242de589d59299f43f8325d59c7d4ebbe"
+    db:
+      root_password: "1234556"
+      viewer_password: "123456"
+      name: "my_wiki"
+      user: "wikiuser"
+      password: "AULT;1.2;AES2"
+  mediawiki_mail:
+    address: "tls://smtp.sendgrid.net"
+    port: "587"
+    smtp_username: "apikey"
+    smtp_password: "{{ params.sendgrid_password }}"
 ```
 
 ### Complete Deployment - Remote
@@ -212,15 +215,11 @@ params:
   db_hostname: "mediawiki_db"
   cache_hostname: "mediawiki_cache"
   web_hostname: "mediawiki_web"
-  private_ips: "{{ params.private_ips | default([]) }}"
+  private_ips: ["{{ params.private_ip }}"]
   cloud_service: "digital_ocean_vpn"
   node_service: "digital_ocean_node"
-  nameserver_provider: "godaddy"
   dns_provider: "cloudflare"
-  local_main_domain: "localhost"
-  main_domain: "lucasbasquerotto.com"
-  elasticsearch_url: "http://elasticsearch.lucasbasquerotto.com:9200"
-  main_nameservers: ["beau.ns.cloudflare.com", "bonnie.ns.cloudflare.com"]
+  main_domain: "{{ params.your_domain }}"
   local_domains:
     mediawiki: "localhost"
     private: "private.localhost"
@@ -229,12 +228,12 @@ params:
     theia: "theia.localhost"
     minio_gateway: "s3.localhost"
   domains:
-    mediawiki: "wiki.lucasbasquerotto.com"
-    private: "private-wiki.lucasbasquerotto.com"
-    phpmyadmin: "pma-wiki.lucasbasquerotto.com"
-    adminer: "adminer-wiki.lucasbasquerotto.com"
-    theia: "files-wiki.lucasbasquerotto.com"
-    minio_gateway: "s3-wiki.lucasbasquerotto.com"
+    mediawiki: "wiki.{{ params.your_domain }}"
+    private: "private-wiki.{{ params.your_domain }}"
+    phpmyadmin: "pma-wiki.{{ params.your_domain }}"
+    adminer: "adminer-wiki.{{ params.your_domain }}"
+    theia: "files-wiki.{{ params.your_domain }}"
+    minio_gateway: "s3-wiki.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "wiki"
     - record: "private-wiki"
@@ -242,40 +241,24 @@ params:
     - record: "adminer-wiki"
     - record: "files-wiki"
     - record: "s3-wiki"
-  dns_main_service_params_list:
-    - dns_type: "CNAME"
-      record: "em7152.wiki"
-      value: "u9659567.wl068.sendgrid.net"
-    - dns_type: "CNAME"
-      record: "s1._domainkey.wiki"
-      value: "s1.domainkey.u9659567.wl068.sendgrid.net"
-    - dns_type: "CNAME"
-      record: "s2._domainkey.wiki"
-      value: "s2.domainkey.u9659567.wl068.sendgrid.net"
   mediawiki:
     sitename: "My Wiki"
     meta_namespace: "MyWiki"
     logo: "https://www.mediawiki.org/static/images/project-logos/mediawikiwiki.png"
-    emergency_contact: "noreply@wiki.lucasbasquerotto.com"
-    password_sender: "noreply@wiki.lucasbasquerotto.com"
+    emergency_contact: "noreply@wiki.example.com"
+    password_sender: "noreply@wiki.example.com"
     lang: "en"
     authentication_token_version: "1"
     upload_path: ""
-  db_setup_restore_s3:
-    is_compressed_file: true
-    restore_bucket_path_dir: "db/20210203"
-    compressed_file_name: "my_wiki.20210203.002503.95010316.zip"
   db_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/mediawiki/db/20200612_181745.zip?raw=true"
   uploads_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/mediawiki/uploads/20200612_181745.zip?raw=true"
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-2vcpu-2gb"
-  linode_region: "us-east"
-  linode_type: "g6-standard-1"
-  certbot_email: "lucasbasquerotto@gmail.com"
-  backup_bucket_name: "lucasbasquerotto-mediawiki-backup"
-  uploads_bucket_name: "lucasbasquerotto-mediawiki-uploads"
-  backup_replica_bucket_name: "lucasbasquerotto-mediawiki-replica-backup"
-  uploads_replica_bucket_name: "lucasbasquerotto-mediawiki-replica-uploads"
+  certbot_email: "{{ params.certbot_email }}"
+  backup_bucket_name: "mediawiki-backup"
+  uploads_bucket_name: "mediawiki-uploads"
+  backup_replica_bucket_name: "mediawiki-replica-backup"
+  uploads_replica_bucket_name: "mediawiki-replica-uploads"
   meta:
     ignore_validators: true
     skip_local_node_preparation: true
@@ -287,8 +270,8 @@ params:
     no_info_wrap: false
     no_summary: false
     no_colors: false
-  run_nameserver_main: true
-  run_dns_main: true
+  run_nameserver_main: false
+  run_dns_main: false
   use_pod_prefix: true
   use_secrets: true
   use_mediawiki_mail: true
@@ -309,7 +292,6 @@ params:
   use_private_path: true
   use_basic_auth_private: true
   use_ssl: false
-  use_secure_elasticsearch: false
   use_node_exporter: false
   use_pod_full_prefix: true
   non_s3_setup: true
@@ -334,23 +316,18 @@ params:
   fluentd_output_plugin: "file"
   s3_cli: "awscli"
   outer_proxy_type: "cloudflare"
-  auth_file: "files/auth/.htpasswd"
-  pod_custom_dir_sync: "{{ params.pod_custom_dir_sync | default(false) }}"
-  inner_scripts_dir: "{{ params.inner_scripts_dir | default('') }}"
-  named_volumes: "{{ params.named_volumes | default(false) }}"
-  local_custom_ssl:
-    main_domain: "localhost"
-    fullchain: "files/ssl/generated/localhost.bundle.crt"
-    privkey: "files/ssl/generated/localhost.key"
-    concat: "files/ssl/generated/localhost.concat.pem"
+  auth_file: "demo/auth/.htpasswd"
+  pod_custom_dir_sync: false
+  inner_scripts_dir: ""
+  named_volumes: false
   internal_ssl:
-    fullchain: "files/ssl/generated/localhost.bundle.crt"
-    cert: "files/ssl/generated/localhost.crt"
-    ca: "files/ssl/generated/localhost.ca.crt"
-    privkey: "files/ssl/generated/localhost.key"
+    fullchain: "demo/ssl/internal.bundle.crt"
+    cert: "demo/ssl/internal.crt"
+    ca: "demo/ssl/internal.ca.crt"
+    privkey: "demo/ssl/internal.key"
   host_ssh_public_keys_content:
     origin: "env"
-    file: "ssh/host.pub"
+    file: "demo/ssh/id_rsa.pub"
   memory_app:
     nginx: 512mb
     varnish: 512mb
@@ -367,36 +344,7 @@ params:
     certbot: 256mb
     logrotator: 256mb
     s3_cli: 512mb
-  memory_cache:
-    redis: 512mb
-    memcached: 512mb
-    toolbox: 512mb
-    s3_cli: 512mb
-    fluentd: 256mb
-  memory_db:
-    mysql: 1gb
-    toolbox: 512mb
-    fluentd: 256mb
-    logrotator: 256mb
-    s3_cli: 512mb
-  memory_web:
-    nginx: 512mb
-    varnish: 512mb
-    mediawiki: 1gb
-    pma: 512mb
-    adminer: 512mb
-    theia: 512mb
-    minio_gateway: 512mb
-    toolbox: 512mb
-    fluentd: 256mb
-    certbot: 256mb
-    logrotator: 256mb
-    s3_cli: 512mb
 credentials:
-  host:
-    host_user: "host"
-    host_pass: "def456"
-    ssh_file: "ssh/host.encrypted.key"
   mediawiki:
     secret_key: "ce4e374745189efeeb2202833493c13242de589d59299f43f8325d59c7d4ebbe"
     db:
@@ -409,11 +357,11 @@ credentials:
     address: "tls://smtp.sendgrid.net"
     port: "587"
     smtp_username: "apikey"
-    smtp_password: "{{ params.mediawiki_mail_password }}"
+    smtp_password: "{{ params.sendgrid_password }}"
   host:
     host_user: "host"
     host_pass: "111222"
-    ssh_file: "ssh/id_rsa"
+    ssh_file: "demo/ssh/id_rsa"
   digital_ocean:
     api_token: "{{ params.digital_ocean_api_token }}"
   s3:
@@ -430,7 +378,3 @@ credentials:
 ```
 
 The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).
-
-## Pod Parameters
-
-TODO

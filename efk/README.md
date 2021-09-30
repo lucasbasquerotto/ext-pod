@@ -8,6 +8,10 @@ This example deploys a pod with containers containing the following services:
 
 The only service required (of the services above) is Elasticsearch. The Kibana service can be included with the option `use_kibana: true` and the Fluentd service can be included with the option `use_fluentd: true` and `use_internal_fluentd: true` (the later with a `true` value means that the fluentd service is in the pod, otherwise the containers will try to connect with an external fluentd service in the host, or in another pod in the host). The Fluentd service, in this case, is used by the containers in the pod. To use fluentd in other pods, the fluentd service must be included (separately) in them.
 
+## Pod Parameters
+
+TODO
+
 ## Deployment
 
 There are 3 types of deployment of this pod:
@@ -73,12 +77,12 @@ params:
   use_nginx: true
   host_ssh_public_keys_content:
     origin: "env"
-    file: "ssh/id_rsa.pub"
+    file: "demo/ssh/id_rsa.pub"
 credentials:
   host:
     host_user: "host"
     host_pass: "111222"
-    ssh_file: "ssh/id_rsa"
+    ssh_file: "demo/ssh/id_rsa"
   digital_ocean:
     api_token: "{{ params.digital_ocean_api_token }}"
   cloudflare:
@@ -143,13 +147,13 @@ params:
   inner_scripts_dir: ""
   named_volumes: false
   s3_cli: "awscli"
-  auth_file: "files/auth/.htpasswd"
+  auth_file: "demo/auth/.htpasswd"
   fluentd_output_plugin: "elasticsearch"
   local_custom_ssl:
-    fullchain: "ssl/internal.bundle.crt"
-    cert: "ssl/internal.crt"
-    ca: "ssl/internal.ca.crt"
-    privkey: "ssl/internal.key"
+    fullchain: "demo/ssl/internal.bundle.crt"
+    cert: "demo/ssl/internal.crt"
+    ca: "demo/ssl/internal.ca.crt"
+    privkey: "demo/ssl/internal.key"
   memory_app:
     nginx: 512mb
     kibana: 512mb
@@ -232,18 +236,18 @@ params:
   inner_scripts_dir: ""
   named_volumes: false
   s3_cli: "awscli"
-  auth_file: "auth/.htpasswd"
+  auth_file: "demo/auth/.htpasswd"
   expose_elasticsearch_port: true
   elasticsearch_external_port: "9200"
   fluentd_output_plugin: "elasticsearch"
   internal_ssl:
-    fullchain: "ssl/internal.bundle.crt"
-    cert: "ssl/internal.crt"
-    ca: "ssl/internal.ca.crt"
-    privkey: "ssl/internal.key"
+    fullchain: "demo/ssl/internal.bundle.crt"
+    cert: "demo/ssl/internal.crt"
+    ca: "demo/ssl/internal.ca.crt"
+    privkey: "demo/ssl/internal.key"
   host_ssh_public_keys_content:
     origin: "env"
-    file: "ssh/id_rsa.pub"
+    file: "demo/ssh/id_rsa.pub"
   memory_app:
     nginx: 512mb
     kibana: 512mb
@@ -259,7 +263,7 @@ credentials:
   host:
     host_user: "host"
     host_pass: "111222"
-    ssh_file: "ssh/id_rsa"
+    ssh_file: "demo/ssh/id_rsa"
   elasticsearch:
     elastic_password: "111111"
     kibana_system_password: "222222"
@@ -281,7 +285,3 @@ credentials:
 ```
 
 The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).
-
-## Pod Parameters
-
-TODO
