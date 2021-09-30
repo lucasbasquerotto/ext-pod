@@ -1,6 +1,53 @@
 # Base Pod
 
+This is a basic example of a pod that has an Nginx service that returns a static response.
+
+## Pod Parameters
+
 TODO
+
+## Deployment
+
+There is a single type of deployment of this pod (at the moment):
+
+- `app`: deploy all the containers in a single pod.
+
+There are 2 cloud contexts that can be used:
+
+- `local`: for local deployments.
+- `remote`: for remote deployments using a single host.
+
+The following sections are examples of local and remote deployments. The minimal deployment has just the necessary stuff to run the Minio service.
+
+The examples use the project environment base file https://github.com/lucasbasquerotto/env-base/tree/master/examples/minio.yml.
+
+The following deployments can be seen at https://github.com/lucasbasquerotto/env-base/tree/master/docs/pod/minio.
+
+### Minimal Deployment - Local
+
+```yaml
+
+```
+
+### Minimal Deployment - Remote
+
+```yaml
+
+```
+
+### Complete Deployment - Local
+
+```yaml
+
+```
+
+### Complete Deployment - Remote
+
+```yaml
+
+```
+
+The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](#needed-environment-files).
 
 # Needed Environment Files
 

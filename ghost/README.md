@@ -22,7 +22,9 @@ There are 3 cloud contexts that can be used:
 
 The following sections are examples of local and remote deployments. The minimal deployment has just the necessary stuff to run the Ghost and MySQL services (with Nginx, optionally).
 
-The examples use the project environment base file https://github.com/lucasbasquerotto/env-base/tree/master/examples/ghost.yml
+The examples use the project environment base file https://github.com/lucasbasquerotto/env-base/tree/master/examples/ghost.yml.
+
+The following deployments can be seen at https://github.com/lucasbasquerotto/env-base/tree/master/docs/pod/ghost.
 
 ### Minimal Deployment - Local
 
@@ -72,6 +74,9 @@ params:
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-1vcpu-1gb"
   meta:
+    ignore_validators: false
+    skip_local_node_preparation: false
+    skip_local_pod_preparation: false
     template_no_empty_lines: true
   use_nginx: true
   host_ssh_public_keys_content:
@@ -110,11 +115,14 @@ env:
 params:
   local_main_domain: "localhost"
   local_domains:
-    kibana: "localhost"
+    ghost: "localhost"
     private: "private.localhost"
+    phpmyadmin: "pma.localhost"
+    adminer: "adminer.localhost"
     theia: "theia.localhost"
     minio_gateway: "s3.localhost"
-  backup_bucket_name: "ghost-backup"
+  backup_bucket_name: "{{ params.backup_bucket_name }}"
+  uploads_bucket_name: "{{ params.uploads_bucket_name }}"
   db_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/ghost/db/20210505_013103.zip?raw=true"
   uploads_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/ghost/uploads/20210505_013115.zip?raw=true"
   meta:
@@ -139,8 +147,10 @@ params:
   use_basic_auth_private: true
   use_ssl: false
   use_pod_full_prefix: true
-  db_backup_s3_snapshot: true
   define_s3_backup_lifecycle: true
+  non_s3_setup: true
+  db_gui_root_user: true
+  block_ips: true
   define_cron: true
   include_cron_watch: true
   enable_db_backup: true
@@ -193,6 +203,8 @@ credentials:
       auth:
         user: "apikey"
         pass: "{{ params.sendgrid_password }}"
+  s3: {}
+  minio_gateway: {}
 ```
 
 ### Complete Deployment - Remote
@@ -218,18 +230,26 @@ params:
   domains:
     ghost: "blog.{{ params.your_domain }}"
     private: "private-blog.{{ params.your_domain }}"
+    phpmyadmin: "pma-blog.{{ params.your_domain }}"
+    adminer: "adminer-blog.{{ params.your_domain }}"
     theia: "files-blog.{{ params.your_domain }}"
     minio_gateway: "s3-blog.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "blog"
     - record: "private-blog"
+    - record: "pma-blog"
+    - record: "adminer-blog"
     - record: "files-blog"
     - record: "s3-blog"
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-2vcpu-2gb"
   certbot_email: "{{ params.certbot_email }}"
   backup_bucket_name: "{{ params.backup_bucket_name }}"
+  uploads_bucket_name: "{{ params.uploads_bucket_name }}"
   meta:
+    ignore_validators: false
+    skip_local_node_preparation: false
+    skip_local_pod_preparation: false
     template_no_empty_lines: true
   run_dns_main: false
   use_pod_prefix: true
@@ -248,8 +268,10 @@ params:
   use_ssl: false
   use_node_exporter: false
   use_pod_full_prefix: true
-  db_backup_s3_snapshot: true
   define_s3_backup_lifecycle: true
+  non_s3_setup: true
+  db_gui_root_user: true
+  block_ips: true
   define_cron: true
   include_cron_watch: true
   enable_db_backup: true
@@ -259,7 +281,6 @@ params:
   enable_sync_backup: true
   enable_sync_setup: false
   enable_backup_replica: false
-  pod_custom_dir_sync: true
   inner_scripts_dir: ""
   named_volumes: false
   s3_cli: "awscli"
@@ -275,7 +296,11 @@ params:
     file: "demo/ssh/id_rsa.pub"
   memory_app:
     nginx: 512mb
-    kibana: 512mb
+    varnish: 512mb
+    ghost: 1gb
+    pma: 512mb
+    adminer: 512mb
+    mysql: 1gb
     theia: 512mb
     minio_gateway: 512mb
     toolbox: 512mb
@@ -306,6 +331,9 @@ credentials:
     ssh_file: "demo/ssh/id_rsa"
   digital_ocean:
     api_token: "{{ params.digital_ocean_api_token }}"
+  cloudflare:
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
   s3:
     endpoint: "{{ params.s3_endpoint }}"
     access_key: "{{ params.s3_access_key }}"
@@ -314,9 +342,6 @@ credentials:
     endpoint: "{{ params.minio_gateway_endpoint }}"
     access_key: "{{ params.minio_gateway_access_key }}"
     secret_key: "{{ params.minio_gateway_secret_key }}"
-  cloudflare:
-    email: "{{ params.cloudflare_email }}"
-    token: "{{ params.cloudflare_token }}"
 ```
 
 The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).

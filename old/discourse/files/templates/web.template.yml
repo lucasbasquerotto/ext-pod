@@ -1,4 +1,0 @@
-templates:
-  - "templates/web.template.validate.yml"
-  - "templates/web.template.build.yml"
-  - "templates/web.template.run.yml"

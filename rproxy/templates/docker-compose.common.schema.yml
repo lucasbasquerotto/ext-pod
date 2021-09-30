@@ -59,6 +59,9 @@ schemas:
       nginx:
         type: "str"
         description: "memory limit for the nginx service"
+      haproxy:
+        type: "str"
+        description: "memory limit for the haproxy service"
       theia:
         type: "str"
         description: "memory limit for the theia service"

@@ -22,7 +22,9 @@ There are 3 cloud contexts that can be used:
 
 The following sections are examples of local and remote deployments. The minimal deployment has just the necessary stuff to run the Mediawiki and MySQL services (with Nginx, optionally).
 
-The examples use the project environment base file https://github.com/lucasbasquerotto/env-base/tree/master/examples/mediawiki.yml
+The examples use the project environment base file https://github.com/lucasbasquerotto/env-base/tree/master/examples/mediawiki.yml.
+
+The following deployments can be seen at https://github.com/lucasbasquerotto/env-base/tree/master/docs/pod/mediawiki.
 
 ### Minimal Deployment - Local
 
@@ -74,6 +76,9 @@ params:
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-1vcpu-1gb"
   meta:
+    ignore_validators: false
+    skip_local_node_preparation: false
+    skip_local_pod_preparation: false
     template_no_empty_lines: true
   use_nginx: true
   mediawiki:
@@ -115,11 +120,14 @@ env:
 params:
   local_main_domain: "localhost"
   local_domains:
-    kibana: "localhost"
+    mediawiki: "localhost"
     private: "private.localhost"
+    phpmyadmin: "pma.localhost"
+    adminer: "adminer.localhost"
     theia: "theia.localhost"
     minio_gateway: "s3.localhost"
-  backup_bucket_name: "mediawiki-backup"
+  backup_bucket_name: "{{ params.backup_bucket_name }}"
+  uploads_bucket_name: "{{ params.uploads_bucket_name }}"
   db_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/mediawiki/db/20200612_181745.zip?raw=true"
   uploads_setup_restore_remote_file: "https://github.com/lucasbasquerotto/backups/blob/master/mediawiki/uploads/20200612_181745.zip?raw=true"
   meta:
@@ -127,6 +135,7 @@ params:
     skip_local_node_preparation: true
     skip_local_pod_preparation: true
     template_no_empty_lines: true
+  use_mediawiki_mail: true
   use_pod_prefix: true
   use_secrets: false
   use_kibana: true
@@ -144,8 +153,10 @@ params:
   use_basic_auth_private: true
   use_ssl: false
   use_pod_full_prefix: true
-  db_backup_s3_snapshot: true
   define_s3_backup_lifecycle: true
+  non_s3_setup: true
+  db_gui_root_user: true
+  block_ips: true
   define_cron: true
   include_cron_watch: true
   enable_db_backup: true
@@ -197,6 +208,8 @@ credentials:
     port: "587"
     smtp_username: "apikey"
     smtp_password: "{{ params.sendgrid_password }}"
+  s3: {}
+  minio_gateway: {}
 ```
 
 ### Complete Deployment - Remote
@@ -220,13 +233,6 @@ params:
   node_service: "digital_ocean_node"
   dns_provider: "cloudflare"
   main_domain: "{{ params.your_domain }}"
-  local_domains:
-    mediawiki: "localhost"
-    private: "private.localhost"
-    phpmyadmin: "pma.localhost"
-    adminer: "adminer.localhost"
-    theia: "theia.localhost"
-    minio_gateway: "s3.localhost"
   domains:
     mediawiki: "wiki.{{ params.your_domain }}"
     private: "private-wiki.{{ params.your_domain }}"
@@ -255,14 +261,12 @@ params:
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-2vcpu-2gb"
   certbot_email: "{{ params.certbot_email }}"
-  backup_bucket_name: "mediawiki-backup"
-  uploads_bucket_name: "mediawiki-uploads"
-  backup_replica_bucket_name: "mediawiki-replica-backup"
-  uploads_replica_bucket_name: "mediawiki-replica-uploads"
+  backup_bucket_name: "{{ params.backup_bucket_name }}"
+  uploads_bucket_name: "{{ params.uploads_bucket_name }}"
   meta:
-    ignore_validators: true
-    skip_local_node_preparation: true
-    skip_local_pod_preparation: true
+    ignore_validators: false
+    skip_local_node_preparation: false
+    skip_local_pod_preparation: false
     template_no_empty_lines: true
   pod_meta:
     no_stacktrace: false
@@ -272,9 +276,9 @@ params:
     no_colors: false
   run_nameserver_main: false
   run_dns_main: false
+  use_mediawiki_mail: true
   use_pod_prefix: true
   use_secrets: true
-  use_mediawiki_mail: true
   use_nginx: true
   use_varnish: true
   use_redis: false
@@ -284,7 +288,6 @@ params:
   use_theia: true
   use_minio_gateway: true
   use_s3: true
-  use_local_s3: true
   use_s3_storage: false
   use_fluentd: true
   use_outer_proxy: false
@@ -310,14 +313,10 @@ params:
   enable_uploads_setup: true
   enable_backup_replica: false
   enable_uploads_replica: false
-  local_standard_ports: false
-  local_db_backup_sync: false
-  local_uploads_backup_sync: true
   fluentd_output_plugin: "file"
   s3_cli: "awscli"
   outer_proxy_type: "cloudflare"
   auth_file: "demo/auth/.htpasswd"
-  pod_custom_dir_sync: false
   inner_scripts_dir: ""
   named_volumes: false
   internal_ssl:
@@ -364,6 +363,9 @@ credentials:
     ssh_file: "demo/ssh/id_rsa"
   digital_ocean:
     api_token: "{{ params.digital_ocean_api_token }}"
+  cloudflare:
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
   s3:
     endpoint: "{{ params.s3_endpoint }}"
     access_key: "{{ params.s3_access_key }}"
@@ -372,9 +374,6 @@ credentials:
     endpoint: "{{ params.minio_gateway_endpoint }}"
     access_key: "{{ params.minio_gateway_access_key }}"
     secret_key: "{{ params.minio_gateway_secret_key }}"
-  cloudflare:
-    email: "{{ params.cloudflare_email }}"
-    token: "{{ params.cloudflare_token }}"
 ```
 
 The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).
