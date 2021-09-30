@@ -55,13 +55,13 @@ env:
   repo_dir: "env-base"
   file: "examples/mattermost.yml"
 params:
-  private_ips: ["<< private_ip >>"]
+  private_ips: ["{{ params.private_ip }}"]
   cloud_service: "digital_ocean_vpn"
   node_service: "digital_ocean_node"
   dns_provider: "cloudflare"
-  main_domain: "<< your_domain >>"
+  main_domain: "{{ params.your_domain }}"
   domains:
-    mattermost: "chat.<< your_domain >>"
+    mattermost: "chat.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "chat"
   digital_ocean_node_region: "ams3"
@@ -84,10 +84,10 @@ credentials:
     host_pass: "111222"
     ssh_file: "ssh/id_rsa"
   digital_ocean:
-    api_token: "<< digital_ocean_api_token >>"
+    api_token: "{{ params.digital_ocean_api_token }}"
   cloudflare:
-    email: "<< cloudflare_email >>"
-    token: "<< cloudflare_token >>"
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
 ```
 
 ### Complete Deployment - Local
@@ -175,15 +175,15 @@ credentials:
     db_user: "mattermost"
     db_password: "333333"
   mattermost:
-    secret_key: "<< mattermost_secret_key >>"
+    secret_key: "{{ params.mattermost_secret_key }}"
   mattermost_mail:
     address: "smtp.sendgrid.net"
     port: "587"
     connection_security: "STARTTLS"
     smtp_username: "apikey"
-    smtp_password: "<< sendgrid_password >>"
+    smtp_password: "{{ params.sendgrid_password }}"
   pgadmin:
-    email: "<< your_email >>"
+    email: "{{ params.your_email }}"
     password: "123456"
 ```
 
@@ -202,16 +202,16 @@ params:
   app_hostname: "mattermost_app"
   db_hostname: "mattermost_db"
   web_hostname: "mattermost_web"
-  private_ips: ["<< private_ip >>"]
+  private_ips: ["{{ params.private_ip }}"]
   cloud_service: "digital_ocean_vpn"
   node_service: "digital_ocean_node"
   dns_provider: "cloudflare"
-  main_domain: "<< your_domain >>"
+  main_domain: "{{ params.your_domain }}"
   domains:
-    mattermost: "chat.<< your_domain >>"
-    private: "private-chat.<< your_domain >>"
-    theia: "files-chat.<< your_domain >>"
-    minio_gateway: "s3-chat.<< your_domain >>"
+    mattermost: "chat.{{ params.your_domain }}"
+    private: "private-chat.{{ params.your_domain }}"
+    theia: "files-chat.{{ params.your_domain }}"
+    minio_gateway: "s3-chat.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "chat"
     - record: "private-chat"
@@ -219,8 +219,8 @@ params:
     - record: "s3-chat"
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-2vcpu-2gb"
-  certbot_email: "<< certbot_email >>"
-  backup_bucket_name: "<< backup_bucket_name >>"
+  certbot_email: "{{ params.certbot_email }}"
+  backup_bucket_name: "{{ params.backup_bucket_name }}"
   meta:
     template_no_empty_lines: true
   run_dns_main: false
@@ -284,33 +284,33 @@ credentials:
     db_user: "mattermost"
     db_password: "333333"
   mattermost:
-    secret_key: "<< mattermost_secret_key >>"
+    secret_key: "{{ params.mattermost_secret_key }}"
   mattermost_mail:
     address: "smtp.sendgrid.net"
     port: "587"
     connection_security: "STARTTLS"
     smtp_username: "apikey"
-    smtp_password: "<< sendgrid_password >>"
+    smtp_password: "{{ params.sendgrid_password }}"
   pgadmin:
-    email: "<< your_email >>"
+    email: "{{ params.your_email }}"
     password: "123456"
   host:
     host_user: "host"
     host_pass: "111222"
     ssh_file: "ssh/id_rsa"
   digital_ocean:
-    api_token: "<< digital_ocean_api_token >>"
+    api_token: "{{ params.digital_ocean_api_token }}"
   s3:
-    endpoint: "<< s3_endpoint >>"
-    access_key: "<< s3_access_key >>"
-    secret_key: "<< s3_secret_key >>"
+    endpoint: "{{ params.s3_endpoint }}"
+    access_key: "{{ params.s3_access_key }}"
+    secret_key: "{{ params.s3_secret_key }}"
   minio_gateway:
-    endpoint: "<< minio_gateway_replica_endpoint >>"
-    access_key: "<< minio_gateway_replica_access_key >>"
-    secret_key: "<< minio_gateway_replica_secret_key >>"
+    endpoint: "{{ params.minio_gateway_endpoint }}"
+    access_key: "{{ params.minio_gateway_access_key }}"
+    secret_key: "{{ params.minio_gateway_secret_key }}"
   cloudflare:
-    email: "<< cloudflare_email >>"
-    token: "<< cloudflare_token >>"
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
 ```
 
 The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).

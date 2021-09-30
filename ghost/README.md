@@ -56,13 +56,13 @@ env:
   repo_dir: "env-base"
   file: "examples/ghost.yml"
 params:
-  private_ips: ["<< private_ip >>"]
+  private_ips: ["{{ params.private_ip }}"]
   cloud_service: "digital_ocean_vpn"
   node_service: "digital_ocean_node"
   dns_provider: "cloudflare"
-  main_domain: "<< your_domain >>"
+  main_domain: "{{ params.your_domain }}"
   domains:
-    ghost: "blog.<< your_domain >>"
+    ghost: "blog.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "blog"
   digital_ocean_node_region: "ams3"
@@ -86,10 +86,10 @@ credentials:
     host_pass: "111222"
     ssh_file: "ssh/id_rsa"
   digital_ocean:
-    api_token: "<< digital_ocean_api_token >>"
+    api_token: "{{ params.digital_ocean_api_token }}"
   cloudflare:
-    email: "<< cloudflare_email >>"
-    token: "<< cloudflare_token >>"
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
 ```
 
 ### Complete Deployment - Local
@@ -180,7 +180,7 @@ credentials:
     user: "ghost_user"
     password: "333333"
   ghost_mail:
-    from: "'My Send Email' <me@domain.com>"
+    from: "'My Send Email' <{{ params.sender_email }}>"
     transport: "SMTP"
     options:
       service: "Sendgrid"
@@ -188,7 +188,7 @@ credentials:
       port: "587"
       auth:
         user: "apikey"
-        pass: "<< sendgrid_pass >>"
+        pass: "{{ params.sendgrid_pass }}"
 ```
 
 ### Complete Deployment - Remote
@@ -206,16 +206,16 @@ params:
   app_hostname: "ghost_app"
   db_hostname: "ghost_db"
   web_hostname: "ghost_web"
-  private_ips: ["<< private_ip >>"]
+  private_ips: ["{{ params.private_ip }}"]
   cloud_service: "digital_ocean_vpn"
   node_service: "digital_ocean_node"
   dns_provider: "cloudflare"
-  main_domain: "<< your_domain >>"
+  main_domain: "{{ params.your_domain }}"
   domains:
-    ghost: "blog.<< your_domain >>"
-    private: "private-blog.<< your_domain >>"
-    theia: "files-blog.<< your_domain >>"
-    minio_gateway: "s3-blog.<< your_domain >>"
+    ghost: "blog.{{ params.your_domain }}"
+    private: "private-blog.{{ params.your_domain }}"
+    theia: "files-blog.{{ params.your_domain }}"
+    minio_gateway: "s3-blog.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "blog"
     - record: "private-blog"
@@ -223,8 +223,8 @@ params:
     - record: "s3-blog"
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-2vcpu-2gb"
-  certbot_email: "<< certbot_email >>"
-  backup_bucket_name: "<< backup_bucket_name >>"
+  certbot_email: "{{ params.certbot_email }}"
+  backup_bucket_name: "{{ params.backup_bucket_name }}"
   meta:
     template_no_empty_lines: true
   run_dns_main: false
@@ -290,7 +290,7 @@ credentials:
     user: "ghost_user"
     password: "333333"
   ghost_mail:
-    from: "'My Send Email' <me@domain.com>"
+    from: "'My Send Email' <{{ params.sender_email }}>"
     transport: "SMTP"
     options:
       service: "Sendgrid"
@@ -298,24 +298,24 @@ credentials:
       port: "587"
       auth:
         user: "apikey"
-        pass: "<< sendgrid_pass >>"
+        pass: "{{ params.sendgrid_pass }}"
   host:
     host_user: "host"
     host_pass: "111222"
     ssh_file: "ssh/id_rsa"
   digital_ocean:
-    api_token: "<< digital_ocean_api_token >>"
+    api_token: "{{ params.digital_ocean_api_token }}"
   s3:
-    endpoint: "<< s3_endpoint >>"
-    access_key: "<< s3_access_key >>"
-    secret_key: "<< s3_secret_key >>"
+    endpoint: "{{ params.s3_endpoint }}"
+    access_key: "{{ params.s3_access_key }}"
+    secret_key: "{{ params.s3_secret_key }}"
   minio_gateway:
-    endpoint: "<< minio_gateway_replica_endpoint >>"
-    access_key: "<< minio_gateway_replica_access_key >>"
-    secret_key: "<< minio_gateway_replica_secret_key >>"
+    endpoint: "{{ params.minio_gateway_endpoint }}"
+    access_key: "{{ params.minio_gateway_access_key }}"
+    secret_key: "{{ params.minio_gateway_secret_key }}"
   cloudflare:
-    email: "<< cloudflare_email >>"
-    token: "<< cloudflare_token >>"
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
 ```
 
 The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).

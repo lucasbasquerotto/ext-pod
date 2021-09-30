@@ -56,13 +56,13 @@ env:
   repo_dir: "env-base"
   file: "examples/efk.yml"
 params:
-  private_ips: ["<< private_ip >>"]
+  private_ips: ["{{ params.private_ip }}"]
   cloud_service: "digital_ocean_vpn"
   node_service: "digital_ocean_node"
   dns_provider: "cloudflare"
-  main_domain: "<< your_domain >>"
+  main_domain: "{{ params.your_domain }}"
   domains:
-    kibana: "log.<< your_domain >>"
+    kibana: "log.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "log"
   digital_ocean_node_region: "ams3"
@@ -80,10 +80,10 @@ credentials:
     host_pass: "111222"
     ssh_file: "ssh/id_rsa"
   digital_ocean:
-    api_token: "<< digital_ocean_api_token >>"
+    api_token: "{{ params.digital_ocean_api_token }}"
   cloudflare:
-    email: "<< cloudflare_email >>"
-    token: "<< cloudflare_token >>"
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
 ```
 
 ### Complete Deployment - Local
@@ -178,16 +178,16 @@ params:
   app_hostname: "efk_app"
   db_hostname: "efk_db"
   web_hostname: "efk_web"
-  private_ips: ["<< private_ip >>"]
+  private_ips: ["{{ params.private_ip }}"]
   cloud_service: "digital_ocean_vpn"
   node_service: "digital_ocean_node"
   dns_provider: "cloudflare"
-  main_domain: "<< your_domain >>"
+  main_domain: "{{ params.your_domain }}"
   domains:
-    kibana: "log.<< your_domain >>"
-    private: "private-log.<< your_domain >>"
-    theia: "files-log.<< your_domain >>"
-    minio_gateway: "s3-log.<< your_domain >>"
+    kibana: "log.{{ params.your_domain }}"
+    private: "private-log.{{ params.your_domain }}"
+    theia: "files-log.{{ params.your_domain }}"
+    minio_gateway: "s3-log.{{ params.your_domain }}"
   dns_service_params_list:
     - record: "log"
     - record: "private-log"
@@ -197,8 +197,8 @@ params:
     - record: "elasticsearch"
   digital_ocean_node_region: "ams3"
   digital_ocean_node_size: "s-2vcpu-2gb"
-  certbot_email: "<< certbot_email >>"
-  backup_bucket_name: "<< backup_bucket_name >>"
+  certbot_email: "{{ params.certbot_email }}"
+  backup_bucket_name: "{{ params.backup_bucket_name }}"
   meta:
     template_no_empty_lines: true
   run_dns_main: false
@@ -266,22 +266,18 @@ credentials:
     kibana_admin_password: "333333"
     fluentd_password: "444444"
   digital_ocean:
-    api_token: "<< digital_ocean_api_token >>"
+    api_token: "{{ params.digital_ocean_api_token }}"
   s3:
-    endpoint: "<< s3_endpoint >>"
-    access_key: "<< s3_access_key >>"
-    secret_key: "<< s3_secret_key >>"
-  s3_replica:
-    endpoint: "<< s3_replica_endpoint >>"
-    access_key: "<< s3_replica_access_key >>"
-    secret_key: "<< s3_replica_secret_key >>"
+    endpoint: "{{ params.s3_endpoint }}"
+    access_key: "{{ params.s3_access_key }}"
+    secret_key: "{{ params.s3_secret_key }}"
   minio_gateway:
-    endpoint: "<< minio_gateway_replica_endpoint >>"
-    access_key: "<< minio_gateway_replica_access_key >>"
-    secret_key: "<< minio_gateway_replica_secret_key >>"
+    endpoint: "{{ params.minio_gateway_endpoint }}"
+    access_key: "{{ params.minio_gateway_access_key }}"
+    secret_key: "{{ params.minio_gateway_secret_key }}"
   cloudflare:
-    email: "<< cloudflare_email >>"
-    token: "<< cloudflare_token >>"
+    email: "{{ params.cloudflare_email }}"
+    token: "{{ params.cloudflare_token }}"
 ```
 
 The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).
