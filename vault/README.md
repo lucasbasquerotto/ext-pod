@@ -35,7 +35,10 @@ env:
   repo_dir: "env-base"
   file: "examples/vault.yml"
 params:
+  local_domains:
+    vault: "localhost"
   pod_custom_dir_sync: true
+  use_nginx: true
 credentials:
   dev_vault:
     root_token: "vault123"
@@ -304,4 +307,4 @@ credentials:
     secret_key: "{{ params.minio_gateway_secret_key }}"
 ```
 
-The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).
+The above configuration expects some files to be defined in the project environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).

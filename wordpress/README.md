@@ -38,7 +38,10 @@ env:
   repo_dir: "env-base"
   file: "examples/wordpress.yml"
 params:
+  local_domains:
+    wordpress: "localhost"
   pod_custom_dir_sync: true
+  use_nginx: true
   app_dev: false
   enable_db_setup_new: true
 credentials:
@@ -459,4 +462,4 @@ credentials:
     secret_key: "{{ params.minio_gateway_secret_key }}"
 ```
 
-The above configuration expects some files to be defined in the environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).
+The above configuration expects some files to be defined in the project environment repository directory, that can be seen [here](../base/README.md#needed-environment-files).
