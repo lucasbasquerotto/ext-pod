@@ -308,7 +308,7 @@ templates:
   schema: "{{ var_shared_dir }}/templates/{{ var_rproxy_type }}/{{ var_rproxy_type }}.schema.yml"
   params:
     main_domain: "{{ params.main_domain }}"
-    conf: {{ params.services[var_rproxy_type].conf | default(var_default_rproxy_conf) | to_json }}
+    conf: {{ params[var_rproxy_type + '_conf'] | default(var_default_rproxy_conf) | to_json }}
     ports: {{ var_ports | to_json }}
     domains: {{ params.domains | default({}) | to_json }}
     contents: {{ contents | default({}) | to_json }}
