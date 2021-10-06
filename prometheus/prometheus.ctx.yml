@@ -121,19 +121,17 @@
 
 {% set var_grafana_external_host = '' %}
 
-{% if var_use_grafana %}
-  {% set var_grafana_domain = params.domains.grafana | default('') %}
-  {% set var_grafana_external_port = params.use_ssl | default(false) | bool | ternary(
-      var_ports.private_https_port | default(''),
-      var_ports.private_http_port | default('')
-    )
-  %}
-  {% set var_grafana_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
-    + '://' + var_grafana_domain
-    + (((var_grafana_external_port | string) in ['80', '443'])
-    | ternary('', ':' + (var_grafana_external_port | string)))
-  %}
-{% endif %}
+{% set var_grafana_domain = params.domains.grafana | default('') %}
+{% set var_grafana_external_port = params.use_ssl | default(false) | bool | ternary(
+    var_ports.private_https_port | default(''),
+    var_ports.private_http_port | default('')
+  )
+%}
+{% set var_grafana_external_host = (params.use_ssl | default(false) | bool | ternary('https', 'http'))
+  + '://' + var_grafana_domain
+  + (((var_grafana_external_port | string) in ['80', '443'])
+  | ternary('', ':' + (var_grafana_external_port | string)))
+%}
 
 {% set var_s3_minio_gateway_credentials = credentials.minio_gateway | default({}) %}
 {% set var_s3_backup_credentials = credentials.backup_bucket | default({}) %}
