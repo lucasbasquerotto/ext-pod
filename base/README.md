@@ -286,9 +286,9 @@ By defining `use_basic_auth_private: true`, the private services expect basic au
 
 *(To generate a basic authentication file with a user `user1`, run the command `htpasswd /path/to/.htpasswd user1`)*
 
-In certain cases, a service will expect a secure connection and there would need to be included TLS certificates to be used for communication between the pod services internally (and sometimes externally).
-
 ## Internal SSL/TLS certificates
+
+In certain cases, a service will expect a secure connection and there would need to be included TLS certificates to be used for communication between the pod services internally (and sometimes externally).
 
 An example is that by defining `use_secure_elasticsearch: true`, the `fluentd` service in a pod will connect to `elasticsearch` using a secure connection (when `fluentd_output_plugin` is `elasticsearch`).
 
