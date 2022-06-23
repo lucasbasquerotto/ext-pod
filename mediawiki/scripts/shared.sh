@@ -82,6 +82,29 @@ case "$command" in
 			fi
 		fi
 		;;
+	"setup")
+		# shellcheck disable=SC2154
+		pod_type="$var_main__pod_type"
+
+		"$pod_shared_run_file" "$command" ${args[@]+"${args[@]}"}
+
+		"$pod_script_env_file" exec-nontty toolbox \
+			bash "$inner_run_file" "inner:custom:after_setup" \
+			--pod_type="$pod_type"
+		;;
+	"inner:custom:after_setup")
+		data_dir="/var/main/data"
+
+		if [ "$arg_pod_type" = "app" ] || [ "$arg_pod_type" = "web" ]; then
+			dir="$data_dir/mediawiki/uploads"
+
+			if [ ! -d "$dir" ]; then
+				mkdir -p "$dir"
+			fi
+
+			chown -R 33:33 "$dir"
+		fi
+		;;
 	"migrate")
 		# shellcheck disable=SC2154
 		pod_type="$var_main__pod_type"
