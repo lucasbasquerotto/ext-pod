@@ -30,6 +30,10 @@ fi
 shift;
 
 case "$command" in
+	"upgrade")
+		"$pod_env_shared_file" "$command" "$@"
+		info "login and access the admin dashboard at: /wp/wp-login.php"
+		;;
 	"c")
 		"$pod_env_shared_file" exec composer composer update --verbose
 		;;
@@ -91,12 +95,15 @@ case "$command" in
 
 		chmod -R 777 "$dir"
 		;;
-	"migrate")
+	"setup:new")
 		if [ "${var_custom__app_dev:-}" = "true" ] && [ "${var_main__use_composer:-}" = "true" ]; then
 			"$pod_env_shared_file" up mysql composer
 			"$pod_env_shared_file" exec composer composer install --verbose
 		fi
 
+		"$pod_env_shared_file" "$command" "$@"
+		;;
+	"migrate")
 		"$pod_env_shared_file" "$command" "$@"
 
 		if [ "${var_custom__app_dev:-}" = "true" ]; then
