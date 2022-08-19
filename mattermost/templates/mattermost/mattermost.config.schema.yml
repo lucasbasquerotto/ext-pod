@@ -6,6 +6,12 @@ schemas:
       site_url:
         type: "str"
         description: "the site url"
+      websocket_url:
+        type: "str"
+        description: "the websocket url; defaults to the site url"
+      allow_cookies_for_subdomains:
+        type: "bool"
+        description: "when true, allow cookies for subdomains (useful when websocket_url is a subdomain of the site url)"
       db_user:
         type: "str"
         description: "the database username"

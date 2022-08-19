@@ -380,6 +380,8 @@ templates:
   schema: "{{ var_main_dir }}/templates/mattermost/mattermost.config.schema.yml"
   params:
     site_url: "{{ var_mattermost_external_host }}"
+    websocket_url: "{{ params.mattermost_websocket_url | default('') }}"
+    allow_cookies_for_subdomains: "{{ params.mattermost_allow_cookies_for_subdomains | default(false) }}"
     db_hostname: "{{ var_postgres_hostname }}"
     db_port: "{{ var_postgres_port }}"
     db_name: "{{ credentials.postgres.db_name | default('') }}"

@@ -1,7 +1,7 @@
 {
   "ServiceSettings": {
     "SiteURL": "{{ params.site_url }}",
-    "WebsocketURL": "",
+    "WebsocketURL": "{{ params.websocket_url }}",
     "LicenseFileLocation": "",
     "ListenAddress": ":8065",
     "ConnectionSecurity": "",
@@ -39,11 +39,11 @@
     "EnableMultifactorAuthentication": false,
     "EnforceMultifactorAuthentication": false,
     "EnableUserAccessTokens": false,
-    "AllowCorsFrom": "",
+    "AllowCorsFrom": "{{ params.site_url }}",
     "CorsExposedHeaders": "",
     "CorsAllowCredentials": false,
     "CorsDebug": false,
-    "AllowCookiesForSubdomains": false,
+    "AllowCookiesForSubdomains": {{ params.allow_cookies_for_subdomains | bool | ternary('true', 'false') }},
     "ExtendSessionLengthWithActivity": true,
     "SessionLengthWebInDays": 30,
     "SessionLengthMobileInDays": 30,
