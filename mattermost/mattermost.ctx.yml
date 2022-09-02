@@ -11,9 +11,9 @@
 {% endif %}
 
 {% set var_is_web = var_pod_type in ['app', 'web'] %}
-{% set var_use_pgadmin = var_is_web and (params.use_pgadmin | bool) %}
-{% set var_use_adminer = var_is_web and (params.use_adminer | bool) %}
-{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | bool) %}
+{% set var_use_pgadmin = var_is_web and (params.use_pgadmin | default(false) | bool) %}
+{% set var_use_adminer = var_is_web and (params.use_adminer | default(false) | bool) %}
+{% set var_use_minio_gateway = var_is_web and (params.use_minio_gateway | default(false) | bool) %}
 
 {% set var_is_db = var_pod_type in ['app', 'db'] %}
 {% set var_use_postgres = var_is_db %}
@@ -447,13 +447,13 @@ templates:
       region: "{{ var_s3_backup_replica_credentials.region | default('') }}"
       access_key: "{{ var_s3_backup_replica_credentials.access_key | default('') }}"
       secret_key: "{{ var_s3_backup_replica_credentials.secret_key | default('') }}"
-      when: "{{ (params.enable_backup_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+      when: "{{ (params.enable_backup_replica | default(false) | bool) and (var_pod_type in ['app', 'web']) }}"
     - alias: "uploads_replica"
       endpoint: "{{ var_s3_uploads_replica_credentials.endpoint | default('') }}"
       region: "{{ var_s3_uploads_replica_credentials.region | default('') }}"
       access_key: "{{ var_s3_uploads_replica_credentials.access_key | default('') }}"
       secret_key: "{{ var_s3_uploads_replica_credentials.secret_key | default('') }}"
-      when: "{{ (params.enable_uploads_replica | bool) and (var_pod_type in ['app', 'web']) }}"
+      when: "{{ (params.enable_uploads_replica | default(false) | bool) and (var_pod_type in ['app', 'web']) }}"
 
 {% endif %}
 ##############################################################
