@@ -1,0 +1,16 @@
+{% set var_pod_kind = 'test' %}
+{% set var_main_base_dir = params.custom_dir | default('') %}
+{% set var_main_dir =
+  (var_main_base_dir != '')
+  | ternary(var_main_base_dir + '/', '')
+  + var_pod_kind
+%}
+
+templates:
+
+- src: "{{ var_main_dir }}/dynamic.tpl.yml"
+  dest: "env/pod-data.test.yml"
+  params:
+    params: {{ params | to_json }}
+    credentials: {{ credentials | to_json }}
+    contents: {{ contents | to_json }}
